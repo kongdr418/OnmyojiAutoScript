@@ -3,7 +3,7 @@
 # github https://github.com/runhey
 from datetime import datetime
 
-from module.exception import RequestHumanTakeover, TaskEnd
+from module.exception import GameStuckError, RequestHumanTakeover, TaskEnd
 from module.logger import logger
 from tasks.Component.Login.service import LoginService
 from tasks.Restart.server_update import delay_pending_tasks_for_server_update, is_server_update_window
@@ -30,7 +30,7 @@ class ScriptTask(BaseTask):
             self.finish_recovery()
         except RequestHumanTakeover:
             if not self.delay_pending_tasks(reason='login failed during Restart recovery'):
-                raise
+                raise GameStuckError('Login failed during Restart recovery')
         raise TaskEnd
 
     def app_stop(self):
