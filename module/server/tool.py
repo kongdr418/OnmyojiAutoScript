@@ -21,6 +21,7 @@ from filelock import FileLock
 from dev_tools.assets_extract import AssetsExtractor
 from dev_tools.assets_test import detect_image_detail, detect_ocr_detail
 from module.config.atomicwrites import atomic_write
+from module.config.config import Config
 from module.logger import logger
 from module.server.config_manager import ConfigManager
 from module.server.annotator_rule_schema import (
@@ -49,8 +50,21 @@ ALLOWED_SWIPE_MODE = set(field_options("swipe", "mode"))
 SESSION_IDLE_TIMEOUT_SECONDS = 10 * 60
 SESSION_SWEEP_INTERVAL_SECONDS = 30
 EMULATOR_CAPTURE_MAX_RETRIES = 3
+# 本地截图方式（nemu_ipc / window_background 等）子进程能立刻响应 stop
 EMULATOR_CAPTURE_PROCESS_JOIN_TIMEOUT_SECONDS = 2.5
+# 网络截图方式（ADB / DroidCast / scrcpy 连远端设备）单次 screencap 就可能 1~3s，
+# 子进程恰好卡在截图里时 2.5s 必然超时，需要放宽。
+EMULATOR_CAPTURE_PROCESS_JOIN_TIMEOUT_NETWORK_SECONDS = 8.0
+# terminate() 之后等它真正消失的时间（POSIX 上是 SIGTERM，可能被拖延）
+EMULATOR_CAPTURE_PROCESS_TERMINATE_WAIT_SECONDS = 1.0
+# kill() 之后等它真正消失的时间（POSIX 上是 SIGKILL，不可捕获）
+EMULATOR_CAPTURE_PROCESS_KILL_WAIT_SECONDS = 1.0
 EMULATOR_CAPTURE_COMMAND_TIMEOUT_SECONDS = 5.0
+
+# 这些截图方式要经网络往返，视作“远端设备”
+_REMOTE_SCREENSHOT_METHODS = {
+    'ADB', 'ADB_nc', 'uiautomator2', 'DroidCast', 'DroidCast_raw', 'scrcpy',
+}
 
 _EMULATOR_CAPTURE_CONTEXT = multiprocessing.get_context("spawn")
 
@@ -90,6 +104,8 @@ class EmulatorCaptureSession:
         self.config_name = ""
         self.frame_rate = 2
         self.error = ""
+        # 记录实际生效的截图方式，用于判断子进程停止时该等多久
+        self.screenshot_method = ""
         self._process: multiprocessing.Process | None = None
         self._state_queue = None
         self._frame_queue = None
@@ -103,12 +119,15 @@ class EmulatorCaptureSession:
         self._last_error_at = 0.0
 
     def _drain_status_queue(self) -> None:
-        if self._state_queue is None:
+        # 把队列绑到局部变量：stop() 可能在别的线程里把属性置为 None 或 close()，
+        # 先判 None 再取值会有竞态窗口。
+        queue = self._state_queue
+        if queue is None:
             return
         while True:
             try:
-                payload = self._state_queue.get_nowait()
-            except QueueEmpty:
+                payload = queue.get_nowait()
+            except (QueueEmpty, ValueError, OSError):
                 break
 
             with self._frame_lock:
@@ -124,12 +143,13 @@ class EmulatorCaptureSession:
                     self._last_error_at = float(payload["last_error_at"] or 0.0)
 
     def _drain_frame_queue(self) -> None:
-        if self._frame_queue is None:
+        queue = self._frame_queue
+        if queue is None:
             return
         while True:
             try:
-                payload = self._frame_queue.get_nowait()
-            except QueueEmpty:
+                payload = queue.get_nowait()
+            except (QueueEmpty, ValueError, OSError):
                 break
 
             jpeg = payload.get("jpeg")
@@ -207,6 +227,7 @@ class EmulatorCaptureSession:
             self._retry_count = 0
             self._last_error_at = 0.0
             self._latest_jpeg = None
+        self.screenshot_method = self._read_configured_screenshot_method()
         self._create_ipc()
         self._process = _EMULATOR_CAPTURE_CONTEXT.Process(
             target=run_annotator_capture_worker,
@@ -225,7 +246,34 @@ class EmulatorCaptureSession:
         self._process.start()
         return self.frame_rate
 
+    def _read_configured_screenshot_method(self) -> str:
+        """读取配置里的截图方式，用于决定停止子进程时该等多久。
+
+        读不到就当作本地方式，保持原有的 2.5s 行为。
+        """
+        if not self.config_name:
+            return ""
+        try:
+            config = Config(config_name=self.config_name)
+            method = config.script.device.screenshot_method
+        except Exception as e:
+            logger.debug(f"[annotator] read screenshot method failed: {type(e).__name__}: {e}")
+            return ""
+        # 枚举值是 str 子类，转成纯字符串再比较
+        return str(getattr(method, "value", method) or "")
+
+    def _resolve_stop_timeout(self) -> float:
+        """按截图方式决定等子进程退出的时长。"""
+        if str(self.screenshot_method or "") in _REMOTE_SCREENSHOT_METHODS:
+            return EMULATOR_CAPTURE_PROCESS_JOIN_TIMEOUT_NETWORK_SECONDS
+        return EMULATOR_CAPTURE_PROCESS_JOIN_TIMEOUT_SECONDS
+
     def stop(self, clear_error: bool = False) -> None:
+        """停止采集子进程。
+
+        注意：本方法是同步阻塞的（最多几秒），调用方必须放在线程池里执行，
+        不要直接在 async 路由里调用，否则会卡住事件循环。
+        """
         process = self._process
         if process and process.is_alive() and self._command_queue is not None:
             try:
@@ -233,11 +281,43 @@ class EmulatorCaptureSession:
             except Exception:
                 pass
 
+        forced_terminate = False
+        still_alive = False
         if process and process.is_alive():
-            process.join(timeout=EMULATOR_CAPTURE_PROCESS_JOIN_TIMEOUT_SECONDS)
+            join_timeout = self._resolve_stop_timeout()
+            process.join(timeout=join_timeout)
             if process.is_alive():
+                # 采集进程没响应 stop 命令，只能强杀。
+                # Windows 的 terminate() 是 TerminateProcess（无条件立即杀），
+                # 而 POSIX 只是 SIGTERM（可拖延），所以这里必须逐级升级并在最后复查存活，
+                # 否则会出现“以为停了、其实子进程还在占着设备”的假停止。
+                logger.warning(
+                    f"[annotator] capture process did not exit within {join_timeout}s, "
+                    f"terminating, session={self.session_id}"
+                )
                 process.terminate()
-                process.join(timeout=1.0)
+                process.join(timeout=EMULATOR_CAPTURE_PROCESS_TERMINATE_WAIT_SECONDS)
+                forced_terminate = True
+
+                if process.is_alive():
+                    # SIGTERM 无效（常见于卡在 C 层阻塞调用里），升级为 SIGKILL。
+                    # SIGKILL 不可捕获，语义上等价于 Windows 的 TerminateProcess。
+                    logger.warning(
+                        f"[annotator] capture process survived terminate, killing, "
+                        f"session={self.session_id}, pid={process.pid}"
+                    )
+                    try:
+                        process.kill()
+                    except Exception as e:
+                        logger.error(f"[annotator] kill capture process failed: {type(e).__name__}: {e}")
+                    process.join(timeout=EMULATOR_CAPTURE_PROCESS_KILL_WAIT_SECONDS)
+                    still_alive = process.is_alive()
+
+        if still_alive:
+            logger.error(
+                f"[annotator] capture process still alive after kill, "
+                f"session={self.session_id}, pid={process.pid}"
+            )
 
         self._drain_updates()
         self._process = None
@@ -247,7 +327,13 @@ class EmulatorCaptureSession:
             self._retry_count = 0
             self._latest_jpeg = None
             self._updated_at = 0.0
-            if clear_error:
+            if still_alive:
+                self.error = "采集进程无法被终止，仍在后台运行，请重启服务"
+                self._last_error_at = time.time()
+            elif forced_terminate:
+                self.error = "采集进程未响应停止命令，已强制终止；设备侧连接可能未完全释放"
+                self._last_error_at = time.time()
+            elif clear_error:
                 self.error = ""
                 self._last_error_at = 0.0
 
