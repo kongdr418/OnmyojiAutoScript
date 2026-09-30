@@ -150,7 +150,7 @@ class LoginService(
 
             if self.ocr_appear_click(self.O_LOGIN_ENTER_GAME, interval=3):
                 skip_login_animation = False  # 进入登录页面后不再处理登录动画逻辑
-                self.wait_until_appear(self.I_LOGIN_SPECIFIC_SERVE, True, wait_time=10)
+                self.wait_until_appear(self.I_LOGIN_SPECIFIC_SERVE, True, wait_time=5)
                 continue
 
         return login_success

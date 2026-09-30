@@ -5,7 +5,7 @@
     "roiFront": "807,108,76,45",
     "roiBack": "49,98,1033,61",
     "method": "Template matching",
-    "threshold": 0.95,
+    "threshold": 0.9,
     "description": "庭院标志"
   },
   {
