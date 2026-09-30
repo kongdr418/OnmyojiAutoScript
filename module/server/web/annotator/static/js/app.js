@@ -2526,6 +2526,21 @@
     }
   }
 
+  // 断开/出错时清空预览框。
+  // 注意：只 revokeObjectURL 是不够的——<img>.src 仍指向已失效的 blob，
+  // 浏览器会渲染出碎图并占住预览框，看起来就像"断开连接后控件坏了"。
+  // 这里同时清掉 src 并隐藏元素，回到刚打开时的空态。
+  function resetEmulatorPreview() {
+    if (state.wsImageUrl) {
+      URL.revokeObjectURL(state.wsImageUrl);
+      state.wsImageUrl = "";
+    }
+    if (el.emulatorPreview) {
+      el.emulatorPreview.removeAttribute("src");
+      el.emulatorPreview.classList.add("hidden");
+    }
+  }
+
   function closeFrameSocket(markExpected = true) {
     if (state.ws) {
       state.wsCloseExpected = Boolean(markExpected);
@@ -2534,10 +2549,7 @@
     } else {
       state.wsCloseExpected = false;
     }
-    if (state.wsImageUrl) {
-      URL.revokeObjectURL(state.wsImageUrl);
-      state.wsImageUrl = "";
-    }
+    resetEmulatorPreview();
   }
 
   function openFrameSocket() {
@@ -2575,6 +2587,7 @@
         URL.revokeObjectURL(state.wsImageUrl);
       }
       state.wsImageUrl = url;
+      el.emulatorPreview.classList.remove("hidden");
       el.emulatorPreview.src = url;
     };
 
@@ -2648,12 +2661,19 @@
     if (!state.sessionId) {
       return;
     }
-    const res = await api(`${API_PREFIX}/api/emulator/stop`, {
-      method: "POST",
-      body: JSON.stringify({ session_id: state.sessionId }),
-    });
-    closeFrameSocket();
-    updateEmulatorStatusView(res.emulator || {});
+    let res = null;
+    try {
+      res = await api(`${API_PREFIX}/api/emulator/stop`, {
+        method: "POST",
+        body: JSON.stringify({ session_id: state.sessionId }),
+      });
+    } finally {
+      // 不论后端是否报错都要断开预览，否则 WS 会一直挂着收不到帧
+      closeFrameSocket();
+      if (res) {
+        updateEmulatorStatusView(res.emulator || {});
+      }
+    }
     showMessage("模拟器会话已停止", "ok");
   }
 
@@ -2719,6 +2739,11 @@
     el.captureBtn.addEventListener("click", withError(captureEmulatorFrame));
 
     el.mainImage.addEventListener("load", adjustStageByImage);
+
+    // 预览图加载失败（例如 blob 已释放）时兜底清空，避免残留碎图占位
+    el.emulatorPreview.addEventListener("error", () => {
+      resetEmulatorPreview();
+    });
 
     const applyFrontInput = () => applyRoiInputToRule("front");
     const applyBackInput = () => applyRoiInputToRule("back");

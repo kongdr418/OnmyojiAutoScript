@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
 from starlette.websockets import WebSocketState
 
 from module.logger import logger
@@ -18,6 +19,95 @@ tool_app = APIRouter(
     tags=["tool"],
     route_class=ApiLoggingRoute,
 )
+
+# 单帧推送的硬超时。
+# websockets 的 drain() 会在发送缓冲区写满且对端不收时一直 await；
+# 客户端异常断开（半开连接）时 TCP 可能长时间不报错，于是整个事件循环被卡死，
+# 表现为服务进程还在、端口能连、但所有 HTTP 请求超时。
+# 给它加超时，宁可丢弃这一帧也不能阻塞事件循环。
+ANNOTATOR_WS_SEND_TIMEOUT_SECONDS = 2.0
+
+# 用 receive() 的短超时来探测客户端断开；超时即“暂无消息”，属正常情况
+ANNOTATOR_WS_POLL_SECONDS = 0.1
+
+
+def _is_ws_connected(websocket: WebSocket) -> bool:
+    """WebSocket 是否仍处于可发送状态。"""
+    return websocket.client_state == WebSocketState.CONNECTED
+
+
+async def _ws_client_gone(websocket: WebSocket) -> bool:
+    """探测客户端是否已断开。
+
+    正常收帧期间不会有客户端消息，超时即视为“仍然在线”。
+    """
+    try:
+        await asyncio.wait_for(websocket.receive(), timeout=ANNOTATOR_WS_POLL_SECONDS)
+        # 收到任何消息都视为客户端主动结束（本端点是单向推流）
+        return True
+    except asyncio.TimeoutError:
+        return False
+    except WebSocketDisconnect:
+        return True
+    except RuntimeError:
+        # 状态已切换到 DISCONNECTED 之类
+        return True
+
+
+async def _ws_send_frame(websocket: WebSocket, frame: bytes) -> bool:
+    """带超时地推送一帧；返回 False 表示客户端已不可用，应结束推流。"""
+    if not _is_ws_connected(websocket):
+        return False
+    try:
+        await asyncio.wait_for(websocket.send_bytes(frame), timeout=ANNOTATOR_WS_SEND_TIMEOUT_SECONDS)
+        return True
+    except asyncio.TimeoutError:
+        logger.warning(
+            f"[annotator] ws send timeout after {ANNOTATOR_WS_SEND_TIMEOUT_SECONDS}s, "
+            f"drop frame and close stream"
+        )
+        return False
+    except (WebSocketDisconnect, RuntimeError):
+        return False
+    except Exception as e:
+        # 其它异常（例如 websockets 的 ConnectionClosedError）同样视为客户端已走
+        if _looks_like_client_disconnect(e):
+            return False
+        raise
+
+
+async def _ws_send_json(websocket: WebSocket, payload: dict[str, Any]) -> bool:
+    """带超时地推送一条 JSON 事件；返回 False 表示客户端已不可用。"""
+    if not _is_ws_connected(websocket):
+        return False
+    try:
+        await asyncio.wait_for(websocket.send_json(payload), timeout=ANNOTATOR_WS_SEND_TIMEOUT_SECONDS)
+        return True
+    except (asyncio.TimeoutError, WebSocketDisconnect, RuntimeError):
+        return False
+    except Exception as e:
+        if _looks_like_client_disconnect(e):
+            return False
+        raise
+
+
+def _looks_like_client_disconnect(error: BaseException) -> bool:
+    """判断异常是否属于“客户端已断开”而非服务端真错误。
+
+    websockets 库在连接被对端异常关闭时抛 ConnectionClosedError，
+    其类名叫 ConnectionClosed、消息为 "no close frame received or sent"，
+    既不是 WebSocketDisconnect 也不含 "disconnect" 字样，需要显式识别。
+    """
+    name = error.__class__.__name__
+    if name in {"ConnectionClosed", "ConnectionClosedOK", "ConnectionClosedError", "ClientDisconnected"}:
+        return True
+    if isinstance(error, WebSocketDisconnect):
+        return True
+    message = str(error).strip().lower()
+    return any(
+        token in message
+        for token in ("no close frame", "connection is closed", "connection closed", "disconnect")
+    )
 
 
 class EmulatorStartBody(BaseModel):
@@ -127,7 +217,8 @@ async def annotator_get_session(session_id: str):
 @tool_app.delete('/annotator/api/session/{session_id}')
 async def annotator_close_session(session_id: str, reason: str = "client_close"):
     try:
-        result = _close_session_safely(session_id, f"api:{reason}")
+        # 关会话内部会停采集进程（同步 join/terminate），同样不能占用事件循环
+        result = await run_in_threadpool(_close_session_safely, session_id, f"api:{reason}")
         return {"code": "ok", **result}
     except AnnotatorError as e:
         _raise_annotator_error(e)
@@ -136,7 +227,8 @@ async def annotator_close_session(session_id: str, reason: str = "client_close")
 @tool_app.post('/annotator/api/session/{session_id}/close')
 async def annotator_close_session_beacon(session_id: str, reason: str = "pagehide"):
     try:
-        result = _close_session_safely(session_id, f"beacon:{reason}")
+        # 关会话内部会停采集进程（同步 join/terminate），同样不能占用事件循环
+        result = await run_in_threadpool(_close_session_safely, session_id, f"beacon:{reason}")
         return {"code": "ok", **result}
     except AnnotatorError as e:
         _raise_annotator_error(e)
@@ -285,7 +377,14 @@ async def annotator_rule_image_delete(data: RuleImageDeleteBody):
 @tool_app.post('/annotator/api/emulator/start')
 async def annotator_start_emulator(data: EmulatorStartBody):
     try:
-        status = annotator_manager.start_emulator(data.session_id, data.config_name, data.frame_rate)
+        # start_emulator() 内部会先 stop() 掉旧采集进程（同步 join/terminate），
+        # 同样可能阻塞数秒，必须丢到线程池。
+        status = await run_in_threadpool(
+            annotator_manager.start_emulator,
+            data.session_id,
+            data.config_name,
+            data.frame_rate,
+        )
         return {"code": "ok", "emulator": status}
     except AnnotatorError as e:
         _raise_annotator_error(e)
@@ -294,7 +393,9 @@ async def annotator_start_emulator(data: EmulatorStartBody):
 @tool_app.post('/annotator/api/emulator/stop')
 async def annotator_stop_emulator(data: SessionBody):
     try:
-        status = annotator_manager.stop_emulator(data.session_id)
+        # stop_emulator() 会同步 join/terminate 子进程（对远端设备最多等 8s），
+        # 必须丢到线程池，否则会阻塞事件循环导致整个服务无响应。
+        status = await run_in_threadpool(annotator_manager.stop_emulator, data.session_id)
         return {"code": "ok", "emulator": status}
     except AnnotatorError as e:
         _raise_annotator_error(e)
@@ -312,7 +413,8 @@ async def annotator_emulator_status(session_id: str):
 @tool_app.post('/annotator/api/emulator/capture')
 async def annotator_capture_frame(data: SessionBody):
     try:
-        image = annotator_manager.capture_from_emulator(data.session_id)
+        # capture_from_emulator() 会同步等待采集进程回执，最长 5s
+        image = await run_in_threadpool(annotator_manager.capture_from_emulator, data.session_id)
         return {"code": "ok", "image": image}
     except AnnotatorError as e:
         _raise_annotator_error(e)
@@ -375,25 +477,37 @@ async def annotator_frame_ws(websocket: WebSocket, session_id: str):
     try:
         annotator_manager.get_session_snapshot(session_id)
         while True:
+            # 客户端异常断开时 TCP 可能长时间不报错，必须先主动探测，
+            # 否则会一直往没人收的 socket 写，最终 drain() 阻塞整个事件循环。
+            if await _ws_client_gone(websocket):
+                log_ws_event(f"annotator_ws[{session_id}] disconnect")
+                logger.info(f"[annotator] ws client gone, session={session_id}")
+                break
+
             frame = annotator_manager.latest_emulator_frame(session_id)
             if frame:
-                await websocket.send_bytes(frame)
+                if not await _ws_send_frame(websocket, frame):
+                    log_ws_event(f"annotator_ws[{session_id}] disconnect")
+                    logger.info(f"[annotator] ws stream stopped, session={session_id}")
+                    break
                 continue
 
             status = annotator_manager.emulator_status(session_id)
             if status.get("state") == "error":
                 log_ws_event(f"annotator_ws[{session_id}] event: emulator_error")
-                await websocket.send_json(
+                await _ws_send_json(
+                    websocket,
                     {
                         "event": "error",
                         "code": "emulator_error",
                         "message": status.get("error", "unknown"),
-                    }
+                    },
                 )
-                await websocket.close(code=1011)
+                try:
+                    await websocket.close(code=1011)
+                except Exception:
+                    pass
                 break
-
-            await asyncio.sleep(0.1)
     except WebSocketDisconnect:
         log_ws_event(f"annotator_ws[{session_id}] disconnect")
         logger.info(f"[annotator] ws disconnect, session={session_id}")
@@ -401,19 +515,16 @@ async def annotator_frame_ws(websocket: WebSocket, session_id: str):
         log_ws_event(f"annotator_ws[{session_id}] annotator_error: code={e.code}, message={e.message}", level="warning")
         if e.code != "invalid_session":
             logger.warning(f"[annotator] ws annotator error, session={session_id}, code={e.code}")
-        try:
-            await websocket.send_json({"event": "error", "code": e.code, "message": e.message})
-        except Exception:
-            pass
+        await _ws_send_json(websocket, {"event": "error", "code": e.code, "message": e.message})
         try:
             await websocket.close(code=1008)
         except Exception:
             pass
     except Exception as e:
-        message = str(e).strip().lower()
-        if e.__class__.__name__ == "ClientDisconnected" or "disconnected" in message:
+        if _looks_like_client_disconnect(e):
+            # 客户端断开是常态，不该按 ERROR 打整段 traceback 淹掉日志
             log_ws_event(f"annotator_ws[{session_id}] client_disconnected_during_send")
-            logger.info(f"[annotator] ws client disconnected during send, session={session_id}")
+            logger.info(f"[annotator] ws client disconnected, session={session_id}: {type(e).__name__}")
         else:
             log_ws_event(f"annotator_ws[{session_id}] error: {type(e).__name__}: {e}", level="error")
             logger.exception(f"[annotator] ws failed, session={session_id}")

@@ -29,8 +29,11 @@ def _release_device(device: Device | None) -> None:
         return
     try:
         device.release_during_wait()
-    except Exception:
-        pass
+    except Exception as e:
+        # 这里以前是静默 pass，导致设备侧清理失败完全无痕。
+        # 注意 release_during_wait() 会读 config.script.device.screenshot_method，
+        # 配置里没有 script.device 时该链路会抛 AttributeError（Config.__getattr__ 返回 None）。
+        logger.warning(f"[annotator] release device failed: {type(e).__name__}: {e}")
 
 
 def _format_error_message(error: Exception) -> str:
