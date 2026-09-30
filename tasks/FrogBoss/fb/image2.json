@@ -15,7 +15,7 @@
     "roiFront": "510,274,169,64",
     "roiBack": "492,260,220,113",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "休息中"
   },
@@ -25,7 +25,7 @@
     "roiFront": "664,31,148,65",
     "roiBack": "551,4,371,145",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "竞猜主页面"
   }

@@ -23,39 +23,39 @@ class FrogBossAssets:
 	# description 
 	I_FROG_BOSS_ENTER = RuleImage(roi_front=(1188,303,36,38), roi_back=(1169,203,78,320), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_frog_boss_enter.png")
 	# 休息中 
-	I_FROG_BOSS_REST = RuleImage(roi_front=(510,274,169,64), roi_back=(492,260,220,113), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_frog_boss_rest.png")
+	I_FROG_BOSS_REST = RuleImage(roi_front=(510,274,169,64), roi_back=(492,260,220,113), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_frog_boss_rest.png")
 	# 竞猜主页面 
-	I_FROG_CHECK = RuleImage(roi_front=(664,31,148,65), roi_back=(551,4,371,145), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_frog_check.png")
+	I_FROG_CHECK = RuleImage(roi_front=(664,31,148,65), roi_back=(551,4,371,145), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_frog_check.png")
 
 
 	# Image Rule Assets
 	# 左边竞猜 
-	I_BET_LEFT = RuleImage(roi_front=(271,303,145,100), roi_back=(222,251,245,195), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_left.png")
+	I_BET_LEFT = RuleImage(roi_front=(271,303,145,100), roi_back=(222,251,245,195), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_left.png")
 	# 右边竞猜 
-	I_BET_RIGHT = RuleImage(roi_front=(1070,302,146,100), roi_back=(1048,248,187,208), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_right.png")
+	I_BET_RIGHT = RuleImage(roi_front=(1070,302,146,100), roi_back=(1048,248,187,208), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_right.png")
 	# description 
-	I_BET_SUCCESS_BOX = RuleImage(roi_front=(708,394,87,50), roi_back=(661,331,193,182), threshold=0.75, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_success_box.png")
+	I_BET_SUCCESS_BOX = RuleImage(roi_front=(708,394,87,50), roi_back=(661,331,193,182), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_success_box.png")
 	# 左边赢了 
-	I_SUCCESS_LEFT = RuleImage(roi_front=(292,306,100,100), roi_back=(238,243,202,221), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_success_left.png")
+	I_SUCCESS_LEFT = RuleImage(roi_front=(292,306,100,100), roi_back=(238,243,202,221), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_success_left.png")
 	# 右边输了 
-	I_FAILURE_RIGHT = RuleImage(roi_front=(1097,303,100,100), roi_back=(1029,256,224,199), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_failure_right.png")
+	I_FAILURE_RIGHT = RuleImage(roi_front=(1097,303,100,100), roi_back=(1029,256,224,199), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_failure_right.png")
 	# description 
-	I_NEXT_COMPETITION = RuleImage(roi_front=(775,485,42,36), roi_back=(692,437,157,147), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_next_competition.png")
+	I_NEXT_COMPETITION = RuleImage(roi_front=(775,485,42,36), roi_back=(692,437,157,147), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_next_competition.png")
 	# 30万金币 
-	I_GOLD_30 = RuleImage(roi_front=(862,499,78,76), roi_back=(831,441,147,187), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_gold_30.png")
+	I_GOLD_30 = RuleImage(roi_front=(862,499,78,76), roi_back=(831,441,147,187), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_gold_30.png")
 	# 确认竞猜 
-	I_BET_SURE = RuleImage(roi_front=(1025,402,100,100), roi_back=(972,340,200,226), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_sure.png")
+	I_BET_SURE = RuleImage(roi_front=(1025,402,100,100), roi_back=(972,340,200,226), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_sure.png")
 	# description 
-	I_GOLD_30_CHECK = RuleImage(roi_front=(513,196,58,53), roi_back=(402,141,459,489), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_gold_30_check.png")
+	I_GOLD_30_CHECK = RuleImage(roi_front=(513,196,58,53), roi_back=(402,141,459,489), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_gold_30_check.png")
 	# description 
-	I_BETTED = RuleImage(roi_front=(1093,313,125,54), roi_back=(207,240,1058,312), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_betted.png")
+	I_BETTED = RuleImage(roi_front=(1093,313,125,54), roi_back=(207,240,1058,312), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_betted.png")
 	# description 
-	I_SUCCESS_RIGHT = RuleImage(roi_front=(1098,289,122,116), roi_back=(1040,250,201,260), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_success_right.png")
+	I_SUCCESS_RIGHT = RuleImage(roi_front=(1098,289,122,116), roi_back=(1040,250,201,260), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_success_right.png")
 	# description 
-	I_FAILURE_LEFT = RuleImage(roi_front=(296,303,100,100), roi_back=(243,245,212,259), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_failure_left.png")
+	I_FAILURE_LEFT = RuleImage(roi_front=(296,303,100,100), roi_back=(243,245,212,259), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_failure_left.png")
 	# description 
-	I_BET_FAILURE = RuleImage(roi_front=(591,290,269,72), roi_back=(496,222,447,211), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_failure.png")
+	I_BET_FAILURE = RuleImage(roi_front=(591,290,269,72), roi_back=(496,222,447,211), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_failure.png")
 	# description 
-	I_BET_SUCCESS = RuleImage(roi_front=(625,278,260,73), roi_back=(482,243,521,225), threshold=0.8, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_success.png")
+	I_BET_SUCCESS = RuleImage(roi_front=(625,278,260,73), roi_back=(482,243,521,225), threshold=0.7, method="Template matching", file="./tasks/FrogBoss/fb/fb_bet_success.png")
 
 

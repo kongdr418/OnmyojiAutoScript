@@ -5,7 +5,7 @@
     "roiFront": "271,303,145,100",
     "roiBack": "222,251,245,195",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "左边竞猜"
   },
@@ -15,7 +15,7 @@
     "roiFront": "1070,302,146,100",
     "roiBack": "1048,248,187,208",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "右边竞猜"
   },
@@ -25,7 +25,7 @@
     "roiFront": "708,394,87,50",
     "roiBack": "661,331,193,182",
     "method": "Template matching",
-    "threshold": 0.75,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "description"
   },
@@ -35,7 +35,7 @@
     "roiFront": "292,306,100,100",
     "roiBack": "238,243,202,221",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "左边赢了"
   },
@@ -45,7 +45,7 @@
     "roiFront": "1097,303,100,100",
     "roiBack": "1029,256,224,199",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "右边输了"
   },
@@ -55,7 +55,7 @@
     "roiFront": "775,485,42,36",
     "roiBack": "692,437,157,147",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "description"
   },
@@ -65,7 +65,7 @@
     "roiFront": "862,499,78,76",
     "roiBack": "831,441,147,187",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "30万金币"
   },
@@ -75,7 +75,7 @@
     "roiFront": "1025,402,100,100",
     "roiBack": "972,340,200,226",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "确认竞猜"
   },
@@ -85,7 +85,7 @@
     "roiFront": "513,196,58,53",
     "roiBack": "402,141,459,489",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "description"
   },
@@ -95,7 +95,7 @@
     "roiFront": "1093,313,125,54",
     "roiBack": "207,240,1058,312",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "description"
   },
@@ -105,7 +105,7 @@
     "roiFront": "1098,289,122,116",
     "roiBack": "1040,250,201,260",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "description"
   },
@@ -115,7 +115,7 @@
     "roiFront": "296,303,100,100",
     "roiBack": "243,245,212,259",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "description"
   },
@@ -125,7 +125,7 @@
     "roiFront": "591,290,269,72",
     "roiBack": "496,222,447,211",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "description"
   },
@@ -135,7 +135,7 @@
     "roiFront": "625,278,260,73",
     "roiBack": "482,243,521,225",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.7,
     "profile": "Default",
     "description": "description"
   }
