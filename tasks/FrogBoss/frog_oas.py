@@ -11,6 +11,9 @@ import requests
 
 from tasks.FrogBoss.oas_sources import DASHEN_UIDS
 
+# 博主票数差距大于此值才视为有明确倾向；否则算难分秋色，改随大众。
+EXPERT_CLEAR_MARGIN = 1
+
 
 def fingerprint(image):
     # Only the two lineups: excludes countdown, votes, chest and result text.
@@ -109,19 +112,28 @@ class OasHistory:
         weights = {} if cold_start else {uid: self.reliability(uid) for uid in votes}
         scores = {'LEFT': 0.0, 'RIGHT': 0.0}
         if cold_start:
-            # Two equal votes: the expert majority as a whole and the crowd.
-            for vote in (expert_side, crowd):
-                if vote:
-                    scores[vote] += 1
+            # 博主为主：票数差距大于 EXPERT_CLEAR_MARGIN 才跟博主，否则视为
+            # 难分秋色，改随大众；大众也给不出方向时退回博主多数，都无则随机。
+            if abs(expert_left - expert_right) > EXPERT_CLEAR_MARGIN:
+                side = expert_side
+                basis = 'expert'
+            else:
+                side = crowd or expert_side
+                basis = 'crowd' if crowd else ('expert' if expert_side else 'random')
+            tied = side is None
+            if tied:
+                side = random.choice(('LEFT', 'RIGHT'))
+            scores = {'LEFT': float(expert_left), 'RIGHT': float(expert_right)}
         else:
             for uid, vote in votes.items():
                 scores[vote] += weights[uid]
-        tied = abs(scores['LEFT'] - scores['RIGHT']) < 1e-12
-        side = random.choice(('LEFT', 'RIGHT')) if tied else max(scores, key=scores.get)
+            tied = abs(scores['LEFT'] - scores['RIGHT']) < 1e-12
+            side = random.choice(('LEFT', 'RIGHT')) if tied else max(scores, key=scores.get)
+            basis = 'win_rate'
         return self.append('decision', id=uuid4().hex, slot=slot, signature=signature,
                            left=left, right=right, votes=votes, weights=weights,
                            scores=scores, side=side, strategy_version=2,
-                           mode='cold_start' if cold_start else 'win_rate',
+                           mode='cold_start' if cold_start else 'win_rate', basis=basis,
                            expert_counts={'LEFT': expert_left, 'RIGHT': expert_right},
                            expert_side=expert_side, crowd_side=crowd, random_tiebreak=tied)
 
