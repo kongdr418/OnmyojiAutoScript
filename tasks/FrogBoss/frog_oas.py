@@ -74,8 +74,10 @@ class OasHistory:
             if vote in ('LEFT', 'RIGHT'):
                 total += 1
                 correct += vote == result['winner']
-        # Unverified newcomers start neutral; verified sources use raw win rate.
-        return correct / total if total else 0.5
+        # 拉普拉斯平滑：只打过一两轮时原始胜率会被推到极端的 0.0/1.0，
+        # 上一轮集体押错就会让所有源同时归零，加权投票退化成抛硬币。
+        # 未验证的新人同样落回中性的 0.5。
+        return (correct + 1) / (total + 2)
 
     def settle(self, signature, winner):
         if winner not in ('LEFT', 'RIGHT'):
@@ -127,9 +129,22 @@ class OasHistory:
         else:
             for uid, vote in votes.items():
                 scores[vote] += weights[uid]
-            tied = abs(scores['LEFT'] - scores['RIGHT']) < 1e-12
-            side = random.choice(('LEFT', 'RIGHT')) if tied else max(scores, key=scores.get)
-            basis = 'win_rate'
+            if max(scores.values()) <= 0:
+                # 加权投票给不出任何方向（所有源权重都是 0，或没有有效票）。
+                # 此时直接抛硬币会连博主和大众的明确倾向一起丢掉，所以退回
+                # 冷启动那套判据：先看博主多数，再看大众，都没有才随机。
+                if abs(expert_left - expert_right) > EXPERT_CLEAR_MARGIN:
+                    side = expert_side
+                else:
+                    side = crowd or expert_side
+                basis = 'fallback'
+                tied = side is None
+                if tied:
+                    side = random.choice(('LEFT', 'RIGHT'))
+            else:
+                tied = abs(scores['LEFT'] - scores['RIGHT']) < 1e-12
+                side = random.choice(('LEFT', 'RIGHT')) if tied else max(scores, key=scores.get)
+                basis = 'win_rate'
         return self.append('decision', id=uuid4().hex, slot=slot, signature=signature,
                            left=left, right=right, votes=votes, weights=weights,
                            scores=scores, side=side, strategy_version=2,
