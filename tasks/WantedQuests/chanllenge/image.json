@@ -25,5 +25,14 @@
     "method": "Template matching",
     "threshold": 0.7,
     "description": "挑战"
+  },
+  {
+    "itemName": "wqc_battle_end_talks",
+    "imageName": "chanllenge_wqc_battle_end_talks.png",
+    "roiFront": "524,560,41,29",
+    "roiBack": "472,529,141,82",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "部分秘闻战斗结束后的剧情对话"
   }
 ]
