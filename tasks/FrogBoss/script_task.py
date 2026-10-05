@@ -119,7 +119,6 @@ class ScriptTask(RightActivity, FrogBossAssets, GeneralBattleAssets):
     def do_bet(self):
         logger.hr('do bet', level=2)
         self.screenshot()
-        flag_glod_30 = 0
         count_left = self.O_LEFT_COUNT.ocr(self.device.image)
         count_right = self.O_RIGHT_COUNT.ocr(self.device.image)
         match self.config.model.frog_boss.frog_boss_config.strategy_frog:
@@ -168,19 +167,33 @@ class ScriptTask(RightActivity, FrogBossAssets, GeneralBattleAssets):
                 continue
         # 正式下注
         logger.info('Formal bet')
+        # 这里只点确认键，不再回头点 30 万宝箱。原先两个键互相打断时会一直
+        # 来回点，直到 GameTooManyClickError 打死整个任务（2026-10-05 出现过）。
+        # 「获胜奖励」卷轴这类模态弹窗带遮罩，遮罩下面的宝箱和大鼓照样能匹配到
+        # （相似度 0.94/0.99），靠识别分不出已经点不动了，只能靠超时兜底。
+        bet_timer = Timer(13)
+        bet_timer.start()
+        popup_timer = Timer(7)
+        popup_timer.start()
+        popup_closed = False
         while 1:
             self.screenshot()
             if self.appear(self.I_BETTED):
                 break
-            if self.appear_then_click(self.I_BET_SURE, interval=2) and flag_glod_30 == 1:
-                continue
-            if self.appear_then_click(self.I_GOLD_30, interval=2):
-                flag_glod_30 = 1
+            if bet_timer.reached():
+                raise GameStuckError('FrogBoss bet not confirmed in 13s')
+            if self.appear_then_click(self.I_BET_SURE, interval=2):
                 continue
             if self.appear_then_click(self.I_UI_CONFIRM, interval=2):
                 continue
             if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=2):
                 continue
+            if not popup_closed and popup_timer.reached():
+                # 正常下注大鼓->确认弹窗两次点击就结束了，这么久还没动静，
+                # 多半是被卷轴弹窗盖住，点一下卷轴外的空白处把遮罩关掉再试。
+                popup_closed = True
+                logger.warning('Bet not confirmed, try to dismiss the blocking popup')
+                self.device.click(200, 200)
 
     def detect(self) -> bool:
         """
