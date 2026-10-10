@@ -56,8 +56,8 @@
   {
     "itemName": "sou_switch_sure",
     "imageName": "ss_sou_switch_sure.png",
-    "roiFront": "668,401,180,61",
-    "roiBack": "668,401,180,61",
+    "roiFront": "664,408,176,62",
+    "roiBack": "664,408,176,62",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "description"
