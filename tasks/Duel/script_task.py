@@ -210,7 +210,7 @@ class ScriptTask(GameUi, GeneralBattle, SwitchSoul, DuelAssets, SwitchOnmyoji):
             self.screenshot()
             if self.appear(self.I_D_FAIL) or self.appear(self.I_FALSE):
                 return
-            if self.appear_then_click(self.I_EXIT_ENSURE):
+            if self.click_exit_ensure():
                 continue
             # 选式神界面退出或战斗内退出
             if self.appear_then_click(self.I_DUEL_EXIT, interval=1) or self.appear_then_click(self.I_EXIT, interval=1):

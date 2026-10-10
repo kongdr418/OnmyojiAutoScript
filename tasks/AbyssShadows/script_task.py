@@ -655,8 +655,9 @@ class ScriptTask(GeneralBattle, GameUi, SwitchSoul, AbyssShadowsAssets):
         logger.info("Quitting battle")
         while True:
             self.screenshot()
-            if self.appear(self.I_EXIT_ENSURE):
-                if self.click(self.I_EXIT_ENSURE, interval=1):
+            if self.appear_any_exit_ensure():
+                # 退出确认有两套 UI（旧版「确认」/新版「确定」），哪个出现点哪个
+                if self.click_exit_ensure(interval=1):
                     self.wait_until_appear(self.I_ABYSS_NAVIGATION, wait_time=1)
                 continue
             if self.appear(self.I_ABYSS_NAVIGATION):
@@ -669,7 +670,7 @@ class ScriptTask(GeneralBattle, GameUi, SwitchSoul, AbyssShadowsAssets):
                 continue
             if self.appear(self.I_EXIT):
                 if self.click(self.I_EXIT, interval=2):
-                    self.wait_until_appear(self.I_EXIT_ENSURE, wait_time=1)
+                    self.wait_until_any_exit_ensure(wait_time=1)
                 continue
         return
 

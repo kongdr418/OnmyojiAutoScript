@@ -149,6 +149,12 @@ class GeneralBattle(GeneralBuff, GeneralBattleAssets):
     使用这个通用的战斗必须要求这个任务的 config 有 general_battle_config。
     """
 
+    # 退出战斗的确认按钮有两套 UI：新版是「确定」（金色菱形边），旧版是「确认」
+    # （红色描边）。两个都要认，否则游戏换皮后另一套界面就退不出去了。
+    # 顺序即优先级：新版在前，旧版兜底。
+    EXIT_ENSURE_RULES: tuple = (GeneralBattleAssets.I_NEW_EXIT_ENSURE,
+                                GeneralBattleAssets.I_EXIT_ENSURE)
+
     def __init__(self, config, device) -> None:
         """初始化通用战斗运行时缓存。
 
@@ -849,6 +855,48 @@ class GeneralBattle(GeneralBuff, GeneralBattleAssets):
             self._battle_context = None
             self.device.screenshot_interval_set()
 
+    def appear_any_exit_ensure(self) -> bool:
+        """
+        退出战斗的确认按钮是否出现（新旧两套 UI 任意一套都算）。
+
+        Returns:
+            bool: 是否识别到确认按钮。
+        """
+        return any(self.appear(rule) for rule in self.EXIT_ENSURE_RULES)
+
+    def click_exit_ensure(self, interval: float = None) -> bool:
+        """
+        点击退出战斗的确认按钮，新旧两套 UI 哪个出现就点哪个。
+
+        Args:
+            interval: 与 `appear_then_click()` 的 interval 一致，用于限制点击频率。
+
+        Returns:
+            bool: 是否出现并点击了确认按钮。
+        """
+        for rule in self.EXIT_ENSURE_RULES:
+            if self.appear_then_click(rule, interval=interval):
+                return True
+        return False
+
+    def wait_until_any_exit_ensure(self, wait_time: float = 1) -> bool:
+        """
+        等待退出战斗的确认按钮出现（新旧两套 UI 任意一套）。
+
+        Args:
+            wait_time: 最长等待时间，单位秒。
+
+        Returns:
+            bool: 是否在超时前识别到确认按钮。
+        """
+        wait_timer = Timer(wait_time).start()
+        while True:
+            self.screenshot()
+            if self.appear_any_exit_ensure():
+                return True
+            if wait_timer.reached():
+                return False
+
     def exit_battle(self, skip_first: bool = False) -> bool:
         """
         在战斗的时候强制退出战斗。
@@ -865,13 +913,14 @@ class GeneralBattle(GeneralBuff, GeneralBattleAssets):
             return False
         while True:
             self.screenshot()
-            if self.appear_then_click(self.I_NEW_EXIT_ENSURE, interval=0.8):
+            if self.click_exit_ensure(interval=0.8):
                 continue
             if GameUi.get_current_page(self) in (page_battle_result, page_reward):
                 break
             if self.appear_then_click(self.I_EXIT, interval=6):
                 continue
-        self.ui_click_until_disappear(self.I_NEW_EXIT_ENSURE, interval=0.8)
+        for rule in self.EXIT_ENSURE_RULES:
+            self.ui_click_until_disappear(rule, interval=0.8)
         logger.info('Exit battle success')
         return True
 
