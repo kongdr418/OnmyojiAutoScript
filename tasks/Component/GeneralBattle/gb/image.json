@@ -268,5 +268,14 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "御魂溢出"
+  },
+  {
+    "itemName": "new_exit_ensure",
+    "imageName": "gb_new_exit_ensure.png",
+    "roiFront": "665,409,178,59",
+    "roiBack": "665,409,178,59",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "新_退出确认"
   }
 ]

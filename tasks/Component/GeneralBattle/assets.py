@@ -10,6 +10,28 @@ from module.atom.list import RuleList
 class GeneralBattleAssets: 
 
 
+	# Ocr Rule Assets
+	# 准备 
+	O_BATTLE_PREPARE = RuleOcr(roi=(1122,546,92,51), area=(1122,546,92,51), mode="Single", method="Default", keyword="准备", name="battle_prepare")
+	# 预设,部分场景预设按钮上的文字为'预设'+数字,导致点击preset失败 
+	O_PRESET = RuleOcr(roi=(20,620,60,80), area=(20,620,60,80), mode="Single", method="Default", keyword="预", name="preset")
+	# 预设 
+	O_PRESET_FULL = RuleOcr(roi=(20,620,60,80), area=(20,620,60,80), mode="Single", method="Default", keyword="预设", name="preset_full")
+	# 绿标区域 
+	O_GREEN_MARK_AREA = RuleOcr(roi=(84,256,1116,308), area=(84,256,1116,308), mode="Full", method="Default", keyword="", name="green_mark_area")
+	# 战斗界面自动标识 
+	O_BATTLE_AUTO = RuleOcr(roi=(37,642,51,36), area=(0,589,133,128), mode="Single", method="Default", keyword="自动", name="battle_auto")
+	# 战斗页面手动标志 
+	O_BATTLE_HAND = RuleOcr(roi=(35,644,52,34), area=(0,589,136,129), mode="Single", method="Default", keyword="手动", name="battle_hand")
+
+
+	# Swipe Rule Assets
+	# description 
+	S_BATTLE_RANDOM_LEFT = RuleSwipe(roi_front=(122,155,480,426), roi_back=(667,147,461,427), mode="default", name="battle_random_left")
+	# description 
+	S_BATTLE_RANDOM_RIGHT = RuleSwipe(roi_front=(719,138,417,392), roi_back=(237,163,387,394), mode="default", name="battle_random_right")
+
+
 	# Click Rule Assets
 	# 预设队伍1 
 	C_PRESET_TEAM_1 = RuleClick(roi_front=(195,235,464,44), roi_back=(195,235,465,44), name="preset_team_1")
@@ -122,6 +144,8 @@ class GeneralBattleAssets:
 	I_GB_CHECK_TEAM_EXIT = RuleImage(roi_front=(507,288,270,54), roi_back=(411,233,452,247), threshold=0.8, method="Template matching", file="./tasks/Component/GeneralBattle/gb/gb_gb_check_team_exit.png")
 	# 御魂溢出 
 	I_OVER_GHOST = RuleImage(roi_front=(697,409,89,32), roi_back=(697,409,89,32), threshold=0.8, method="Template matching", file="./tasks/Component/GeneralBattle/gb/gb_over_ghost.png")
+	# 新_退出确认 
+	I_NEW_EXIT_ENSURE = RuleImage(roi_front=(665,409,178,59), roi_back=(665,409,178,59), threshold=0.8, method="Template matching", file="./tasks/Component/GeneralBattle/gb/gb_new_exit_ensure.png")
 
 
 	# Image Rule Assets
@@ -133,27 +157,5 @@ class GeneralBattleAssets:
 	I_CONFIRM_CLOSE_DIFF_SOUL = RuleImage(roi_front=(571,404,135,54), roi_back=(517,374,226,112), threshold=0.8, method="Template matching", file="./tasks/Component/GeneralBattle/gb/gb_confirm_close_diff_soul.png")
 	# 禁用御魂不一致提示7天 
 	I_DISABLE_7DAYS_DIFF_SOUL = RuleImage(roi_front=(547,342,27,36), roi_back=(524,325,70,71), threshold=0.8, method="Template matching", file="./tasks/Component/GeneralBattle/gb/gb_disable_7days_diff_soul.png")
-
-
-	# Ocr Rule Assets
-	# 准备 
-	O_BATTLE_PREPARE = RuleOcr(roi=(1122,546,92,51), area=(1122,546,92,51), mode="Single", method="Default", keyword="准备", name="battle_prepare")
-	# 预设,部分场景预设按钮上的文字为'预设'+数字,导致点击preset失败 
-	O_PRESET = RuleOcr(roi=(20,620,60,80), area=(20,620,60,80), mode="Single", method="Default", keyword="预", name="preset")
-	# 预设 
-	O_PRESET_FULL = RuleOcr(roi=(20,620,60,80), area=(20,620,60,80), mode="Single", method="Default", keyword="预设", name="preset_full")
-	# 绿标区域 
-	O_GREEN_MARK_AREA = RuleOcr(roi=(84,256,1116,308), area=(84,256,1116,308), mode="Full", method="Default", keyword="", name="green_mark_area")
-	# 战斗界面自动标识 
-	O_BATTLE_AUTO = RuleOcr(roi=(37,642,51,36), area=(0,589,133,128), mode="Single", method="Default", keyword="自动", name="battle_auto")
-	# 战斗页面手动标志 
-	O_BATTLE_HAND = RuleOcr(roi=(35,644,52,34), area=(0,589,136,129), mode="Single", method="Default", keyword="手动", name="battle_hand")
-
-
-	# Swipe Rule Assets
-	# description 
-	S_BATTLE_RANDOM_LEFT = RuleSwipe(roi_front=(122,155,480,426), roi_back=(667,147,461,427), mode="default", name="battle_random_left")
-	# description 
-	S_BATTLE_RANDOM_RIGHT = RuleSwipe(roi_front=(719,138,417,392), roi_back=(237,163,387,394), mode="default", name="battle_random_right")
 
 

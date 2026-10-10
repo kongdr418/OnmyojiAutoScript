@@ -865,13 +865,13 @@ class GeneralBattle(GeneralBuff, GeneralBattleAssets):
             return False
         while True:
             self.screenshot()
-            if self.appear_then_click(self.I_EXIT_ENSURE, interval=0.8):
+            if self.appear_then_click(self.I_NEW_EXIT_ENSURE, interval=0.8):
                 continue
             if GameUi.get_current_page(self) in (page_battle_result, page_reward):
                 break
             if self.appear_then_click(self.I_EXIT, interval=6):
                 continue
-        self.ui_click_until_disappear(self.I_EXIT_ENSURE, interval=0.8)
+        self.ui_click_until_disappear(self.I_NEW_EXIT_ENSURE, interval=0.8)
         logger.info('Exit battle success')
         return True
 
