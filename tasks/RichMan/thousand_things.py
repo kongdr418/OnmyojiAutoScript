@@ -183,7 +183,7 @@ class ThousandThings(GameUi, RichManAssets):
             self.screenshot()
             if not self.appear(self.I_TT_SHIKIGAMI_REPLACE):
                 break
-            if self.appear_then_click(self.I_UI_CONFIRM):
+            if self.click_ui_confirm():
                 continue
             if self.appear_then_click(self.I_TT_SHIKIGAMI_REPLACE):
                 continue

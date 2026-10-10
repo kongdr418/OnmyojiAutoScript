@@ -64,7 +64,8 @@ page_ms_main.connect(page_ms_exit, GlobalGameAssets.I_UI_BACK_BLUE, key="page_ms
 page_ms_battle_land.connect(page_ms_exit, GlobalGameAssets.I_UI_BACK_BLUE, key="page_ms_battle_land->page_ms_exit")
 
 # 准备界面退出
-page_sr_prepare_exit.connect(page_moon_sea, GlobalGameAssets.I_UI_CONFIRM, key="page_sr_prepare_exit->page_moon_sea")
+page_sr_prepare_exit.connect(page_moon_sea, lambda task: task.click_ui_confirm(interval=0.8),
+                             key="page_sr_prepare_exit->page_moon_sea")
 page_sr_prepare_exit.connect(page_ms_prepare, GlobalGameAssets.I_UI_CANCEL, key="page_sr_prepare_exit->page_ms_prepare")
 page_ms_prepare.connect(page_sr_prepare_exit, GlobalGameAssets.I_UI_BACK_BLUE, key="page_ms_prepare->page_sr_prepare_exit")
 page_sr_prepare_exit.add_enter_failure_hooks(GlobalGameAssets.I_UI_BACK_BLUE)

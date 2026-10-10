@@ -123,7 +123,7 @@ class ScriptTask(KU, KekkaiActivationAssets):
                     if self.appear(self.I_A_INVITE, threshold=0.8):
                         logger.info('Card is activated')
                         break
-                    if self.appear_then_click(self.I_UI_CONFIRM, interval=0.6):
+                    if self.click_ui_confirm(interval=0.6):
                         continue
                     if self.appear_then_click(self.I_A_ACTIVATE_YELLOW, interval=1):
                         continue

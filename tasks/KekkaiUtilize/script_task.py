@@ -303,8 +303,9 @@ class ScriptTask(GameUi, ReplaceShikigami, KekkaiUtilizeAssets):
                 if self.get_current_page() == page_guild_realm:
                     break
                 # 如果出现收取确认，表明进入到了有满级的
-                if self.appear(self.I_UI_CONFIRM) and self.appear(self.I_UI_CANCEL):
-                    target_button = self.I_UI_CONFIRM if exp_waste else self.I_UI_CANCEL
+                confirm_button = self.match_ui_confirm()
+                if confirm_button is not None and self.appear(self.I_UI_CANCEL):
+                    target_button = confirm_button if exp_waste else self.I_UI_CANCEL
                     self.ui_click_until_disappear(target_button)
                     break
                 if self.appear(self.I_EXP_EXTRACT, interval=1):

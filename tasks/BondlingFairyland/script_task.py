@@ -167,7 +167,7 @@ class ScriptTask(GameUi, GeneralInvite, GeneralRoom, GeneralBattle, SwitchSoul, 
                     if self.check_and_invite(True):
                         continue
                     # 某些活动的时候出现 “选择共鸣的阴阳师”
-                    if self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+                    if self.click_ui_confirm(interval=1):
                         continue
                     if self.appear(self.I_CREATE_TEAM, interval=1):
                         self.ensure_private(room_mark=self.I_GI_IN_ROOM)
@@ -647,7 +647,7 @@ class ScriptTask(GameUi, GeneralInvite, GeneralRoom, GeneralBattle, SwitchSoul, 
                 logger.error('You might need to check your bondling number. It most possibly arrived to the max 500')
                 raise BondlingNumberMax
             # 某些活动的时候出现 “选择共鸣的阴阳师”
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+            if self.click_ui_confirm(interval=1):
                 continue
 
     def wait_battle(self, wait_time: time) -> bool:
@@ -723,7 +723,7 @@ class ScriptTask(GameUi, GeneralInvite, GeneralRoom, GeneralBattle, SwitchSoul, 
                 return False
             if not self.appear(self.I_BF_SEARSH):
                 return True
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+            if self.click_ui_confirm(interval=1):
                 continue
             if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
                 continue

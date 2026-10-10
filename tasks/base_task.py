@@ -258,6 +258,52 @@ class BaseTask(GlobalGameAssets, CostumeBase):
 
         return appear
 
+    @property
+    def ui_confirm_rules(self) -> tuple:
+        """
+        通用确认按钮的候选规则。
+
+        确认按钮有两套 UI：新版是「确定」（金色菱形描边），旧版是「确定」（红棕描边）。
+        两个都要认，否则游戏换皮后另一套界面的弹窗确认不了。
+        顺序即优先级：新版在前，旧版兜底。
+
+        :return: 按优先级排列的确认按钮规则
+        """
+        return (self.I_UI_NEW_CONFIRM, self.I_UI_CONFIRM)
+
+    def match_ui_confirm(self, interval: float = None) -> RuleImage | None:
+        """
+        返回当前帧命中的通用确认按钮规则，新旧两套 UI 任意一套都算
+
+        :param interval: 与 appear() 的 interval 一致, 用于限制识别频率
+        :return: 命中的规则; 两套都没有出现时返回 None
+        """
+        for rule in self.ui_confirm_rules:
+            if self.appear(rule, interval=interval):
+                return rule
+        return None
+
+    def appear_any_ui_confirm(self, interval: float = None) -> bool:
+        """
+        通用确认按钮是否出现, 新旧两套 UI 任意一套都算
+
+        :param interval: 与 appear() 的 interval 一致, 用于限制识别频率
+        :return: 是否识别到确认按钮
+        """
+        return self.match_ui_confirm(interval=interval) is not None
+
+    def click_ui_confirm(self, interval: float = None) -> bool:
+        """
+        点击通用确认按钮, 新旧两套 UI 哪个出现就点哪个
+
+        :param interval: 与 appear_then_click() 的 interval 一致, 用于限制点击频率
+        :return: 是否出现并点击了确认按钮
+        """
+        for rule in self.ui_confirm_rules:
+            if self.appear_then_click(rule, interval=interval):
+                return True
+        return False
+
     def wait_until_appear(self,
                           target: RuleImage | RuleOcr,
                           skip_first_screenshot=False,

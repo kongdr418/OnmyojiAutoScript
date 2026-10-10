@@ -146,7 +146,7 @@ class MoonSea(BaseMoonSea):
                 self.click(pages.random_click(), interval=1.5)
                 imitated = True
                 continue
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=1.5):
+            if self.click_ui_confirm(interval=1.5):
                 imitated = True
                 continue
             if self.appear_then_click(self.I_MISTERY_IMITATE, interval=2.5):

@@ -105,7 +105,7 @@ class ScriptTask(GameUi, GeneralBattle, GeneralInvite, SwitchSoul, HuntAssets):
             self.screenshot()
             if self.appear(self.I_PREPARE_HIGHLIGHT):
                 break
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=0.9):
+            if self.click_ui_confirm(interval=0.9):
                 continue
             if self.appear_then_click(self.I_KIRIN_CHALLAGE, interval=1.5):
                 continue
@@ -134,7 +134,7 @@ class ScriptTask(GameUi, GeneralBattle, GeneralInvite, SwitchSoul, HuntAssets):
 
             if self.appear_then_click(self.I_NW, interval=0.9):
                 continue
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=0.9):
+            if self.click_ui_confirm(interval=0.9):
                 continue
             if self.appear_then_click(self.I_NW_CHALLAGE, interval=1.5):
                 continue

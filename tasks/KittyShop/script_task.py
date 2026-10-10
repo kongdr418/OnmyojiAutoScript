@@ -61,7 +61,7 @@ class ScriptTask(GameUi, ActivityShikigamiAssets, KittyShopAssets):
             if self.appear(self.I_MAIN_SHARE):
                 break
             if self.config.model.kitty_shop.kitty_shop_config.kitty_quit_when_finished:
-                if self.appear_then_click(self.I_UI_CONFIRM, interval=0.7):
+                if self.click_ui_confirm(interval=0.7):
                     continue
                 if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=0.7):
                     continue

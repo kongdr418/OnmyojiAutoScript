@@ -236,7 +236,7 @@ class BaseAct(StateMachine, GameUi, GeneralBattle, SwitchSoul, ActivityShikigami
                 raise TicketsNotEnough
             if self.appear_then_click(
                 self.I_UI_CONFIRM_SAMLL, interval=1
-            ) or self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+            ) or self.click_ui_confirm(interval=1):
                 continue
             if self.ocr_appear_click(self.O_FIRE, interval=1.5):
                 self.device.click_record_clear()

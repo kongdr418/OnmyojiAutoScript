@@ -112,7 +112,7 @@ class BaseExploration(GameUi, GeneralBattle, GeneralRoom, GeneralInvite, Replace
             # 有则跳出检测
             if self.appear(self.I_E_EXPLORATION_CLICK) or result and len(result) > 0:
                 break
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+            if self.click_ui_confirm(interval=1):
                 continue
             if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
                 continue
@@ -136,7 +136,7 @@ class BaseExploration(GameUi, GeneralBattle, GeneralRoom, GeneralInvite, Replace
         # 选中对应章节
         while 1:
             self.screenshot()
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+            if self.click_ui_confirm(interval=1):
                 continue
             if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
                 continue

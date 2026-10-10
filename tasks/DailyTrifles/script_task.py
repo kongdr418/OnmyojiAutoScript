@@ -209,7 +209,7 @@ class ScriptTask(GameUi, Summon, DailyTriflesAssets):
         while not timeout_timer.reached():
             self.screenshot()
             self.ui_reward_appear_click()
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=0.6):
+            if self.click_ui_confirm(interval=0.6):
                 continue
             if self.appear_then_click(self.I_DT_GW_DONATE_RECORD_THANKS, interval=1.5):  # 受赠界面的一键感谢
                 timeout_timer.reset()
@@ -280,9 +280,10 @@ class ScriptTask(GameUi, Summon, DailyTriflesAssets):
                 post_click_timeout = Timer(3).start()
                 while not post_click_timeout.reached():
                     self.screenshot()
-                    # 处理确认弹窗
-                    if self.appear(self.I_UI_CONFIRM, interval=0.6):
-                        self.ui_get_reward(self.I_UI_CONFIRM, click_interval=1.5)
+                    # 处理确认弹窗（新旧两套 UI 哪个出现就点哪个）
+                    confirm = self.match_ui_confirm(interval=0.6)
+                    if confirm is not None:
+                        self.ui_get_reward(confirm, click_interval=1.5)
                         donated = True
                     # 如果没有弹窗了，退出子循环
                     if not self.appear(self.I_UI_REWARD) and not self.appear(self.I_UI_REWARD):

@@ -184,7 +184,7 @@ class ScriptTask(RightActivity, FrogBossAssets, GeneralBattleAssets):
                 raise GameStuckError('FrogBoss bet not confirmed in 13s')
             if self.appear_then_click(self.I_BET_SURE, interval=2):
                 continue
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=2):
+            if self.click_ui_confirm(interval=2):
                 continue
             if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=2):
                 continue

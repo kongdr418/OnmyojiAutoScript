@@ -45,6 +45,7 @@ class GameUi(ChessBattleNavigationMixin, BaseTask, GameUiAssets):
         GlobalGameAssets.I_CHAT_CLOSE_BUTTON,
         ActivityShikigamiAssets.I_SKIP_BUTTON,
         GlobalGameAssets.I_UI_CONFIRM_SAMLL,
+        GlobalGameAssets.I_UI_NEW_CONFIRM,
         GlobalGameAssets.I_UI_CONFIRM,
         ExplorationAssets.I_E_EXIT_CONFIRM,
         GameUiAssets.I_BACK_DAILY,

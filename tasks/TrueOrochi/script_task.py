@@ -74,7 +74,7 @@ class ScriptTask(OrochiScriptTask, TrueOrochiAssets):
             self.screenshot()
             if self.appear(self.I_ST_CREATE_ROOM):
                 break
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+            if self.click_ui_confirm(interval=1):
                 continue
             if self.appear_then_click(self.I_ST_FIRE, interval=4):
                 # 修正已经挑战的次数, 注意这个是战斗开始之前的次数
@@ -94,7 +94,7 @@ class ScriptTask(OrochiScriptTask, TrueOrochiAssets):
                 break
             if self.appear_then_click(self.I_FIRE, interval=3, threshold=0.7):
                 continue
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+            if self.click_ui_confirm(interval=1):
                 continue
             if self.appear_then_click(self.I_ST_CREATE_ROOM, interval=1):
                 continue

@@ -288,7 +288,7 @@ class ScriptTask(GameUi, GeneralBattle, SwitchSoul, QuickLoadout, BaseActivity, 
                 logger.warning('Search boss timeout')
                 return False
             if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1) or \
-                    self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+                    self.click_ui_confirm(interval=1):
                 continue
             if search_times >= max_times:
                 if not click_limit_logged:
@@ -332,7 +332,7 @@ class ScriptTask(GameUi, GeneralBattle, SwitchSoul, QuickLoadout, BaseActivity, 
                 logger.warning('Cannot enter battle, click reach max times')
                 raise TicketsNotEnough
             if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1) or \
-                    self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+                    self.click_ui_confirm(interval=1):
                 continue
             if self.appear_then_click(self.I_MT_CHALLENGE, interval=1.5):
                 self.device.click_record_clear()
@@ -357,7 +357,7 @@ class ScriptTask(GameUi, GeneralBattle, SwitchSoul, QuickLoadout, BaseActivity, 
                     return False
                 raise TicketsNotEnough
             if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1) or \
-                    self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+                    self.click_ui_confirm(interval=1):
                 continue
             if self.appear_then_click(self.I_MT_CHALLENGE_AP, interval=1.5):
                 self.device.click_record_clear()

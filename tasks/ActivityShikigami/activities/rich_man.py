@@ -46,7 +46,7 @@ class RichManAct(BaseAct, Debugger):
                 self.appear_then_click(self.I_UI_BACK_YELLOW, interval=1.2)
                 continue
             already_passed = False
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=2):
+            if self.click_ui_confirm(interval=2):
                 continue
             if self.appear_then_click(self.I_RM_THROW, interval=2):  # 开始扔骰子
                 logger.hr('Throw ticket', 3)
@@ -79,7 +79,7 @@ class RichManAct(BaseAct, Debugger):
                     self.screenshot()
                     if self.ui_reward_appear_click():  # 获得奖励跳出循环
                         break
-                    if self.appear_then_click(self.I_UI_CONFIRM, interval=1) or \
+                    if self.click_ui_confirm(interval=1) or \
                             self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
                         timeout_timer.reset()
                         continue
@@ -135,7 +135,7 @@ class RichManAct(BaseAct, Debugger):
             self.screenshot()
             if self.appear(self.I_TO_BATTLE_MAIN, interval=1):
                 break
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=1) or self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
+            if self.click_ui_confirm(interval=1) or self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
                 continue
             self.close_unknown_pages()
 

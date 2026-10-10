@@ -51,7 +51,8 @@ class ScriptTask(BaseExploration):
 
     def exec_exp_page(self):
         pages.page_battle_team_exit = self.navigator.resolve_page(pages.page_battle_team_exit)
-        pages.page_battle_team_exit.connect(pages.page_exp_entrance, self.I_UI_CONFIRM, key="page_battle_team_exit->page_exp_entrance")
+        pages.page_battle_team_exit.connect(pages.page_exp_entrance, lambda task: task.click_ui_confirm(interval=0.8),
+                                            key="page_battle_team_exit->page_exp_entrance")
         while True:
             self.screenshot()
             current_page = self.get_current_page()

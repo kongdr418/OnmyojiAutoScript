@@ -67,7 +67,7 @@ class ScriptTask(GameUi, SoulsTidyAssets):
                 if self.appear(self.I_ST_UNSELECTED):
                     self.ui_click_until_disappear(self.I_ST_UNSELECTED)
                     continue
-                if self.appear_then_click(self.I_UI_CONFIRM, interval=0.5):
+                if self.click_ui_confirm(interval=0.5):
                     continue
                 if feed_count >= 3:
                     break
@@ -86,7 +86,7 @@ class ScriptTask(GameUi, SoulsTidyAssets):
             if self.appear(self.I_ST_UNSELECTED):
                 self.ui_click_until_disappear(self.I_ST_UNSELECTED)
                 continue
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=0.5):
+            if self.click_ui_confirm(interval=0.5):
                 continue
 
             if self.appear_then_click(self.I_ST_GREED_CLOSE, interval=0.7):
@@ -180,7 +180,7 @@ class ScriptTask(GameUi, SoulsTidyAssets):
         """点击奉纳和收取奖励"""
         while True:
             self.screenshot()
-            if self.appear_then_click(self.I_UI_CONFIRM, interval=0.5):
+            if self.click_ui_confirm(interval=0.5):
                 continue
             # 如果奉纳少就不是神赐而是获得奖励
             if self.ui_reward_appear_click():

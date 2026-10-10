@@ -116,7 +116,7 @@ class ScriptTask(GameUi, GeneralBattle, SwitchSoul, GeneralRoom, GeneralInvite, 
                     self.screenshot()
                     if not self.appear(self.I_N_WAITING):
                         break
-                    if self.appear_then_click(self.I_UI_CONFIRM, interval=1):
+                    if self.click_ui_confirm(interval=1):
                         continue
                     if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
                         continue

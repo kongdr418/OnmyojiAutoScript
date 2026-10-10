@@ -106,5 +106,14 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "弯曲返回按钮"
+  },
+  {
+    "itemName": "ui_new_confirm",
+    "imageName": "ui_ui_new_confirm.png",
+    "roiFront": "664,406,179,66",
+    "roiBack": "547,368,322,122",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "新_长一点的确认"
   }
 ]
