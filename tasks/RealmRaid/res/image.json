@@ -128,8 +128,8 @@
   {
     "itemName": "fresh_ensure",
     "imageName": "res_fresh_ensure.png",
-    "roiFront": "672,403,173,59",
-    "roiBack": "672,403,173,59",
+    "roiFront": "667,409,173,59",
+    "roiBack": "667,409,173,59",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "刷新确认/再战确认"
