@@ -614,8 +614,8 @@ class GameUi(ChessBattleNavigationMixin, BaseTask, GameUiAssets):
         Args:
             destination: 当前导航目标页面。
             last_path_signature: 最近一次成功构建的路径签名。
-            repeated_failure_transition_key: 最近一次连续失败的边 key。
-            repeated_failure_count: 当前连续失败次数。
+            repeated_failure_transition_key: 最近一次失败的边 key。
+            repeated_failure_count: 自上次进展以来的导航失败次数（跨边累计）。
             last_repeated_failure_close_result: 最近一次“三连失败后主动关闭”的结果摘要。
         """
 
@@ -847,10 +847,8 @@ class GameUi(ChessBattleNavigationMixin, BaseTask, GameUiAssets):
                     )
                 continue
 
-            path_signature = (current.key, " -> ".join(transition.key for transition in path))
-            if path_signature != last_progress_signature:
-                progress_timer.reset()
-                last_progress_signature = path_signature
+            # 只记录签名供超时诊断，不当进展：等价路径交替失败会一直重置计时器
+            last_progress_signature = (current.key, " -> ".join(transition.key for transition in path))
             logger.info(f"Current page: {current}. Following path:")
             logger.info(" -> ".join([current.name, *[transition.destination.name for transition in path]]))
 
@@ -858,11 +856,9 @@ class GameUi(ChessBattleNavigationMixin, BaseTask, GameUiAssets):
             for transition in path:
                 if not self._execute_transition(transition):
                     advanced = False
-                    if repeated_failure_transition_key == transition.key:
-                        repeated_failure_count += 1
-                    else:
-                        repeated_failure_transition_key = transition.key
-                        repeated_failure_count = 1
+                    # 跨边累计，避免交替失败时计数器被换边打断
+                    repeated_failure_transition_key = transition.key
+                    repeated_failure_count += 1
                     if repeated_failure_count % self.REPEATED_TRANSITION_FAILURE_THRESHOLD == 0:
                         close_success = self.close_unknown_pages(skip_first_screenshot=False)
                         logger.warning(f"Transition {transition.key} repeated failure close result: {close_success}")
