@@ -2,7 +2,7 @@
 # @author runhey
 # github https://github.com/runhey
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SerializationInfo, field_serializer
 
 from tasks.Component.config_scheduler import Scheduler
 from tasks.Component.config_base import ConfigBase, dynamic_hide, DateTime, MultiLine
@@ -23,6 +23,22 @@ class DoneRecord(ConfigBase):
     store_sign_dt: DateTime = Field(default=DateTime.fromisoformat("2023-01-01 00:00:00"))
     sushi_dt: DateTime = Field(default=DateTime.fromisoformat("2023-01-01 00:00:00"))
     guild_donate_finish: bool = Field(default=False)
+
+
+class IncomeSnapshot(ConfigBase):
+    """一次收益快照。读不到的项目留 -1，不要用 0 顶替，否则差值会凭空多出来。"""
+    dt: DateTime = Field(default=DateTime.fromisoformat("2023-01-01 00:00:00"))
+    # 庭院
+    gold: int = Field(default=-1)
+    jade: int = Field(default=-1)
+    ap: int = Field(default=-1)
+    # 秘卷屋
+    sca_orochi_scales: int = Field(default=-1)
+    sca_reverse_scale: int = Field(default=-1)
+    sca_demon_souls: int = Field(default=-1)
+    sca_picture_book: int = Field(default=-1)
+    # 商城
+    mystery_amulet: int = Field(default=-1)
 
 
 class DailyGuildDonate(ConfigBase):
@@ -62,6 +78,8 @@ class DailyTriflesConfig(BaseModel):
     store_sign: bool = Field(title='Store Sign', default=False, description='store_sign_help')
     # 每天购买体力数量
     buy_sushi_count: int = Field(title='Buy Sushi Count', default=-1)
+    # 统计每日收益
+    income_stat: bool = Field(title='Income Stat', default=False)
 
     hide_fields = dynamic_hide('draw_mystery_pattern')
 
@@ -71,8 +89,17 @@ class DailyTrifles(ConfigBase):
     trifles_config: DailyTriflesConfig = Field(default_factory=DailyTriflesConfig)
     guild_donate: DailyGuildDonate = Field(default_factory=DailyGuildDonate)
     done_record: DoneRecord = Field(default_factory=DoneRecord)
+    # 收益快照历史，每次运行追加一条
+    income_history: list[IncomeSnapshot] = Field(default_factory=list)
 
     hide_fields = dynamic_hide('done_record')
+
+    @field_serializer('income_history')
+    def serialize_income_history(self, value: list[IncomeSnapshot], info: SerializationInfo):
+        """快照列表要显式落成 dict，隐藏时用和 dynamic_hide 一样的哨兵值"""
+        if info.context and info.context.get('hide', False):
+            return 0xABCDEF
+        return [item.model_dump() for item in value]
 
     def today_is_done(self, mode: str) -> bool:
         """对应mode今天是否已经完成"""

@@ -1,0 +1,74 @@
+[
+  {
+    "itemName": "income_gold",
+    "roiFront": "524,17,102,30",
+    "roiBack": "524,17,102,30",
+    "mode": "Quantity",
+    "method": "Default",
+    "keyword": "",
+    "description": "识别金币"
+  },
+  {
+    "itemName": "income_jade",
+    "roiFront": "698,18,104,29",
+    "roiBack": "698,18,104,29",
+    "mode": "Quantity",
+    "method": "Default",
+    "keyword": "",
+    "description": "识别勾玉"
+  },
+  {
+    "itemName": "income_ap",
+    "roiFront": "880,18,101,30",
+    "roiBack": "880,18,101,30",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "识别体力"
+  },
+  {
+    "itemName": "income_sca_orochi_scales",
+    "roiFront": "521,12,162,33",
+    "roiBack": "521,12,162,33",
+    "mode": "Quantity",
+    "method": "Default",
+    "keyword": "",
+    "description": "识别八岐大蛇鳞片"
+  },
+  {
+    "itemName": "income_sca_reverse_scale",
+    "roiFront": "704,12,162,33",
+    "roiBack": "704,12,162,33",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "识别大蛇的逆鳞"
+  },
+  {
+    "itemName": "income_sca_demon_souls",
+    "roiFront": "900,9,162,33",
+    "roiBack": "900,9,162,33",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "识别逢魔之魂"
+  },
+  {
+    "itemName": "income_sca_picture_book",
+    "roiFront": "1093,11,162,33",
+    "roiBack": "1093,11,162,33",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "识别遗忘之海的绘本"
+  },
+  {
+    "itemName": "income_mystery_amulet",
+    "roiFront": "789,14,96,31",
+    "roiBack": "789,14,96,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "识别神秘的符咒"
+  }
+]
