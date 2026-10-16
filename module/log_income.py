@@ -24,9 +24,9 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Iterable, Optional
 
 from module.logger import logger, normalize_log_name
 
@@ -129,15 +129,19 @@ def income_store_path(config_name: str) -> Path:
     return INCOME_STORE_DIR / f'{income_store_name(config_name)}.jsonl'
 
 
-def read_income_store(config_name: str) -> dict[str, dict]:
-    """读日汇总，返回 {日期: 记录}。同一天写了多次时后面的覆盖前面的"""
+def read_income_store(config_name: str) -> dict[str, Optional[dict]]:
+    """读日汇总，返回 {日期: 记录}，从新到旧无所谓。
+
+    值为 None 表示这天被用户删掉了（墓碑）。留墓碑是因为那天的快照可能还在
+    日志里，只删日汇总的话读取会回退到日志、记录又"复活"。
+    """
     path = income_store_path(config_name)
     try:
         lines = path.read_text(encoding='utf-8', errors='ignore').splitlines()
     except OSError:
         return {}
 
-    store: dict[str, dict] = {}
+    store: dict[str, Optional[dict]] = {}
     for line in lines:
         text = line.strip()
         if not text:
@@ -145,6 +149,9 @@ def read_income_store(config_name: str) -> dict[str, dict]:
         try:
             entry = json.loads(text)
             key = str(entry['date'])
+            if entry.get('deleted'):
+                store[key] = None
+                continue
             values = {str(field): int(value) for field, value in entry['values'].items()}
         except (ValueError, KeyError, TypeError, AttributeError):
             logger.warning(f'Income: skip broken store line in {path}')
@@ -215,23 +222,35 @@ def income_dates(config_name: str) -> list[date]:
     """列出**真正有收益快照**的日期，从新到旧。
 
     日汇总（长存）与日志（约 7 天）取并集，这样本次改动之前只存在于日志里的
-    历史不会立刻消失。
+    历史不会立刻消失；被用户删掉的日期（墓碑）两边都要挡掉。
     """
+    store = read_income_store(config_name)
     days = set()
-    for key in read_income_store(config_name):
+    deleted = set()
+    for key, record in store.items():
+        if record is None:
+            deleted.add(key)
+            continue
         try:
             days.add(date.fromisoformat(key))
         except ValueError:
             continue
-    days.update(_log_income_dates(config_name))
+    days.update(
+        day for day in _log_income_dates(config_name)
+        if day.isoformat() not in deleted
+    )
     return sorted(days, reverse=True)
 
 
 def load_income_day(config_name: str, day: date) -> Optional[dict]:
-    """读某一天的快照：日汇总优先，没有再回退到当天的日志"""
-    stored = read_income_store(config_name).get(day.isoformat())
-    if stored is not None:
-        return stored
+    """读某一天的快照：日汇总优先，没有再回退到当天的日志。
+
+    日汇总里有这天（哪怕是墓碑）就以它为准，不再看日志。
+    """
+    key = day.isoformat()
+    store = read_income_store(config_name)
+    if key in store:
+        return store[key]
     return last_income_record(income_day_path(config_name, day))
 
 
@@ -244,11 +263,89 @@ def find_income_baseline(config_name: str, before: date) -> Optional[tuple[date,
     for day in income_dates(config_name):
         if day >= before:
             continue
-        record = store.get(day.isoformat()) or last_income_record(
+        key = day.isoformat()
+        record = store[key] if key in store else last_income_record(
             income_day_path(config_name, day))
         if record is not None:
             return day, record
     return None
+
+
+def delete_income_days(config_name: str, days: Iterable[date]) -> list[str]:
+    """删除若干天的收益记录，返回真正被删掉的日期（升序）。
+
+    不能只把日汇总里那行删掉：这些日期的快照可能还在日志里（7 天内），
+    读取会回退到日志、记录又"复活"。所以删完留一条墓碑挡住日志兜底。
+    """
+    path = income_store_path(config_name)
+    keys = {day.isoformat() for day in days}
+    # 只处理真有记录的日期，免得给从没记录过的日子留下一堆墓碑
+    keys &= {day.isoformat() for day in income_dates(config_name)}
+    if not keys:
+        return []
+
+    kept = []
+    try:
+        for line in path.read_text(encoding='utf-8', errors='ignore').splitlines():
+            text = line.strip()
+            if not text:
+                continue
+            try:
+                # 坏行原样留着，不去猜也不擅自删
+                if json.loads(text).get('date') in keys:
+                    continue
+            except (ValueError, AttributeError):
+                pass
+            kept.append(text)
+    except OSError:
+        pass
+
+    for key in sorted(keys):
+        kept.append(json.dumps(
+            {'date': key, 'deleted': True},
+            ensure_ascii=False,
+            sort_keys=True,
+        ))
+
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('\n'.join(kept) + '\n', encoding='utf-8')
+    except OSError as e:
+        logger.warning(f'Income: write {path} failed: {e}')
+        return []
+
+    logger.info(f'Income: deleted {len(keys)} day(s) of {config_name}: {sorted(keys)}')
+    return sorted(keys)
+
+
+def income_history(config_name: str, days: int) -> dict:
+    """最近 days 天的历史，按日期升序，只包含真有记录的日子。
+
+    没跑任务的那天就是没有点，不要用 0 去填——0 会被读成"收益归零"。
+    """
+    days = max(1, int(days))
+    end = date.today()
+    start = end - timedelta(days=days - 1)
+    store = read_income_store(config_name)
+
+    records = []
+    for day in sorted(income_dates(config_name)):
+        if day < start or day > end:
+            continue
+        key = day.isoformat()
+        record = store[key] if key in store else last_income_record(
+            income_day_path(config_name, day))
+        if record is None:
+            continue
+        records.append({'date': key, 'values': record['values']})
+
+    return {
+        'script_name': config_name,
+        'days': days,
+        'start': start.isoformat(),
+        'end': end.isoformat(),
+        'records': records,
+    }
 
 
 def build_income_report(config_name: str, day: date) -> Optional[dict]:
