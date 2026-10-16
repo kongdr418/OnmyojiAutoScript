@@ -5,9 +5,8 @@ import copy
 from time import sleep
 
 import difflib
-from datetime import time, date, datetime, timedelta
+from datetime import time, datetime, timedelta
 from decimal import Decimal
-from pathlib import Path
 from module.atom.image import RuleImage
 from module.atom.ocr import RuleOcr
 from ppocronnx.predict_system import BoxedResult
@@ -21,114 +20,36 @@ from tasks.DailyTrifles.config import DailyTriflesConfig, IncomeSnapshot
 from tasks.DailyTrifles.assets import DailyTriflesAssets
 from tasks.Component.Summon.summon import Summon
 
-from module.logger import logger, normalize_log_name
+from module.logger import logger
 from module.exception import TaskEnd
 from module.base.timer import Timer
+from module.log_income import (
+    INCOME_FIELDS as INCOME_LOG_FIELDS,
+    INCOME_LOG_PREFIX,
+    find_income_baseline,
+)
 from tasks.DailyTrifles.config import SummonType
 import re
 from typing import Any, Optional, List, Callable
 
-# 统计每日收益的字段：(快照字段名, 中文名, 资产名, 上限)
-# 前三个在庭院，中间四个在秘卷屋，最后一个在商城热门推荐页
-INCOME_MAIN = (
-    ('gold', '金币', 'O_INCOME_GOLD', 10 ** 11),
-    ('jade', '勾玉', 'O_INCOME_JADE', 10 ** 8),
-    ('ap', '体力', 'O_INCOME_AP', 10 ** 6),
-)
-INCOME_SCALES = (
-    ('sca_orochi_scales', '八岐大蛇鳞片', 'O_INCOME_SCA_OROCHI_SCALES', 10 ** 7),
-    ('sca_reverse_scale', '大蛇的逆鳞', 'O_INCOME_SCA_REVERSE_SCALE', 10 ** 7),
-    ('sca_demon_souls', '逢魔之魂', 'O_INCOME_SCA_DEMON_SOULS', 10 ** 7),
-    ('sca_picture_book', '被遗忘的绘本', 'O_INCOME_SCA_PICTURE_BOOK', 10 ** 7),
-)
-INCOME_MALL = (
-    ('mystery_amulet', '神秘的符咒', 'O_INCOME_MYSTERY_AMULET', 10 ** 7),
-)
-INCOME_FIELDS = INCOME_MAIN + INCOME_SCALES + INCOME_MALL
-
-# 快照只写进日志，再从日志里读回来做差。
-# 存配置里会被"复制配置/导出配置"整份带到别的号上，而日志是按配置名分文件的，天然隔离。
-INCOME_LOG_PREFIX = 'Income snapshot: '
+# 统计每日收益的资源：(中文名, 资产名, 上限)
+# 前三个在庭院，中间四个在秘卷屋，最后一个在商城热门推荐页。
+# 字段顺序以 module.log_income.INCOME_FIELDS 为准，这里只补中文名和资产。
+INCOME_ITEMS = {
+    'gold': ('金币', 'O_INCOME_GOLD', 10 ** 11),
+    'jade': ('勾玉', 'O_INCOME_JADE', 10 ** 8),
+    'ap': ('体力', 'O_INCOME_AP', 10 ** 6),
+    'sca_orochi_scales': ('八岐大蛇鳞片', 'O_INCOME_SCA_OROCHI_SCALES', 10 ** 7),
+    'sca_reverse_scale': ('大蛇的逆鳞', 'O_INCOME_SCA_REVERSE_SCALE', 10 ** 7),
+    'sca_demon_souls': ('逢魔之魂', 'O_INCOME_SCA_DEMON_SOULS', 10 ** 7),
+    'sca_picture_book': ('被遗忘的绘本', 'O_INCOME_SCA_PICTURE_BOOK', 10 ** 7),
+    'mystery_amulet': ('神秘的符咒', 'O_INCOME_MYSTERY_AMULET', 10 ** 7),
+}
+# 名字对不上会直接 KeyError，比静默少统计一项好
+INCOME_FIELDS = tuple((name, *INCOME_ITEMS[name]) for name in INCOME_LOG_FIELDS)
 
 INCOME_UNITS = {'': 1, '千': 1000, '万': 10000, '亿': 100000000}
 INCOME_NUMBER = re.compile(r'(\d+(?:\.\d+)?)([千万亿]?)')
-# Rich 写文件日志时按 160 列折行，快照行会被切成几段；续段没有时间戳，内容只剩 key=value
-INCOME_CONTINUATION = re.compile(r'^[\w=]+(?: [\w=]+)*$')
-
-
-def parse_income_snapshot(line: str) -> Optional[IncomeSnapshot]:
-    """解析 "Income snapshot: gold=1 jade=2 ..." 这一行。
-
-    字段必须一个不少、值必须是整数，否则整行作废，不让半截数据参与做差。
-    """
-    index = line.find(INCOME_LOG_PREFIX)
-    if index < 0:
-        return None
-    values = {}
-    for token in line[index + len(INCOME_LOG_PREFIX):].split():
-        key, _, text = token.partition('=')
-        try:
-            values[key] = int(text)
-        except ValueError:
-            return None
-    if set(values) != {field for field, _, _, _ in INCOME_FIELDS}:
-        return None
-    return IncomeSnapshot(**values)
-
-
-def last_income_snapshot(path: Path) -> Optional[IncomeSnapshot]:
-    """取某天日志里最后一条快照，也就是当天的最终值"""
-    try:
-        lines = path.read_text(encoding='utf-8', errors='ignore').splitlines()
-    except OSError as e:
-        logger.warning(f'Income: read {path} failed: {e}')
-        return None
-
-    records = []
-    for line in lines:
-        text = line.strip()
-        # 只把"看着就是 key=value"的无时间戳行当折行续段；
-        # logger.hr() 那种分隔线也没有时间戳，当成独立记录丢掉
-        if records and INCOME_LOG_PREFIX in records[-1] and INCOME_CONTINUATION.match(text):
-            records[-1] += ' ' + text
-        else:
-            records.append(text)
-
-    for record in reversed(records):
-        if INCOME_LOG_PREFIX not in record:
-            continue
-        snapshot = parse_income_snapshot(record)
-        if snapshot is not None:
-            return snapshot
-        logger.warning(f'Income: skip broken snapshot line in {path}')
-    return None
-
-
-def find_income_baseline(config_name: str, today: date) -> Optional[tuple[date, IncomeSnapshot]]:
-    """从日志里找最近一个有快照、且早于今天的日子。
-
-    逐日往前找而不是只认昨天，这样机器停几天再开机也能算出跨天的收益。
-    """
-    log_dir = Path('./log')
-    if not log_dir.is_dir():
-        return None
-    # 日志文件名里的配置名是规范化过的(下划线后面的会被丢掉)，必须用同一套规则拼
-    suffix = f'_{normalize_log_name(config_name)}.txt'
-    days = []
-    for path in log_dir.iterdir():
-        if not path.is_file() or not path.name.endswith(suffix):
-            continue
-        try:
-            day = date.fromisoformat(path.name[:10])
-        except ValueError:
-            continue
-        if day < today:
-            days.append((day, path))
-    for day, path in sorted(days, reverse=True):
-        snapshot = last_income_snapshot(path)
-        if snapshot is not None:
-            return day, snapshot
-    return None
 
 
 def parse_income_number(text: str) -> Optional[int]:
@@ -728,7 +649,7 @@ class ScriptTask(GameUi, Summon, DailyTriflesAssets):
         logger.hr('income of the day', 2)
         logger.info(f'Income: compare with {day}')
         for field, name, _, _ in INCOME_FIELDS:
-            now, before = getattr(snapshot, field), getattr(previous, field)
+            now, before = getattr(snapshot, field), previous['values'].get(field, -1)
             if now < 0 or before < 0:
                 logger.warning(f'Income {name}: skipped, {before} -> {now}')
                 continue
