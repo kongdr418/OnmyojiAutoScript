@@ -48,6 +48,17 @@ INCOME_ITEMS = {
 }
 # 名字对不上会直接 KeyError，比静默少统计一项好
 INCOME_FIELDS = tuple((name, *INCOME_ITEMS[name]) for name in INCOME_LOG_FIELDS)
+# 按读取位置分组：庭院顶栏 / 秘卷屋 / 商城热门推荐页
+INCOME_MAIN = tuple((name, *INCOME_ITEMS[name]) for name in ('gold', 'jade', 'ap'))
+INCOME_SCALES = tuple((name, *INCOME_ITEMS[name]) for name in (
+    'sca_orochi_scales',
+    'sca_reverse_scale',
+    'sca_demon_souls',
+    'sca_picture_book',
+))
+INCOME_MALL = tuple((name, *INCOME_ITEMS[name]) for name in ('mystery_amulet',))
+# 三组必须正好覆盖全部字段；漏一组或重一个，导入的时候就炸，不要等到跑任务
+assert {item[0] for item in INCOME_MAIN + INCOME_SCALES + INCOME_MALL} == set(INCOME_LOG_FIELDS)
 
 INCOME_UNITS = {'': 1, '千': 1000, '万': 10000, '亿': 100000000}
 INCOME_NUMBER = re.compile(r'(\d+(?:\.\d+)?)([千万亿]?)')
