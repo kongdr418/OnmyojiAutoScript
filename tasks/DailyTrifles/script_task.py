@@ -5,8 +5,9 @@ import copy
 from time import sleep
 
 import difflib
-from datetime import time, datetime, timedelta
+from datetime import time, date, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 from module.atom.image import RuleImage
 from module.atom.ocr import RuleOcr
 from ppocronnx.predict_system import BoxedResult
@@ -20,7 +21,7 @@ from tasks.DailyTrifles.config import DailyTriflesConfig, IncomeSnapshot
 from tasks.DailyTrifles.assets import DailyTriflesAssets
 from tasks.Component.Summon.summon import Summon
 
-from module.logger import logger
+from module.logger import logger, normalize_log_name
 from module.exception import TaskEnd
 from module.base.timer import Timer
 from tasks.DailyTrifles.config import SummonType
@@ -44,11 +45,90 @@ INCOME_MALL = (
     ('mystery_amulet', '神秘的符咒', 'O_INCOME_MYSTERY_AMULET', 10 ** 7),
 )
 INCOME_FIELDS = INCOME_MAIN + INCOME_SCALES + INCOME_MALL
-# 每天一条快照，留 40 条够回溯 40 天
-INCOME_KEEP = 40
+
+# 快照只写进日志，再从日志里读回来做差。
+# 存配置里会被"复制配置/导出配置"整份带到别的号上，而日志是按配置名分文件的，天然隔离。
+INCOME_LOG_PREFIX = 'Income snapshot: '
 
 INCOME_UNITS = {'': 1, '千': 1000, '万': 10000, '亿': 100000000}
 INCOME_NUMBER = re.compile(r'(\d+(?:\.\d+)?)([千万亿]?)')
+# Rich 写文件日志时按 160 列折行，快照行会被切成几段；续段没有时间戳，内容只剩 key=value
+INCOME_CONTINUATION = re.compile(r'^[\w=]+(?: [\w=]+)*$')
+
+
+def parse_income_snapshot(line: str) -> Optional[IncomeSnapshot]:
+    """解析 "Income snapshot: gold=1 jade=2 ..." 这一行。
+
+    字段必须一个不少、值必须是整数，否则整行作废，不让半截数据参与做差。
+    """
+    index = line.find(INCOME_LOG_PREFIX)
+    if index < 0:
+        return None
+    values = {}
+    for token in line[index + len(INCOME_LOG_PREFIX):].split():
+        key, _, text = token.partition('=')
+        try:
+            values[key] = int(text)
+        except ValueError:
+            return None
+    if set(values) != {field for field, _, _, _ in INCOME_FIELDS}:
+        return None
+    return IncomeSnapshot(**values)
+
+
+def last_income_snapshot(path: Path) -> Optional[IncomeSnapshot]:
+    """取某天日志里最后一条快照，也就是当天的最终值"""
+    try:
+        lines = path.read_text(encoding='utf-8', errors='ignore').splitlines()
+    except OSError as e:
+        logger.warning(f'Income: read {path} failed: {e}')
+        return None
+
+    records = []
+    for line in lines:
+        text = line.strip()
+        # 只把"看着就是 key=value"的无时间戳行当折行续段；
+        # logger.hr() 那种分隔线也没有时间戳，当成独立记录丢掉
+        if records and INCOME_LOG_PREFIX in records[-1] and INCOME_CONTINUATION.match(text):
+            records[-1] += ' ' + text
+        else:
+            records.append(text)
+
+    for record in reversed(records):
+        if INCOME_LOG_PREFIX not in record:
+            continue
+        snapshot = parse_income_snapshot(record)
+        if snapshot is not None:
+            return snapshot
+        logger.warning(f'Income: skip broken snapshot line in {path}')
+    return None
+
+
+def find_income_baseline(config_name: str, today: date) -> Optional[tuple[date, IncomeSnapshot]]:
+    """从日志里找最近一个有快照、且早于今天的日子。
+
+    逐日往前找而不是只认昨天，这样机器停几天再开机也能算出跨天的收益。
+    """
+    log_dir = Path('./log')
+    if not log_dir.is_dir():
+        return None
+    # 日志文件名里的配置名是规范化过的(下划线后面的会被丢掉)，必须用同一套规则拼
+    suffix = f'_{normalize_log_name(config_name)}.txt'
+    days = []
+    for path in log_dir.iterdir():
+        if not path.is_file() or not path.name.endswith(suffix):
+            continue
+        try:
+            day = date.fromisoformat(path.name[:10])
+        except ValueError:
+            continue
+        if day < today:
+            days.append((day, path))
+    for day, path in sorted(days, reverse=True):
+        snapshot = last_income_snapshot(path)
+        if snapshot is not None:
+            return day, snapshot
+    return None
 
 
 def parse_income_number(text: str) -> Optional[int]:
@@ -636,27 +716,17 @@ class ScriptTask(GameUi, Summon, DailyTriflesAssets):
         return value
 
     def record_income(self, snapshot: IncomeSnapshot):
-        """写入快照历史，并与上一个自然日的快照做差"""
-        daily = self.config.daily_trifles
-        history = daily.income_history
-        # 一天只留最后一次快照，重复运行直接覆盖，免得把历史撑满
-        history[:] = [item for item in history if item.dt.date() != snapshot.dt.date()]
-        previous = None
-        for item in reversed(history):
-            if item.dt.date() < snapshot.dt.date():
-                previous = item
-                break
+        """把快照写进日志，再拿日志里上一个有记录的日子做差"""
+        logger.info(INCOME_LOG_PREFIX + ' '.join(
+            f'{field}={getattr(snapshot, field)}' for field, _, _, _ in INCOME_FIELDS))
 
-        history.append(snapshot)
-        if len(history) > INCOME_KEEP:
-            del history[:len(history) - INCOME_KEEP]
-        self.config.save()
-
-        if previous is None:
+        baseline = find_income_baseline(self.config.config_name, snapshot.dt.date())
+        if baseline is None:
             logger.info('Income: no record before today, skip the difference')
             return
+        day, previous = baseline
         logger.hr('income of the day', 2)
-        logger.info(f'Income: compare with {previous.dt}')
+        logger.info(f'Income: compare with {day}')
         for field, name, _, _ in INCOME_FIELDS:
             now, before = getattr(snapshot, field), getattr(previous, field)
             if now < 0 or before < 0:

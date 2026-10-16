@@ -2,7 +2,7 @@
 # @author runhey
 # github https://github.com/runhey
 from datetime import datetime
-from pydantic import BaseModel, Field, SerializationInfo, field_serializer
+from pydantic import BaseModel, Field
 
 from tasks.Component.config_scheduler import Scheduler
 from tasks.Component.config_base import ConfigBase, dynamic_hide, DateTime, MultiLine
@@ -89,17 +89,8 @@ class DailyTrifles(ConfigBase):
     trifles_config: DailyTriflesConfig = Field(default_factory=DailyTriflesConfig)
     guild_donate: DailyGuildDonate = Field(default_factory=DailyGuildDonate)
     done_record: DoneRecord = Field(default_factory=DoneRecord)
-    # 收益快照历史，每次运行追加一条
-    income_history: list[IncomeSnapshot] = Field(default_factory=list)
 
     hide_fields = dynamic_hide('done_record')
-
-    @field_serializer('income_history')
-    def serialize_income_history(self, value: list[IncomeSnapshot], info: SerializationInfo):
-        """快照列表要显式落成 dict，隐藏时用和 dynamic_hide 一样的哨兵值"""
-        if info.context and info.context.get('hide', False):
-            return 0xABCDEF
-        return [item.model_dump() for item in value]
 
     def today_is_done(self, mode: str) -> bool:
         """对应mode今天是否已经完成"""
