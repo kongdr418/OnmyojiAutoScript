@@ -27,6 +27,7 @@ from module.log_income import (
     INCOME_FIELDS as INCOME_LOG_FIELDS,
     INCOME_LOG_PREFIX,
     find_income_baseline,
+    write_income_day,
 )
 from tasks.DailyTrifles.config import SummonType
 import re
@@ -637,11 +638,18 @@ class ScriptTask(GameUi, Summon, DailyTriflesAssets):
         return value
 
     def record_income(self, snapshot: IncomeSnapshot):
-        """把快照写进日志，再拿日志里上一个有记录的日子做差"""
+        """快照写进日志（人可读）和日汇总（长期保留），再拿上一个有记录的日子做差"""
         logger.info(INCOME_LOG_PREFIX + ' '.join(
             f'{field}={getattr(snapshot, field)}' for field, _, _, _ in INCOME_FIELDS))
 
-        baseline = find_income_baseline(self.config.config_name, snapshot.dt.date())
+        # 日汇总不受日志 7 天清理影响，是收益历史的正主；日志那行只作兜底
+        day = snapshot.dt.date()
+        write_income_day(self.config.config_name, day, {
+            'dt': snapshot.dt.strftime('%Y-%m-%d %H:%M:%S'),
+            'values': {field: int(getattr(snapshot, field)) for field in INCOME_LOG_FIELDS},
+        })
+
+        baseline = find_income_baseline(self.config.config_name, day)
         if baseline is None:
             logger.info('Income: no record before today, skip the difference')
             return
