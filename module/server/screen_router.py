@@ -34,9 +34,9 @@ screen_app = APIRouter(
 BASE_DIR = Path(__file__).resolve().parents[2]
 SCREEN_DIR = Path('./log/screen')
 CONFIG_DIR = Path('./config')
-# 正常截一张（连设备 + 读包名 + 抓帧）只要几秒。给 15 秒是为了模拟器不在线时
-# 能尽快失败、把错误显示给用户，而不是让界面一直转圈。
-CAPTURE_TIMEOUT_SECONDS = 15
+# worker 内部 adb 抓帧上限 12 秒，这里给 20 秒：既覆盖真机抓一张要 6 秒左右，
+# 又能在设备不在线时尽快失败、把错误显示给用户，而不是让界面一直转圈。
+CAPTURE_TIMEOUT_SECONDS = 20
 
 # 连点时别同时连两次模拟器
 _capture_lock = threading.Lock()
@@ -91,6 +91,10 @@ def _friendly_capture_error(raw: str) -> str:
         return '连接不上模拟器，请检查模拟器地址与 adb 连接'
     if 'timeout' in lowered:
         return '截图超时，请检查模拟器状态'
+    if 'no screenshot data' in lowered:
+        return '没有拿到画面数据，请检查模拟器是否正常显示'
+    if 'adb not found' in lowered:
+        return '找不到 adb，请检查 OAS 的 adb 是否可用'
     if 'requesthumantakeover' in lowered or 'initialize' in lowered:
         return '设备初始化失败，请检查配置里的模拟器地址和游戏包名'
     return f'截图失败：{text}' if text else '截图失败'
@@ -98,8 +102,8 @@ def _friendly_capture_error(raw: str) -> str:
 
 def _run_capture_worker(config_name: str, output: Path) -> None:
     """起个子进程截图，失败时把它的报错带回给调用方"""
-    # 用 -m 启动，子进程的 sys.path 才会包含仓库根目录（按脚本路径启动就不会，
-    # 那样 worker 里 import module.* 会直接 ModuleNotFoundError）
+    # 独立进程跑，避免 adb 卡住时拖累 Web 服务；PYTHONPATH 指向仓库根目录，
+    # 这样 worker 里若要 import module.* 也能找到
     env = dict(os.environ)
     existing = env.get('PYTHONPATH', '')
     env['PYTHONPATH'] = str(BASE_DIR) + (os.pathsep + existing if existing else '')

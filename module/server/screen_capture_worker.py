@@ -1,47 +1,83 @@
 # This Python file uses the following encoding: utf-8
 """模拟器画面截取 worker。
 
-单独起一个进程来截图，而不是在 Web 服务进程里直接 new Device：标注工具也是
-这么做的（见 tool_capture_worker.py），能把设备连接、卡死检测这些东西隔离开，
-截完就随进程一起回收，不留在服务进程里。
+直接用 adb 抓一帧，不走 Device / 图像服务。
 
-用法：python screen_capture_worker.py <配置名> <输出文件>
-进程退出码 0 表示成功，其它表示失败（错误写到 stdout/stderr）。
+原因：Device.screenshot() 每次都会向图像服务注册一帧
+（module/device/screenshot.py），而服务端对同一配置只保留最新一帧
+（module/image/runtime.py::register_frame 会删掉旧的），于是会把正在运行的
+任务手里的那一帧删掉，任务下一步做匹配就 KeyError: Unknown frame id。
+抓画面是纯旁路功能，不该有这种副作用。
+顺带也省掉了 Device 初始化时探包名、探屏幕尺寸的两次截图。
+
+用法：python -m module.server.screen_capture_worker <配置名> <输出文件>
+退出码 0 表示成功，错误信息写到 stderr。
 """
 from __future__ import annotations
 
+import json
+import subprocess
 import sys
 from pathlib import Path
 
-import cv2
+BASE_DIR = Path(__file__).resolve().parents[2]
+CONFIG_DIR = Path('./config')
+# 真机 2780x1264 抓一张 PNG 要 6 秒左右，留一倍余量
+ADB_TIMEOUT_SECONDS = 12
 
-from module.config.config import Config
-from module.device.device import Device
-from module.logger import logger
+
+def _configured_serial(config_name: str) -> str:
+    """读配置里的模拟器地址；没有或填 auto 就返回空串"""
+    path = CONFIG_DIR / f'{config_name}.json'
+    if not path.is_file():
+        return ''
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+        serial = data.get('script', {}).get('device', {}).get('serial') or ''
+    except Exception:
+        return ''
+    serial = str(serial).strip()
+    return '' if serial.lower() in ('', 'auto') else serial
+
+
+def _auto_serial() -> str:
+    """填 auto 时取唯一一台在线设备"""
+    out = subprocess.run(
+        ['adb', 'devices'],
+        capture_output=True,
+        text=True,
+        timeout=ADB_TIMEOUT_SECONDS,
+    ).stdout
+    online = []
+    for line in out.splitlines()[1:]:
+        parts = line.split()
+        if len(parts) >= 2 and parts[1] == 'device':
+            online.append(parts[0])
+    if len(online) != 1:
+        raise RuntimeError(
+            f'无法自动确定设备（在线 {len(online)} 台），请在配置里填写模拟器地址'
+        )
+    return online[0]
 
 
 def capture(config_name: str, output_file: str) -> None:
-    """截一帧并覆盖写入 output_file"""
-    config = Config(config_name=config_name)
-    device = Device(config=config)
-    # 只截一张，不需要卡死检测
-    device.disable_stuck_detection()
-    try:
-        frame = device.screenshot()
-        if frame is None:
-            raise RuntimeError('screenshot returned nothing')
-        output = Path(output_file)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        # device.screenshot() 给的是 RGB，cv2.imwrite 要 BGR
-        if not cv2.imwrite(str(output), cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)):
-            raise RuntimeError(f'write {output} failed')
-        logger.info(f'[screen] captured {output}')
-    finally:
-        try:
-            device.release_during_wait()
-        except Exception as e:
-            # 和设备侧清理失败有关，别静默吞掉
-            logger.warning(f'[screen] release device failed: {type(e).__name__}: {e}')
+    """adb 抓一帧并覆盖写入 output_file"""
+    serial = _configured_serial(config_name) or _auto_serial()
+    result = subprocess.run(
+        ['adb', '-s', serial, 'exec-out', 'screencap', '-p'],
+        capture_output=True,
+        timeout=ADB_TIMEOUT_SECONDS,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.decode('utf-8', 'replace').strip()
+        raise RuntimeError(detail or f'adb exited {result.returncode}')
+    # 正常 PNG 至少几十 KB，太小说明没拿到画面
+    if len(result.stdout) < 1024:
+        raise RuntimeError('no screenshot data')
+
+    output = Path(output_file)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_bytes(result.stdout)
 
 
 def main(argv: list[str]) -> int:
@@ -50,6 +86,12 @@ def main(argv: list[str]) -> int:
         return 2
     try:
         capture(argv[1], argv[2])
+    except subprocess.TimeoutExpired:
+        print(f'screenshot timeout after {ADB_TIMEOUT_SECONDS}s', file=sys.stderr)
+        return 1
+    except FileNotFoundError:
+        print('adb not found', file=sys.stderr)
+        return 1
     except Exception as e:
         print(f'{type(e).__name__}: {e}', file=sys.stderr)
         return 1
