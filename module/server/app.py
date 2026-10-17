@@ -13,6 +13,7 @@ from module.logger import logger
 from module.server.api_logger import ensure_api_logger
 from module.server.home_router import home_app
 from module.server.income_router import income_app
+from module.server.screen_router import screen_app
 from module.server.log_router import log_app
 from module.server.script_router import script_app
 from module.server.stats_router import stats_app
@@ -49,6 +50,7 @@ app.include_router(home_app)
 app.include_router(script_app)
 app.include_router(stats_app)
 app.include_router(income_app)
+app.include_router(screen_app)
 app.include_router(log_app)
 app.include_router(tool_app)
 
