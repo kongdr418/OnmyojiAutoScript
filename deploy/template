@@ -1,13 +1,11 @@
 Deploy:
   Git:
-    # URL of AzurLaneAutoScript repository
-    # [CN user] Use 'https://gitee.com/lmeszinc/azur-lane-auto-script-mirror' for faster and more stable download
-    # [Other] Use 'https://github.com/LmeSzinc/AzurLaneAutoScript'
-    Repository: https://e.coding.net/onmyojiautoscript/oas/OnmyojiAutoScript.git
+    # URL of OnmyojiAutoScript repository
+    Repository: https://github.com/kongdr418/OnmyojiAutoScript.git
     # Branch of Alas
     # [Developer] Use 'dev', 'app', etc, to try new features
     # [Other] Use 'master', the stable branch
-    Branch: master
+    Branch: mine
     # Filepath of git executable `git.exe`
     # [Easy installer] Use './toolkit/Git/mingw64/bin/git.exe'
     # [Other] Use you own git
