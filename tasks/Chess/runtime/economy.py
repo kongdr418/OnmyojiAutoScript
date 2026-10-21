@@ -354,13 +354,20 @@ class ChessEconomyMixin:
         return False
 
     def _clear_economy_click_history(self) -> None:
-        """豁免合法的经验/刷新循环，保留其他按钮的全局防重复点击保护。"""
-        removed_experience = self.device.click_record_remove(self.I_EXPERIENCE)
-        removed_refresh = self.device.click_record_remove(self.I_REFRESH)
-        if removed_experience or removed_refresh:
+        """豁免合法的经验/刷新/买卡循环，保留其他按钮的全局防重复点击保护。
+
+        商店槽位 C_SHIKIGAMI_1~5 每局要反复点击买卡，不清记录会在第 10 次触发
+        GameTooManyClickError。
+        """
+        removed = {}
+        for rule in (self.I_EXPERIENCE, self.I_REFRESH,
+                     self.C_SHIKIGAMI_1, self.C_SHIKIGAMI_2, self.C_SHIKIGAMI_3,
+                     self.C_SHIKIGAMI_4, self.C_SHIKIGAMI_5):
+            removed[rule.name] = self.device.click_record_remove(rule)
+        if any(removed.values()):
             logger.debug(
                 'Clear Chess economy click history before legal loop: '
-                f'experience={removed_experience}, refresh={removed_refresh}'
+                + ', '.join(f'{k}={v}' for k, v in removed.items() if v)
             )
 
 
