@@ -491,7 +491,8 @@ class ChessEconomyMixin:
                         'no safe hand card can be cleared; block shop refresh'
                     )
                     return False
-                if sell_lineup:
+                if sell_lineup or recovery.get('type') == 'lineup':
+                    emergency_cleanup_done = True
                     lineup_sale_done = True
                     logger.debug(
                         f'Retry Chess buy {matched_name} after selling one '
