@@ -1,7 +1,7 @@
-"""百鬼试行投掷：黄色文字框、对应锁、四秒计时及场上御魂定位。"""
+"""百鬼试行投掷：黄色文字框、对应锁、六秒计时及场上御魂定位。"""
 
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import random
 import time
 
@@ -19,6 +19,7 @@ class HyakkiTurn:
     unlocked_at: float | None = None
     absent_frames: int = 0
     throws: int = 0
+    wait_seconds: float = field(default_factory=lambda: random.uniform(5.5, 6.5))
 
     def ready(self, score, now):
         if self.throws >= 2:
@@ -27,7 +28,7 @@ class HyakkiTurn:
             self.seen_lock = True
             self.unlocked_at = None
             self.absent_frames = 0
-        elif score is not None and score < .55 and self.seen_lock:
+        elif score is not None and score < .55:
             if self.unlocked_at is None:
                 self.unlocked_at = now
             self.absent_frames += 1
@@ -35,7 +36,7 @@ class HyakkiTurn:
             self.unlocked_at = None
             self.absent_frames = 0
         return (self.unlocked_at is not None and self.absent_frames >= 2
-                and now - self.unlocked_at >= 4)
+                and now - self.unlocked_at >= self.wait_seconds)
 
 
 def player_name_box(rule, image):
@@ -134,6 +135,14 @@ def throw_point(previous, latest, elapsed, latency, roi):
 
 
 class ChessHyakkiDraftMixin:
+    def _hyakki_skip(self, reason):
+        now = time.monotonic()
+        if (getattr(self, '_hyakki_skip_reason', None) != reason
+                or now - getattr(self, '_hyakki_skip_at', float('-inf')) >= 5):
+            self._hyakki_skip_reason = reason
+            self._hyakki_skip_at = now
+            logger.info(f'Chess Hyakki throw skipped: {reason}')
+
     @cached_property
     def hyakki_soul_fronts(self):
         return load_soul_fronts(Path(__file__).resolve().parents[1] / 'resource/hyakki_soul')
@@ -145,8 +154,10 @@ class ChessHyakkiDraftMixin:
     def _hyakki_own_lock(self):
         player = player_name_box(self.O_NAME_RANGE, self.device.image)
         if player is None:
+            self._hyakki_player_found = False
             return None
-        identity = (player[0], player[1][1])
+        self._hyakki_player_found = True
+        identity = player[0]
         if getattr(self, '_hyakki_player_row', None) != identity:
             self._hyakki_player_row = identity
             logger.info(f'Chess Hyakki own player: name={player[0]}, box={player[1]}')
@@ -175,8 +186,22 @@ class ChessHyakkiDraftMixin:
         score = self._hyakki_own_lock()
         previous_unlock = state.unlocked_at
         ready = state.ready(score, time.monotonic())
+        now = time.monotonic()
+        if now - getattr(self, '_hyakki_status_at', float('-inf')) >= 5:
+            self._hyakki_status_at = now
+            logger.info(
+                f'Chess Hyakki gate: player_found={getattr(self, "_hyakki_player_found", False)}, '
+                f'lock_score={score}, seen_lock={state.seen_lock}, '
+                f'absent_frames={state.absent_frames}, '
+                f'unlocked_seconds={now-state.unlocked_at if state.unlocked_at is not None else None}, '
+                f'ready={ready}, attempts={state.throws}/2'
+            )
         if previous_unlock is None and state.unlocked_at is not None:
-            logger.info('Chess Hyakki own lock disappeared: wait 4 seconds')
+            logger.info(
+                f'Chess Hyakki own lock disappeared: wait {state.wait_seconds:.2f} seconds'
+                if state.seen_lock else
+                f'Chess Hyakki own player has no lock: wait {state.wait_seconds:.2f} seconds'
+            )
         if not ready:
             return
         roi = self.C_HYAKKI_SOUL_SHIKI.roi_back
@@ -185,31 +210,52 @@ class ChessHyakkiDraftMixin:
         # 只选择可投掷范围内的目标，边缘目标等待进入范围。
         candidates = [item for item in candidates if throw_point(item, item, 0, 0, roi)]
         if not candidates:
+            self._hyakki_skip(
+                f'no recognizable soul in throw range; templates={len(self.hyakki_soul_fronts)}, roi={roi}'
+            )
             return
         needed = self._hyakki_needed_souls()
         preferred = [item for item in candidates if item['name'] in needed]
         chosen = random.choice(preferred or candidates)
-        # 四秒等待结束后才定位；投掷前再取一帧，避免沿用移动前的位置。
+        # 等待结束后才定位；投掷前再取一帧，避免沿用移动前的位置。
         self.screenshot()
         captured_at = time.monotonic()
         if self._read_chess_mode() != '鬼':
+            self._hyakki_skip('Hyakki stage not confirmed on refreshed frame')
             return
         if not state.ready(self._hyakki_own_lock(), time.monotonic()):
+            self._hyakki_skip('own player/lock gate not ready on refreshed frame')
             return
-        latest = [item for item in find_souls(self.device.image, roi, self.hyakki_soul_fronts)
+        fresh = [item for item in find_souls(self.device.image, roi, self.hyakki_soul_fronts)
+                 if throw_point(item, item, 0, 0, roi)]
+        latest = [item for item in fresh
                   if item['name'] == chosen['name']
                   and abs(item['center'][0]-chosen['center'][0]) <= 150
                   and abs(item['center'][1]-chosen['center'][1]) <= 45]
         if not latest:
-            return
-        target = min(latest, key=lambda item: abs(item['center'][0]-chosen['center'][0]))
-        point = throw_point(chosen, target, captured_at-first_at,
-                            time.monotonic()-captured_at, roi)
+            if not fresh:
+                self._hyakki_skip('no recognizable soul in throw range on refreshed frame')
+                return
+            fresh_preferred = [item for item in fresh if item['name'] in needed]
+            target = random.choice(fresh_preferred or fresh)
+            # 截图间隔较长时目标可能已移远或离场；按新画面重新选择，
+            # 不把不同目标的位移用于速度预测。
+            point = throw_point(target, target, 0, 0, roi)
+            logger.info(
+                f'Chess Hyakki target reselected on refreshed frame: '
+                f'old={chosen["name"]}@{chosen["center"]}, '
+                f'new={target["name"]}@{target["center"]}'
+            )
+        else:
+            target = min(latest, key=lambda item: abs(item['center'][0]-chosen['center'][0]))
+            point = throw_point(chosen, target, captured_at-first_at,
+                                time.monotonic()-captured_at, roi)
         if point is None:
+            self._hyakki_skip(f'predicted throw point outside range: soul={target["name"]}, center={target["center"]}')
             return
         state.throws += 1
         self.device.click(x=point[0], y=point[1], control_name='CHESS_HYAKKI_THROW')
         logger.info(f'Chess Hyakki throw attempted: soul={target["name"]}, '
-                    f'preferred={bool(preferred)}, score={target["score"]:.3f}, '
+                    f'preferred={target["name"] in needed}, score={target["score"]:.3f}, '
                     f'icon={target["center"]}, point={point}, round={key[1]}, '
                     f'attempt={state.throws}/2')

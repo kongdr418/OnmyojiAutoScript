@@ -88,3 +88,46 @@ HAIGUO_CONFIG = {
 
 
 HAIGUO = build_lineup_strategy(HAIGUO_CONFIG)
+
+
+MINGHUO_CONFIG = {
+    'key': 'minghuo',
+    'display_name': '冥火',
+    'hakuzosu_protect_position': None,
+    'shikigami_positions': {
+        '思金神': (1, 1, ()),
+        '鬼使白': (1, 2, ()),
+        '寻香行': (2, 3, ()),
+        '判官': (1, 4, ()),
+        '荒骷髅': (1, 5, ()),
+        '鬼使黑': (2, 6, ()),
+        '黑童子': (1, 7, ()),
+        '平将门': (2, 8, ()),
+        '白童子': (1, 9, ()),
+    },
+}
+
+
+MINGHUO = build_lineup_strategy(MINGHUO_CONFIG)
+
+
+PINGANJING_CONFIG = {
+    'key': 'pinganjing',
+    'display_name': '平安京',
+    'secondary_bond': '追击',
+    'hakuzosu_protect_position': 1,
+    'shikigami_positions': {
+        '青行灯': (1, 1, ()),
+        '姑获鸟': (1, 2, ()),
+        '御馔津': (1, 3, ()),
+        '妖刀姬': (1, 4, ()),
+        '花鸟卷': (1, 5, ()),
+        '鬼切': (1, 6, ()),
+        '夜叉': (1, 7, ()),
+        '山兔': (1, 8, ()),
+        '梦山白藏主': (1, 9, ('招财猫', '狰')),
+    },
+}
+
+
+PINGANJING = build_lineup_strategy(PINGANJING_CONFIG)

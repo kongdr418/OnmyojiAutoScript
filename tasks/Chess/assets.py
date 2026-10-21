@@ -44,7 +44,7 @@ class ChessAssets:
 	# 
 	C_SIXREALMS_3 = RuleClick(roi_front=(871,413,167,140), roi_back=(871,413,167,140), name="sixrealms_3")
 	# 百鬼式神御魂选取框
-	C_HYAKKI_SOUL_SHIKI = RuleClick(roi_front=(117,138,901,460), roi_back=(117,138,901,460), name="hyakki_soul_shiki")
+	C_HYAKKI_SOUL_SHIKI = RuleClick(roi_front=(0,138,1024,462), roi_back=(0,138,1024,462), name="hyakki_soul_shiki")
 
 
 	# Image Rule Assets
@@ -102,6 +102,12 @@ class ChessAssets:
 	I_SELECT_SIXREALMS = RuleImage(roi_front=(550,2,181,34), roi_back=(542,0,200,45), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_select_sixrealms.png")
 	# 百鬼等待 
 	I_HYAKKI_WAIT = RuleImage(roi_front=(1162,78,21,21), roi_back=(1136,39,80,665), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_hyakki_wait.png")
+	# 百鬼阶段 
+	I_STAGE_HYAKKI = RuleImage(roi_front=(606,2,31,29), roi_back=(499,0,268,31), threshold=0.9, method="Template matching", profile="High", file="./tasks/Chess/c/c_stage_hyakki.png")
+	# 大蛇阶段 
+	I_STAGE_ORCHI = RuleImage(roi_front=(708,0,31,29), roi_back=(499,0,268,31), threshold=0.9, method="Template matching", profile="High", file="./tasks/Chess/c/c_stage_orchi.png")
+	# 逢魔阶段 
+	I_STAGE_DEMON = RuleImage(roi_front=(708,0,31,29), roi_back=(499,0,268,31), threshold=0.9, method="Template matching", profile="High", file="./tasks/Chess/c/c_stage_demon.png")
 
 
 	# Ocr Rule Assets
@@ -118,7 +124,7 @@ class ChessAssets:
 	#  
 	O_CHESS_MODE_2 = RuleOcr(roi=(706,2,32,28), area=(706,2,32,28), mode="Single", method="Default", keyword="", name="chess_mode_2")
 	#  
-	O_COIN = RuleOcr(roi=(400,660,93,25), area=(400,660,93,25), mode="DigitCounter", method="Default", keyword="", name="coin")
+	O_COIN = RuleOcr(roi=(395,660,87,25), area=(395,660,87,25), mode="DigitCounter", method="Default", keyword="", name="coin")
 	#  
 	O_NOW_TIME = RuleOcr(roi=(768,0,32,28), area=(768,0,32,28), mode="Single", method="Default", keyword="", name="now_time")
 	#  

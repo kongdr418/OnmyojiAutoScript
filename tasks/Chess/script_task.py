@@ -694,10 +694,13 @@ class ChessLegacyScriptTask(
             time.sleep(self.SLOW_POLL_INTERVAL)
 
     def _is_in_chess_game(self) -> bool:
-        """以阵容入口或问号图标确认当前处于百鬼棋局对局内。"""
+        """以阵容入口、问号或特殊回合标志确认当前处于对局内。"""
         return (
             self.appear(self.I_OPEN_LINEUP)
             or self.appear(self.I_QUESTION_CHECK)
+            or self._special_chess_mode() is not None
+            or self._stage_marker_visible(self.I_STAGE_ORCHI)
+            or self._stage_marker_visible(self.I_STAGE_DEMON)
         )
 
     def _close_chess_lobby_abnormal_page(self) -> bool:
