@@ -172,6 +172,29 @@ class ChessHyakkiDraftMixin:
                           if soul not in (first, second))
         return needed
 
+    def _hyakki_all_locks_gone(self):
+        """在完整玩家锁区域复核，分数不明确时继续等待。"""
+        x, y, w, h = self.I_HYAKKI_WAIT.roi_back
+        image = self.device.image
+        if x < 0 or y < 0 or x+w > image.shape[1] or y+h > image.shape[0]:
+            return False
+        region = image[y:y+h, x:x+w]
+        front = self.hyakki_wait_front
+        if region.shape[0] < front.shape[0] or region.shape[1] < front.shape[1]:
+            return False
+        score = cv2.minMaxLoc(cv2.matchTemplate(region, front, cv2.TM_CCOEFF_NORMED))[1]
+        return score < .55
+
+    def _hyakki_target_pool(self, candidates, needed):
+        preferred = [item for item in candidates if item['name'] in needed]
+        if preferred:
+            return preferred
+        if candidates and self._hyakki_all_locks_gone():
+            logger.info('Chess Hyakki all locks gone: no needed soul visible, select random target')
+            return candidates
+        self._hyakki_skip('waiting for needed soul or all player locks to disappear')
+        return []
+
     def _handle_hyakki_draft(self):
         config = getattr(getattr(self.config, 'chess', None), 'chess_config', None)
         if not getattr(config, 'hyakki_draft_enabled', True):
@@ -215,8 +238,10 @@ class ChessHyakkiDraftMixin:
             )
             return
         needed = self._hyakki_needed_souls()
-        preferred = [item for item in candidates if item['name'] in needed]
-        chosen = random.choice(preferred or candidates)
+        pool = self._hyakki_target_pool(candidates, needed)
+        if not pool:
+            return
+        chosen = random.choice(pool)
         # 等待结束后才定位；投掷前再取一帧，避免沿用移动前的位置。
         self.screenshot()
         captured_at = time.monotonic()
@@ -228,16 +253,18 @@ class ChessHyakkiDraftMixin:
             return
         fresh = [item for item in find_souls(self.device.image, roi, self.hyakki_soul_fronts)
                  if throw_point(item, item, 0, 0, roi)]
-        latest = [item for item in fresh
+        if not fresh:
+            self._hyakki_skip('no recognizable soul in throw range on refreshed frame')
+            return
+        fresh_pool = self._hyakki_target_pool(fresh, needed)
+        if not fresh_pool:
+            return
+        latest = [item for item in fresh_pool
                   if item['name'] == chosen['name']
                   and abs(item['center'][0]-chosen['center'][0]) <= 150
                   and abs(item['center'][1]-chosen['center'][1]) <= 45]
         if not latest:
-            if not fresh:
-                self._hyakki_skip('no recognizable soul in throw range on refreshed frame')
-                return
-            fresh_preferred = [item for item in fresh if item['name'] in needed]
-            target = random.choice(fresh_preferred or fresh)
+            target = random.choice(fresh_pool)
             # 截图间隔较长时目标可能已移远或离场；按新画面重新选择，
             # 不把不同目标的位移用于速度预测。
             point = throw_point(target, target, 0, 0, roi)
