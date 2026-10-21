@@ -55,8 +55,8 @@
   },
   {
     "itemName": "coin",
-    "roiFront": "406,660,87,25",
-    "roiBack": "406,660,87,25",
+    "roiFront": "400,660,93,25",
+    "roiBack": "400,660,93,25",
     "mode": "DigitCounter",
     "method": "Default",
     "keyword": "",
