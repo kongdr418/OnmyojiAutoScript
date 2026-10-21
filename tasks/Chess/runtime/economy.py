@@ -433,6 +433,8 @@ class ChessEconomyMixin:
                 f'attempt={attempts}, source={current_match["source"]}, '
                 f'identity_score={current_match["score"]:.3f})'
             )
+            # 买卡是合法的反复点击；不清记录会累计到 10 次触发防连点保护
+            self.device.click_record_remove(click_rule)
             clicked_and_gone = self.ui_click_until_disappear(
                 click_rule,
                 click_target=click_rule,
