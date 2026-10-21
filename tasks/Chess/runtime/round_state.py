@@ -27,7 +27,7 @@ class ChessRoundStateMixin:
     @cached_property
     def grigri_icon_templates(self) -> dict[str, object]:
         """按中文名缓存全部符咒图标，供 OCR 失败时进行图像兜底。"""
-        badge_dir = Path(__file__).resolve().parents[1] / 'badge'
+        badge_dir = Path(__file__).resolve().parents[1] / 'resource' / 'badge'
         templates = {}
         for name in grigri_names_for_quality(None):
             file = badge_dir / grigri_file(name)
@@ -460,6 +460,11 @@ class ChessRoundStateMixin:
             )
             return occupied
 
+        return self._board_set_has_shikigami_visual(set_index)
+
+    def _board_set_has_shikigami_visual(self, set_index: int) -> bool:
+        """仅按当前截图中的勾玉标志判断指定站位是否有人。"""
+
         x, y, width, height = self._set_jade_area(set_index)
         image_height, image_width = self.device.image.shape[:2]
         if (
@@ -493,6 +498,54 @@ class ChessRoundStateMixin:
             ))
             for rule in self.board_occupancy_rules
         )
+
+    def _reconcile_lineup_after_hyakki_round(
+        self,
+        next_round_no: int | None = None,
+    ) -> list[str]:
+        """百鬼夜行结束后移除已不在原站位上的式神上阵记录。"""
+        if next_round_no in self.BOSS_CHALLENGE_ROUNDS:
+            logger.info(
+                'Skip post-Hyakki lineup check during boss round: '
+                f'round={next_round_no}'
+            )
+            return []
+        deployed_names = set(
+            getattr(self, '_board_lineup_names', set())
+        )
+        actual_positions = dict(
+            getattr(self, '_board_actual_positions', {})
+        )
+        player_positions = set(
+            getattr(self, '_player_deployed_positions', set())
+        )
+        removed = []
+        for name in sorted(deployed_names):
+            set_index = actual_positions.get(
+                name,
+                self.shikigami_deploy_positions.get(name),
+            )
+            if set_index is None:
+                continue
+            if self._board_set_has_shikigami_visual(int(set_index)):
+                continue
+            deployed_names.discard(name)
+            actual_positions.pop(name, None)
+            player_positions.discard(int(set_index))
+            removed.append(name)
+            logger.warning(
+                'Chess shikigami missing after Hyakki round; '
+                f'mark as undeployed: name={name}, set={set_index}'
+            )
+
+        self._board_lineup_names = deployed_names
+        self._board_actual_positions = actual_positions
+        self._player_deployed_positions = player_positions
+        logger.info(
+            'Chess post-Hyakki lineup check: '
+            f'removed={removed}, deployed={sorted(deployed_names)}'
+        )
+        return removed
 
     def _read_board_position_count(self) -> dict:
         """统计 12 个站位勾玉区域中检测到图标的位置数量。"""
@@ -650,62 +703,3 @@ class ChessRoundStateMixin:
             if character in raw:
                 return rank, raw
         return None, raw
-
-    def _try_last_seconds_deploy(self) -> bool:
-        """第一套布局备阶段倒计时不超过 10 秒时，空闲补做一次上阵。
-
-        Returns:
-            bool: 是否已经进入倒计时补位判定。OCR 未到阈值或不可用时
-                返回 False，允许后续截图继续检查；一旦到达阈值，无论
-                阵容是否已满都返回 True，确保每回目至多触发一次。
-        """
-        if self._is_early_round_layout():
-            return False
-        remaining = self._read_remaining_time()
-        if remaining is None or remaining > 10:
-            return False
-
-        logger.debug(
-            'Chess last-seconds lineup check: '
-            f'remaining={remaining}'
-        )
-        if self._read_chess_mode() != '备':
-            logger.debug('Skip last-seconds deploy: mode is no longer 备')
-            return True
-        if not self._ensure_shop_closed():
-            logger.warning(
-                'Skip last-seconds deploy: shop could not be closed'
-            )
-            return True
-
-        self.screenshot()
-        if self._is_early_round_layout() or not self._is_preparation_mode():
-            logger.debug(
-                'Skip last-seconds deploy: preparation/layout changed '
-                'while closing shop'
-            )
-            return True
-
-        capacity = self._read_lineup_capacity_status()
-        if capacity is None:
-            logger.warning(
-                'Skip last-seconds deploy: lineup capacity is unavailable'
-            )
-            return True
-        if capacity['full']:
-            logger.debug(
-                'Skip last-seconds deploy: lineup is already full '
-                f'({capacity["current"]}/{capacity["capacity"]})'
-            )
-            return True
-
-        logger.debug(
-            'Run last-seconds deploy: '
-            f'{capacity["current"]}/{capacity["capacity"]}'
-        )
-        deployed = self.deploy_shikigami_from_hand()
-        logger.debug(
-            'Chess last-seconds deploy complete: '
-            f'deployed={deployed}'
-        )
-        return True
