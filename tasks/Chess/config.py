@@ -10,6 +10,11 @@ from tasks.Chess.strategy.lineup import LineupBond
 class ChessConfig(ConfigBase):
     """百鬼棋局循环与结束条件。"""
 
+    hyakki_draft_enabled: bool = Field(
+        title='百鬼投掷试行', default=True,
+        description='本人锁消失四秒后投掷，优先阵容所需御魂，否则随机选择。',
+    )
+
     lineup_bond: LineupBond = Field(
         title='选择阵容羁绊',
         default=LineupBond.QIJIAOSHAN,

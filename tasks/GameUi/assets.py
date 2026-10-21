@@ -234,4 +234,5 @@ class GameUiAssets:
 	# 活动列表页爬塔活动文字 
 	L_ACT_LIST_OCR = RuleList(folder="./tasks/GameUi/page", direction="vertical", mode="ocr", roi_back=(50,123,49,553), size=(45, 69), 
 					 array=["版本"])
-
+	I_CLOSE_RED = RuleImage(roi_front=(1169,60,33,25), roi_back=(1077,19,151,144), threshold=0.8, method="Template matching", profile="High", file="./tasks/GameUi/page/page_close_red.png")
+	I_ACTIVITY_GENERAL_CLOSE_RED = RuleImage(roi_front=(1149,169,40,32), roi_back=(1008,0,272,274), threshold=0.8, method="Template matching", profile="High", file="./tasks/GameUi/page/page_activity_general_close_red.png")

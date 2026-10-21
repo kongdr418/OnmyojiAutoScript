@@ -16,9 +16,14 @@ from tasks.Chess.strategy.lineup_strategy import (
     QIJIAOSHAN,
 )
 from tasks.Chess.strategy.minghuo import MINGHUO
+from tasks.Chess.strategy.pinganjing import PINGANJING
 
 
 LINEUP_REGISTRY = {
+    'pinganjing': {
+        'display_name': '平安京',
+        'strategy': PINGANJING,
+    },
     'qijiaoshan': {
         'display_name': '七角山',
         'strategy': QIJIAOSHAN,

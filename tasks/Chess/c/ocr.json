@@ -55,8 +55,8 @@
   },
   {
     "itemName": "coin",
-    "roiFront": "141,659,87,25",
-    "roiBack": "141,659,87,25",
+    "roiFront": "406,660,87,25",
+    "roiBack": "406,660,87,25",
     "mode": "DigitCounter",
     "method": "Default",
     "keyword": "",
@@ -106,5 +106,14 @@
     "method": "Default",
     "keyword": "",
     "description": ""
+  },
+  {
+    "itemName": "name_range",
+    "roiFront": "1060,41,166,623",
+    "roiBack": "1060,41,166,623",
+    "mode": "Full",
+    "method": "Default",
+    "keyword": "",
+    "description": "名字出现位置"
   }
 ]

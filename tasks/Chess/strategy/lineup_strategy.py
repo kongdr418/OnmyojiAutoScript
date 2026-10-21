@@ -12,6 +12,7 @@
 - ``arakawa_goldfish_position``：荒川羁绊召唤金鱼后应移动到的位置。
   不使用荒川金鱼时为 ``None``；仅在下阵失败后打开失败位置详情，
   被动确认金鱼并移动到该位置；上阵确认失败后不尝试识别金鱼。
+- ``secondary_bond``：显式指定次要羁绊；未指定时按阵容羁绊计数选择。
 
 经济策略属于通用运营流程，写在主任务中，不放入阵容配置。
 """
@@ -28,6 +29,8 @@ def build_lineup_strategy(config: dict) -> dict:
             config.get('shikigami_positions', {})
         ),
     }
+    if config.get('secondary_bond'):
+        strategy['secondary_bond'] = config['secondary_bond']
     protect_position = config.get('hakuzosu_protect_position')
     if protect_position is not None:
         protect_position = int(protect_position)
@@ -54,7 +57,7 @@ QIJIAOSHAN_CONFIG = {
     'shikigami_positions': {
         '薰': (1, 1, ('魍魉之匣', '钓瓶火')),
         '白狼': (1, 2, ()),
-        '座敷童子': (1, 3, ()),
+        '鲸汐千姬': (1, 3, ()),
         '小松丸': (1, 4, ()),
         '一目连': (2, 5, ()),
         '山风': (2, 6, ()),

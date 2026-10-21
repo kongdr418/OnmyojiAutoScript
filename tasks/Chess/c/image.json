@@ -258,5 +258,15 @@
     "threshold": 0.8,
     "profile": "High",
     "description": "选择六道场地"
+  },
+  {
+    "itemName": "hyakki_wait",
+    "imageName": "c_hyakki_wait.png",
+    "roiFront": "1162,78,21,21",
+    "roiBack": "1136,39,80,665",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "百鬼等待"
   }
 ]

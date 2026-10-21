@@ -43,6 +43,8 @@ class ChessAssets:
 	C_SIXREALMS_2 = RuleClick(roi_front=(558,403,167,140), roi_back=(558,403,167,140), name="sixrealms_2")
 	# 
 	C_SIXREALMS_3 = RuleClick(roi_front=(871,413,167,140), roi_back=(871,413,167,140), name="sixrealms_3")
+	# 百鬼式神御魂选取框
+	C_HYAKKI_SOUL_SHIKI = RuleClick(roi_front=(117,138,901,460), roi_back=(117,138,901,460), name="hyakki_soul_shiki")
 
 
 	# Image Rule Assets
@@ -98,6 +100,8 @@ class ChessAssets:
 	I_SHARE = RuleImage(roi_front=(1159,579,65,66), roi_back=(1147,568,85,86), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_share.png")
 	# 选择六道场地 
 	I_SELECT_SIXREALMS = RuleImage(roi_front=(550,2,181,34), roi_back=(542,0,200,45), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_select_sixrealms.png")
+	# 百鬼等待 
+	I_HYAKKI_WAIT = RuleImage(roi_front=(1162,78,21,21), roi_back=(1136,39,80,665), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_hyakki_wait.png")
 
 
 	# Ocr Rule Assets
@@ -114,7 +118,7 @@ class ChessAssets:
 	#  
 	O_CHESS_MODE_2 = RuleOcr(roi=(706,2,32,28), area=(706,2,32,28), mode="Single", method="Default", keyword="", name="chess_mode_2")
 	#  
-	O_COIN = RuleOcr(roi=(141,659,87,25), area=(141,659,87,25), mode="DigitCounter", method="Default", keyword="", name="coin")
+	O_COIN = RuleOcr(roi=(406,660,87,25), area=(406,660,87,25), mode="DigitCounter", method="Default", keyword="", name="coin")
 	#  
 	O_NOW_TIME = RuleOcr(roi=(768,0,32,28), area=(768,0,32,28), mode="Single", method="Default", keyword="", name="now_time")
 	#  
@@ -125,6 +129,8 @@ class ChessAssets:
 	O_GRIGRI_OPTION_NAME_2 = RuleOcr(roi=(548,370,191,45), area=(548,370,191,45), mode="Single", method="Default", keyword="", name="grigri_option_name_2")
 	#  
 	O_GRIGRI_OPTION_NAME_3 = RuleOcr(roi=(825,370,191,45), area=(825,370,191,45), mode="Single", method="Default", keyword="", name="grigri_option_name_3")
+	# 名字出现位置 
+	O_NAME_RANGE = RuleOcr(roi=(1060,41,166,623), area=(1060,41,166,623), mode="Full", method="Default", keyword="", name="name_range")
 
 
 	# Image Rule Assets

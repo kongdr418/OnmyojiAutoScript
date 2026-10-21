@@ -247,7 +247,7 @@ class ChessStateLoopMixin:
                         )
 
             interval = (
-                3 * self.SLOW_POLL_INTERVAL
+                self.SCREENSHOT_INTERVAL
                 if mode == '鬼'
                 else self.SLOW_POLL_INTERVAL
             )
