@@ -1,5 +1,7 @@
 from module.atom.image import RuleImage
+from module.atom.frame import RuleFrame, Image, Ocr, Click
 from module.atom.click import RuleClick
+from module.atom.scatter import RuleScatter
 from module.atom.long_click import RuleLongClick
 from module.atom.swipe import RuleSwipe
 from module.atom.ocr import RuleOcr
@@ -12,17 +14,19 @@ class GuildBanquetAssets:
 
 	# Image Rule Assets
 	# 寮宴会集结标志 
-	I_BANQUET_FLAG = RuleImage(roi_front=(1035,12,33,60), roi_back=(1035,12,33,60), threshold=0.8, method="Template matching", file="./tasks/GuildBanquet/res/res_banquet_flag.png")
+	I_BANQUET_FLAG = RuleImage(roi_front=(1035,12,33,60), roi_back=(1035,12,33,60), threshold=0.8, method="Template matching", profile="High", file="./tasks/GuildBanquet/res/res_banquet_flag.png")
 	# 经验已满标志 
-	I_BANQUET_EXP_FULL = RuleImage(roi_front=(28,408,18,16), roi_back=(7,138,106,366), threshold=0.8, method="Template matching", file="./tasks/GuildBanquet/res/res_banquet_exp_full.png")
+	I_BANQUET_EXP_FULL = RuleImage(roi_front=(28,408,18,16), roi_back=(7,138,106,366), threshold=0.8, method="Template matching", profile="High", file="./tasks/GuildBanquet/res/res_banquet_exp_full.png")
 	# 宴会式神轮换标志 
-	I_BANQUET_SWITCH = RuleImage(roi_front=(998,164,49,83), roi_back=(974,131,106,152), threshold=0.8, method="Template matching", file="./tasks/GuildBanquet/res/res_banquet_switch.png")
+	I_BANQUET_SWITCH = RuleImage(roi_front=(998,164,49,83), roi_back=(974,131,106,152), threshold=0.8, method="Template matching", profile="High", file="./tasks/GuildBanquet/res/res_banquet_switch.png")
 	# 确定轮换式神标志 
-	I_BANQUET_CONFIRM = RuleImage(roi_front=(1072,411,50,59), roi_back=(990,348,202,163), threshold=0.8, method="Template matching", file="./tasks/GuildBanquet/res/res_banquet_confirm.png")
+	I_BANQUET_CONFIRM = RuleImage(roi_front=(1072,411,50,59), roi_back=(990,348,202,163), threshold=0.8, method="Template matching", profile="High", file="./tasks/GuildBanquet/res/res_banquet_confirm.png")
 	# 一键放入标志 
-	I_BANQUET_ALL_PUT = RuleImage(roi_front=(718,412,90,31), roi_back=(653,377,233,105), threshold=0.8, method="Template matching", file="./tasks/GuildBanquet/res/res_banquet_all_put.png")
+	I_BANQUET_ALL_PUT = RuleImage(roi_front=(718,412,90,31), roi_back=(653,377,233,105), threshold=0.8, method="Template matching", profile="High", file="./tasks/GuildBanquet/res/res_banquet_all_put.png")
 	# 一键清空 
-	I_BANQUET_CLEAR_ALL = RuleImage(roi_front=(480,413,90,31), roi_back=(416,377,233,105), threshold=0.8, method="Template matching", file="./tasks/GuildBanquet/res/res_banquet_clear_all.png")
+	I_BANQUET_CLEAR_ALL = RuleImage(roi_front=(480,413,90,31), roi_back=(416,377,233,105), threshold=0.8, method="Template matching", profile="High", file="./tasks/GuildBanquet/res/res_banquet_clear_all.png")
+	# 宴会标志2 
+	I_BANQUET_FLAG_2 = RuleImage(roi_front=(972,12,33,60), roi_back=(967,7,43,70), threshold=0.8, method="Template matching", profile="High", file="./tasks/GuildBanquet/res/res_banquet_flag_2.png")
 
 
 	# Ocr Rule Assets

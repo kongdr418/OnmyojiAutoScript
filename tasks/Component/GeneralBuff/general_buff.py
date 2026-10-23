@@ -74,14 +74,14 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
         height = 45
         return int(start_x), int(start_y), int(width), int(height)
 
-    def set_switch_area(self, area):
+    def set_switch_area(self, area, kind="buff"):
         """
         设置开关的区域
         :param area:
         :return:
         """
-        self.I_OPEN_YELLOW.roi_back = list(area)  # 动态设置roi
-        self.I_CLOSE_RED.roi_back = list(area)
+        getattr(self, f"I_{kind.upper()}_OPEN_YELLOW").roi_back = list(area)
+        getattr(self, f"I_{kind.upper()}_CLOSE_RED").roi_back = list(area)
 
     def gold_50(self, is_open: bool = True) -> bool:
         """
@@ -95,13 +95,13 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
         if not area:
             logger.warning('No gold 50 buff')
             return False
-        self.set_switch_area(area)
+        self.set_switch_area(area, kind="gold")
         if is_open:
             logger.info('Start open gold50 buff')
-            self.ui_click(self.I_CLOSE_RED, self.I_OPEN_YELLOW, interval=1)
+            self.ui_click(self.I_GOLD_CLOSE_RED, self.I_GOLD_OPEN_YELLOW, interval=1)
             return True
         logger.info('Start close gold50 buff')
-        self.ui_click(self.I_OPEN_YELLOW, self.I_CLOSE_RED, interval=1)
+        self.ui_click(self.I_GOLD_OPEN_YELLOW, self.I_GOLD_CLOSE_RED, interval=1)
         return True
 
     def gold_100(self, is_open: bool = True) -> bool:
@@ -116,13 +116,13 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
         if not area:
             logger.warning('No gold 100 buff')
             return False
-        self.set_switch_area(area)
+        self.set_switch_area(area, kind="gold")
         if is_open:
             logger.info('Start open gold100 buff')
-            self.ui_click(self.I_CLOSE_RED, self.I_OPEN_YELLOW, interval=1)
+            self.ui_click(self.I_GOLD_CLOSE_RED, self.I_GOLD_OPEN_YELLOW, interval=1)
             return True
         logger.info('Start close gold100 buff')
-        self.ui_click(self.I_OPEN_YELLOW, self.I_CLOSE_RED, interval=1)
+        self.ui_click(self.I_GOLD_OPEN_YELLOW, self.I_GOLD_CLOSE_RED, interval=1)
         return True
 
     def exp_50(self, is_open: bool = True) -> bool:
@@ -140,8 +140,8 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
                 return False
             area = self.get_area(self.O_EXP_50)
             if area:
-                self.set_switch_area(area)
-            if not area or (not self.appear(self.I_CLOSE_RED) and not self.appear(self.I_OPEN_YELLOW)):
+                self.set_switch_area(area, kind="experience")
+            if not area or (not self.appear(self.I_EXPERIENCE_CLOSE_RED) and not self.appear(self.I_EXPERIENCE_OPEN_YELLOW)):
                 self.device.swipe(p2=(530, 240), p1=(580, 320))
                 max_swipe -= 1
                 time.sleep(1)
@@ -149,10 +149,10 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
             break
         if is_open:
             logger.info('Start open exp50 buff')
-            self.ui_click(self.I_CLOSE_RED, self.I_OPEN_YELLOW, interval=1)
+            self.ui_click(self.I_EXPERIENCE_CLOSE_RED, self.I_EXPERIENCE_OPEN_YELLOW, interval=1)
             return True
         logger.info('Start close exp50 buff')
-        self.ui_click(self.I_OPEN_YELLOW, self.I_CLOSE_RED, interval=1)
+        self.ui_click(self.I_EXPERIENCE_OPEN_YELLOW, self.I_EXPERIENCE_CLOSE_RED, interval=1)
         return True
 
     def exp_100(self, is_open: bool = True) -> bool:
@@ -170,8 +170,8 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
             self.screenshot()
             area = self.get_area(self.O_EXP_100)
             if area:
-                self.set_switch_area(area)
-            if not area or (not self.appear(self.I_CLOSE_RED) and not self.appear(self.I_OPEN_YELLOW)):
+                self.set_switch_area(area, kind="experience")
+            if not area or (not self.appear(self.I_EXPERIENCE_CLOSE_RED) and not self.appear(self.I_EXPERIENCE_OPEN_YELLOW)):
                 self.device.swipe(p2=(530, 240), p1=(580, 320))
                 max_swipe -= 1
                 time.sleep(1)
@@ -179,10 +179,10 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
             break
         if is_open:
             logger.info('Start open exp100 buff')
-            self.ui_click(self.I_CLOSE_RED, self.I_OPEN_YELLOW, interval=1)
+            self.ui_click(self.I_EXPERIENCE_CLOSE_RED, self.I_EXPERIENCE_OPEN_YELLOW, interval=1)
             return True
         logger.info('Start close exp100 buff')
-        self.ui_click(self.I_OPEN_YELLOW, self.I_CLOSE_RED, interval=1)
+        self.ui_click(self.I_EXPERIENCE_OPEN_YELLOW, self.I_EXPERIENCE_CLOSE_RED, interval=1)
         return True
 
     def get_area_image(self, target: RuleImage) -> Optional[tuple[int, int, int, int]]:
@@ -220,10 +220,10 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
         self.set_switch_area(area)
         if is_open:
             logger.info('Start open awake buff')
-            self.ui_click(self.I_CLOSE_RED, self.I_OPEN_YELLOW, interval=1)
+            self.ui_click(self.I_BUFF_CLOSE_RED, self.I_BUFF_OPEN_YELLOW, interval=1)
             return True
         logger.info('Start close awake buff')
-        self.ui_click(self.I_OPEN_YELLOW, self.I_CLOSE_RED, interval=1)
+        self.ui_click(self.I_BUFF_OPEN_YELLOW, self.I_BUFF_CLOSE_RED, interval=1)
         return True
 
     def soul(self, is_open: bool = True):
@@ -241,10 +241,10 @@ class GeneralBuff(BaseTask, GeneralBuffAssets):
         self.set_switch_area(area)
         if is_open:
             logger.info('Start open soul buff')
-            self.ui_click(self.I_CLOSE_RED, self.I_OPEN_YELLOW, interval=1)
+            self.ui_click(self.I_BUFF_CLOSE_RED, self.I_BUFF_OPEN_YELLOW, interval=1)
             return True
         logger.info('Start close soul buff')
-        self.ui_click(self.I_OPEN_YELLOW, self.I_CLOSE_RED, interval=1)
+        self.ui_click(self.I_BUFF_OPEN_YELLOW, self.I_BUFF_CLOSE_RED, interval=1)
         return True
 
     def reject_invite(self):

@@ -63,7 +63,7 @@
     "description": "description"
   },
   {
-    "itemName": "open_yellow",
+    "itemName": "buff_open_yellow",
     "imageName": "gb_open_yellow.png",
     "roiFront": "774,299,13,18",
     "roiBack": "766,133,35,366",
@@ -72,7 +72,7 @@
     "description": "description"
   },
   {
-    "itemName": "close_red",
+    "itemName": "buff_close_red",
     "imageName": "gb_close_red.png",
     "roiFront": "773,365,12,20",
     "roiBack": "764,134,38,369",
@@ -88,5 +88,45 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "用来判定是否点击的那个"
+  },
+  {
+    "itemName": "gold_open_yellow",
+    "imageName": "gb_gold_open_yellow.png",
+    "profile": "High",
+    "roiFront": "774,299,13,18",
+    "roiBack": "766,133,35,366",
+    "method": "Template matching",
+    "threshold": 0.6,
+    "description": "description"
+  },
+  {
+    "itemName": "experience_open_yellow",
+    "imageName": "gb_experience_open_yellow.png",
+    "profile": "High",
+    "roiFront": "774,299,13,18",
+    "roiBack": "766,133,35,366",
+    "method": "Template matching",
+    "threshold": 0.6,
+    "description": "description"
+  },
+  {
+    "itemName": "gold_close_red",
+    "imageName": "gb_gold_close_red.png",
+    "profile": "High",
+    "roiFront": "773,365,12,20",
+    "roiBack": "764,134,38,369",
+    "method": "Template matching",
+    "threshold": 0.6,
+    "description": "description"
+  },
+  {
+    "itemName": "experience_close_red",
+    "imageName": "gb_experience_close_red.png",
+    "profile": "High",
+    "roiFront": "773,365,12,20",
+    "roiBack": "764,134,38,369",
+    "method": "Template matching",
+    "threshold": 0.6,
+    "description": "description"
   }
 ]

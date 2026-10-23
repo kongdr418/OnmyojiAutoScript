@@ -6,6 +6,7 @@
     "roiBack": "1035,12,33,60",
     "method": "Template matching",
     "threshold": 0.8,
+    "profile": "High",
     "description": "寮宴会集结标志"
   },
   {
@@ -15,6 +16,7 @@
     "roiBack": "7,138,106,366",
     "method": "Template matching",
     "threshold": 0.8,
+    "profile": "High",
     "description": "经验已满标志"
   },
   {
@@ -24,6 +26,7 @@
     "roiBack": "974,131,106,152",
     "method": "Template matching",
     "threshold": 0.8,
+    "profile": "High",
     "description": "宴会式神轮换标志"
   },
   {
@@ -33,6 +36,7 @@
     "roiBack": "990,348,202,163",
     "method": "Template matching",
     "threshold": 0.8,
+    "profile": "High",
     "description": "确定轮换式神标志"
   },
   {
@@ -42,6 +46,7 @@
     "roiBack": "653,377,233,105",
     "method": "Template matching",
     "threshold": 0.8,
+    "profile": "High",
     "description": "一键放入标志"
   },
   {
@@ -51,6 +56,17 @@
     "roiBack": "416,377,233,105",
     "method": "Template matching",
     "threshold": 0.8,
+    "profile": "High",
     "description": "一键清空"
+  },
+  {
+    "itemName": "banquet_flag_2",
+    "imageName": "res_banquet_flag_2.png",
+    "roiFront": "972,12,33,60",
+    "roiBack": "967,7,43,70",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "宴会标志2"
   }
 ]
