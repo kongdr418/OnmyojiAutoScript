@@ -445,6 +445,7 @@ class ChessEconomyMixin:
                 interval=0.3,
                 timeout=min(2.0, max(0.0, deadline-time.monotonic())),
                 confirm_frames=2,
+                max_clicks=3,
             )
             if clicked_and_gone:
                 return True
@@ -480,7 +481,7 @@ class ChessEconomyMixin:
                 if emergency_cleanup_done and lineup_sale_done:
                     logger.warning(
                         f'Chess buy {matched_name} remains blocked after '
-                        'emergency cleanup and one lineup-card sale'
+                        'emergency cleanup and one lineup-card sale; cancel current purchase'
                     )
                     return False
                 sell_lineup = emergency_cleanup_done
