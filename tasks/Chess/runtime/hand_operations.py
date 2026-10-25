@@ -13,7 +13,6 @@ from module.atom.click import RuleClick
 from module.atom.image import RuleImage
 from module.exception import GameStuckError
 from module.logger import logger
-from tasks.Chess.runtime.board_positions import SET_JADE_AREAS, SET_POSITIONS
 from tasks.Chess.runtime.press_and_drag import Press_and_Drag
 from tasks.Chess.strategy.grigri import (
     grigri_bond_name,
@@ -98,22 +97,16 @@ class ChessHandOperationsMixin:
         return x + width // 2, y + height // 2
 
     def _set_position(self, set_index: int) -> tuple[int, int]:
-        """读取独立配置中维护的 1-12 号纯站位坐标。"""
-        try:
-            return tuple(SET_POSITIONS[int(set_index)])
-        except (KeyError, TypeError, ValueError) as exc:
-            raise ValueError(
-                f'Chess board set position is not configured: {set_index}'
-            ) from exc
-
-    def _set_jade_area(self, set_index: int) -> tuple[int, int, int, int]:
-        """读取独立配置中维护的 1-12 号勾玉占位检测区域。"""
-        try:
-            return tuple(SET_JADE_AREAS[int(set_index)])
-        except (KeyError, TypeError, ValueError) as exc:
-            raise ValueError(
-                f'Chess board jade area is not configured: {set_index}'
-            ) from exc
+        """读取普通/首领 Frame 第 13-24 项的上阵落点。"""
+        index = int(set_index)
+        if not 1 <= index <= 12:
+            raise ValueError(f'Chess board set position is not configured: {set_index}')
+        frame = (self.F_BOSS_BOARD_OCCUPANCY if self._is_boss_challenge_round()
+                 else self.F_BOARD_OCCUPANCY)
+        if not self.appear(frame):
+            raise GameStuckError('Chess deployment Frame anchor not found')
+        x, y, w, h = frame.matched_ranges[12 + index - 1]
+        return int(round(x + w / 2)), int(round(y + h / 2))
 
     def sell_hand_card(self, source: tuple[int, int]) -> None:
         """统一拖到左侧售卖区，避免出售动作改变商店开关状态。"""
@@ -276,12 +269,14 @@ class ChessHandOperationsMixin:
             in SHIKIGAMI_BONDS_BY_ROMAJI.get(name, ())
         }
 
-    def _record_arakawa_goldfish_position(self, set_index: int) -> None:
+    def _record_arakawa_goldfish_position(self, set_index: int, identified=False) -> None:
         """登记本局金鱼状态；金鱼不占人口且不能佩戴任何装备。"""
         set_index = int(set_index)
         self._arakawa_goldfish_current_position = set_index
         units = dict(getattr(self, '_board_special_units', {}))
+        previous = units.get('arakawa_goldfish', {})
         units['arakawa_goldfish'] = {
+            **previous,
             'display_name': '金鱼',
             'position': set_index,
             'counts_toward_capacity': False,
@@ -289,16 +284,21 @@ class ChessHandOperationsMixin:
             'can_equip_emblem': False,
             'can_equip_hakuzosu_protect': False,
         }
+        if identified:
+            units['arakawa_goldfish'].update(identified=True, detected_position=set_index)
         self._board_special_units = units
         logger.debug(
             'Chess special board unit state: '
             f'arakawa_goldfish={units["arakawa_goldfish"]}'
         )
 
-    def _move_failed_action_goldfish(self, source_position: int) -> bool:
-        """将失败目标中已确认的金鱼拖到阵容配置位置，不再二次确认。"""
+    def _move_arakawa_goldfish(self, source_position: int) -> bool:
+        """将已确认的金鱼移动到阵容指定位置，并同步交换的式神位置。"""
         target_position = self._arakawa_goldfish_target_position()
         if target_position is None:
+            return False
+        if not self._is_preparation_mode():
+            self._goldfish_relocation_pending = True
             return False
         source_position = int(source_position)
         protected_before = set(
@@ -309,8 +309,9 @@ class ChessHandOperationsMixin:
             protected_positions.add(target_position)
             self._player_deployed_positions = protected_positions
             self._record_arakawa_goldfish_position(target_position)
+            self._goldfish_relocation_pending = False
             logger.info(
-                'Chess failed-action target is goldfish and already at '
+                'Chess identified goldfish already at '
                 f'assigned set {target_position}'
             )
             return True
@@ -326,7 +327,13 @@ class ChessHandOperationsMixin:
                 f'_TO_{target_position}'
             ),
         )
+        swapped_names = [name for name in getattr(self, '_board_lineup_names', set())
+                         if getattr(self, '_board_actual_positions', {}).get(
+                             name, self.shikigami_deploy_positions.get(name)) == target_position]
+        for name in swapped_names:
+            self._record_actual_lineup_position(name, source_position)
         self._record_arakawa_goldfish_position(target_position)
+        self._goldfish_relocation_pending = False
         protected_positions = set(protected_before)
         protected_positions.discard(source_position)
         protected_positions.add(target_position)
@@ -335,58 +342,95 @@ class ChessHandOperationsMixin:
             protected_positions.add(source_position)
         self._player_deployed_positions = protected_positions
         logger.info(
-            'Move Chess Arakawa goldfish after board action failure: '
+            'Move Chess identified Arakawa goldfish: '
             f'{source_position} -> {target_position}'
         )
         return True
 
-    def _handle_goldfish_after_board_action_failure(
-        self,
-        set_index: int,
-        action: str,
-    ) -> bool:
-        """仅在下阵失败后点击该格详情，被动识别并移动金鱼。"""
-        if not self._lineup_arakawa_names():
+    def _active_arakawa_names(self) -> set[str]:
+        return {name for name in getattr(self, '_board_lineup_names', set())
+                if self.ARAKAWA_BOND_NAME in SHIKIGAMI_BONDS_BY_ROMAJI.get(name, ())
+                or '荒川纹章' in self._shikigami_attributes(name)[1:]}
+
+    def _goldfish_formation_baseline(self, next_name, emblem=False):
+        """只在下一次上阵/纹章装备会形成二荒川时保存占位快照。"""
+        active = self._active_arakawa_names()
+        if (getattr(self, '_arakawa_goldfish_current_position', None) is not None
+                or len(active) != 1 or next_name in active
+                or self._arakawa_goldfish_target_position() is None):
+            return None
+        if not emblem and next_name not in self._lineup_arakawa_names():
+            return None
+        slots = self._board_frame_scan()
+        if not slots:
+            return None
+        return {'before': {index for index, slot in enumerate(slots, 1) if slot['occupied']},
+                'deployed_position': None if emblem else self.shikigami_deploy_positions[next_name]}
+
+    def _inspect_arakawa_goldfish(self, set_index: int) -> bool:
+        """打开新增占位的详情，用金鱼专属标志确认身份。"""
+        if not self._is_preparation_mode():
             return False
-        target_position = self._arakawa_goldfish_target_position()
-        if target_position is None or not self._is_preparation_mode():
-            return False
-        self.close_shikigami_specifics_if_open()
         x, y = self._set_position(set_index)
-        inspect_rule = RuleClick(
-            roi_front=(x - 8, y - 8, 16, 16),
-            roi_back=(x - 8, y - 8, 16, 16),
-            name=f'chess_inspect_failed_{action}_set_{set_index}',
-        )
-        logger.info(
-            'Inspect failed Chess board action target for Arakawa goldfish: '
-            f'action={action}, set={set_index}'
-        )
-        for attempt in range(1, self.ACTION_ICON_MAX_ATTEMPTS + 1):
-            self.device.click_record_remove(inspect_rule)
-            self.click(inspect_rule)
-            if not self._wait_chess_action_state(
-                lambda: self.appear(self.I_SHIKIGAMI_SPECIFICS)
-            ):
-                logger.warning(
-                    'Chess failed-action target specifics did not open: '
-                    f'action={action}, set={set_index}, '
-                    f'attempt={attempt}/{self.ACTION_ICON_MAX_ATTEMPTS}'
-                )
-                continue
-            is_goldfish = self._wait_chess_action_state(
-                lambda: self.appear(self.I_CHECK_GOLDFISH)
-            )
-            logger.info(
-                'Chess failed-action target goldfish identification: '
-                f'action={action}, set={set_index}, '
-                f'is_goldfish={is_goldfish}'
-            )
-            self.close_shikigami_specifics_if_open()
-            if not is_goldfish:
+        rule = RuleClick(roi_front=(x-8, y-8, 16, 16), roi_back=(x-8, y-8, 16, 16),
+                         name=f'chess_inspect_arakawa_goldfish_set_{set_index}')
+        for _ in range(self.ACTION_ICON_MAX_ATTEMPTS):
+            if not self._is_preparation_mode():
                 return False
-            return self._move_failed_action_goldfish(set_index)
+            self.device.click_record_remove(rule)
+            self.click(rule)
+            if not self._wait_chess_action_state(lambda: self.appear(self.I_SHIKIGAMI_SPECIFICS)):
+                continue
+            identified = self._wait_chess_action_state(lambda: self.appear(self.I_CHECK_GOLDFISH))
+            self.close_shikigami_specifics_if_open()
+            logger.info(f'Chess new Arakawa unit identified: set={set_index}, goldfish={identified}')
+            return identified
         return False
+
+    def _detect_pending_arakawa_goldfish(self) -> bool:
+        if (getattr(self, '_goldfish_relocation_pending', False)
+                and getattr(self, '_arakawa_goldfish_current_position', None) is not None):
+            return self._move_arakawa_goldfish(self._arakawa_goldfish_current_position)
+        pending = getattr(self, '_pending_goldfish_probe', None)
+        if not pending or len(self._active_arakawa_names()) < 2:
+            return False
+        candidates = []
+        def new_position_visible():
+            nonlocal candidates
+            if not self._is_preparation_mode():
+                return True
+            slots = self._board_frame_scan()
+            if not slots:
+                return False
+            occupied = {index for index, slot in enumerate(slots, 1) if slot['occupied']}
+            target = pending['deployed_position']
+            expected = int(target is not None and target not in pending['before'])
+            if len(occupied) <= len(pending['before']) + expected:
+                return False
+            known = {getattr(self, '_board_actual_positions', {}).get(name, position)
+                     for name, position in self.shikigami_deploy_positions.items()
+                     if name in getattr(self, '_board_lineup_names', set())}
+            candidates = sorted(occupied - pending['before'] - known)
+            return bool(candidates)
+        self._wait_chess_action_state(new_position_visible)
+        if not self._is_preparation_mode():
+            return False
+        for position in candidates:
+            if not self._inspect_arakawa_goldfish(position):
+                continue
+            self._record_arakawa_goldfish_position(position, identified=True)
+            self._pending_goldfish_probe = None
+            self._move_arakawa_goldfish(position)
+            return True
+        logger.debug('Chess Arakawa goldfish not confirmed yet; retain probe for next preparation')
+        return False
+
+    def _handle_goldfish_after_board_action_failure(self, set_index, action):
+        """下阵失败仅处理已登记的金鱼，不再盲点未知式神详情。"""
+        if (getattr(self, '_arakawa_goldfish_current_position', None) != int(set_index)
+                or not self._is_preparation_mode()):
+            return False
+        return self._move_arakawa_goldfish(set_index)
 
     def _find_hakuzosu_protect_hand_card(self) -> dict | None:
         """定位手牌中的守护之印。"""
@@ -551,6 +595,11 @@ class ChessHandOperationsMixin:
             return False
         count_before = self._read_shikigami_count()
         hand_count_before = self._lineup_hand_card_match_count(name)
+        hand_stars_before = self._lineup_hand_stars(name)
+        actual_position = getattr(self, '_board_actual_positions', {}).get(name, set_index)
+        same_board_unit = (name in getattr(self, '_board_lineup_names', set())
+                           and actual_position == set_index)
+        board_star_before = self._board_set_star(set_index) if same_board_unit else None
         target_occupied_before = self._board_set_has_shikigami(set_index)
         target_position = self._set_position(set_index)
         logger.debug(
@@ -567,10 +616,36 @@ class ChessHandOperationsMixin:
             name=f'CHESS_DEPLOY_{name.upper()}_SET_{set_index}',
         )
         self.close_shikigami_specifics_if_open()
-        succeeded = self._wait_hand_card_removed(
-            hand_count_before,
-            lambda: self._lineup_hand_card_match_count(name),
-        )
+        star_confirmations = 0
+        confirmed_stars = None
+        success_reason = None
+
+        def deployed():
+            nonlocal star_confirmations, confirmed_stars, success_reason
+            if self.close_shikigami_specifics_if_open():
+                star_confirmations = 0
+                return False
+            if self._lineup_hand_card_match_count(name) < hand_count_before:
+                success_reason = 'hand_count_decreased'
+                return True
+            hand_stars = self._lineup_hand_stars(name)
+            board_star = self._board_set_star(set_index) if same_board_unit else None
+            hand_upgraded = (hand_stars_before is not None and hand_stars is not None
+                             and len(hand_stars_before) == len(hand_stars)
+                             and hand_stars > hand_stars_before)
+            board_upgraded = (board_star_before is not None and board_star is not None
+                              and board_star > board_star_before)
+            if not (hand_upgraded or board_upgraded):
+                star_confirmations = 0
+                confirmed_stars = None
+                return False
+            current = (hand_stars, board_star)
+            star_confirmations = star_confirmations + 1 if current == confirmed_stars else 1
+            confirmed_stars = current
+            success_reason = 'hand_star_increased' if hand_upgraded else 'board_star_increased'
+            return star_confirmations >= 2
+
+        succeeded = self._wait_chess_action_state(deployed)
         count_after = self._read_shikigami_count()
         hand_count_after = self._lineup_hand_card_match_count(name)
         target_occupied_after = self._board_set_has_shikigami(set_index)
@@ -584,11 +659,12 @@ class ChessHandOperationsMixin:
             not target_occupied_before and target_occupied_after
         )
 
-        # 与御魂装备采用同一确认逻辑：比较完整手牌区中同名卡数量，
-        # 数量减少即确认本次上阵成功。人数和目标格只保留为诊断信息。
+        # 手牌减少或连续两帧确认星级提升，均视为本次上卡成功。
         if succeeded:
-            logger.debug(
+            logger.info(
                 f'Chess shikigami deploy confirmed: {name} -> set {set_index}, '
+                f'reason={success_reason}, hand_stars={hand_stars_before}->{self._lineup_hand_stars(name)}, '
+                f'board_star={board_star_before}->{confirmed_stars[1] if confirmed_stars else None}, '
                 f'board_count={count_before["current"] if count_before else "?"}'
                 f'->{count_after["current"] if count_after else "?"}, '
                 f'hand_count={hand_count_before}->{hand_count_after}, '
@@ -610,6 +686,20 @@ class ChessHandOperationsMixin:
     def _lineup_hand_card_match_count(self, name: str) -> int:
         """Count identities from this screenshot's shared Frame scan."""
         return sum(card['name'] == name for card in self._frame_card_scan('card'))
+
+    def _lineup_hand_stars(self, name: str) -> tuple | None:
+        cards = [card for card in self._frame_card_scan('card') if card['name'] == name]
+        if not cards or any(card.get('star') not in (1, 2, 3) for card in cards):
+            return None
+        return tuple(sorted(card['star'] for card in cards))
+
+    def _board_set_star(self, set_index: int) -> int | None:
+        """从普通或首领棋盘 Frame 读取星级；歧义结果不参与确认。"""
+        index = int(set_index)
+        if not 1 <= index <= 12:
+            raise ValueError(f'Chess board set position is not configured: {set_index}')
+        slots = self._board_frame_scan()
+        return slots[index - 1]['star'] if slots else None
 
     def _find_best_shikigami_hand_card(
         self,
@@ -712,10 +802,10 @@ class ChessHandOperationsMixin:
         return None
 
     def _soul_target_position(self, set_index: int) -> tuple[int, int]:
-        """返回御魂类卡牌的投放位置；奇数位统一向北偏移 5 像素。"""
+        """返回御魂类卡牌的投放位置；前排 1-6 号位统一向北偏移 5 像素。"""
         x, y = self._set_position(set_index)
-        if set_index % 2 == 1:
-            y += self.SOUL_ODD_SET_Y_OFFSET
+        if set_index <= 6:
+            y += self.SOUL_FRONT_ROW_Y_OFFSET
         return x, y
 
     def _soul_targets(
@@ -728,9 +818,12 @@ class ChessHandOperationsMixin:
         strategy_shikigami = self.get_lineup_strategy()['shikigami']
         def can_equip(name: str) -> bool:
             _, soul_1, soul_2 = self._shikigami_attributes(name)
+            occupied = (soul_1, soul_2)
+            reserved_emblems = sum(emblem not in occupied for emblem in
+                                   strategy_shikigami[name].get('preferred_emblems', ()))
             return (
-                soul_name not in (soul_1, soul_2)
-                and (soul_1 is None or soul_2 is None)
+                soul_name not in occupied
+                and sum(item is None for item in occupied) > reserved_emblems
             )
 
         preferred_names = {
@@ -763,17 +856,17 @@ class ChessHandOperationsMixin:
             # 御魂；通用输出/功能分类不得再把其他御魂塞给它。
             and not strategy_shikigami[name].get('preferred_souls', ())
         )
-        wanted_parity = 0 if category == 'attack' else 1
+        wanted_front = category != 'attack'
         targets = []
         for set_index in active_positions:
             target_name = self._shikigami_name_at_set(set_index)
             if (
-                set_index % 2 != wanted_parity
+                (set_index <= 6) != wanted_front
                 or target_name is None
                 or not can_equip(target_name)
             ):
                 continue
-            # 前排奇数位统一使用向北偏移后的御魂投放位置。
+            # 前排 1-6 号位统一使用向北偏移后的御魂投放位置。
             targets.append((set_index, self._soul_target_position(set_index)))
         return targets
 
@@ -1228,6 +1321,7 @@ class ChessHandOperationsMixin:
             )
             return []
 
+        self._detect_pending_arakawa_goldfish()
         deployed = []
         deployed_names = set(getattr(self, '_board_lineup_names', set()))
         player_positions = set(
@@ -1326,6 +1420,7 @@ class ChessHandOperationsMixin:
                 )
                 break
 
+            goldfish_baseline = self._goldfish_formation_baseline(candidate['name'])
             if not self.deploy_shikigami_hand_card(
                 candidate['name'],
                 candidate['position'],
@@ -1365,6 +1460,9 @@ class ChessHandOperationsMixin:
                 'Mark Chess player-deployed position: '
                 f'set={set_index}, name={candidate["name"]}'
             )
+            if goldfish_baseline is not None:
+                self._pending_goldfish_probe = goldfish_baseline
+                self._detect_pending_arakawa_goldfish()
             if candidate['name'] == self.HAKUZOSU_NAME:
                 self.equip_hakuzosu_protect_after_deploy(deployed_names)
         else:
@@ -1426,6 +1524,47 @@ class ChessHandOperationsMixin:
         if not detections:
             logger.debug('Chess hand card templates found no cards')
         return detections
+
+    def _hand_capacity_count(self) -> int:
+        """容量只扫描式神/特殊卡锚点与御魂图片，不识别式神身份。"""
+        image = self.device.image
+        candidates = []
+        for frame, kind in ((self.F_HAND_CARD, 'card'), (self.F_FETTER_BADGE, 'emblem')):
+            x, y, w, h = frame.roi_back
+            # 只扫描手牌顶部及下方，排除棋盘上的星级标志。
+            top = max(y, self.HAND_AREA[1])
+            region = image[top:y+h, x:x+w]
+            bx, _, _, _ = frame.badge_references[0]
+            cx, _, cw, _ = frame.roi_ranges[-1 if kind == 'card' else 1]
+            offset = cx + cw/2 - bx
+            if frame.badge_grayscale:
+                region = cv2.cvtColor(region, cv2.COLOR_RGB2GRAY)
+            for front in self.frame_badges[kind]:
+                if frame.badge_grayscale:
+                    front = cv2.cvtColor(front, cv2.COLOR_RGB2GRAY)
+                if region.shape[0] < front.shape[0] or region.shape[1] < front.shape[1]:
+                    continue
+                scores = cv2.matchTemplate(region, front, cv2.TM_CCOEFF_NORMED)
+                ys, xs = np.where(scores >= frame.threshold)
+                candidates.extend((float(scores[py, px]), x+int(px)+offset) for py, px in zip(ys, xs))
+        candidates.extend((item['score'], item['position'][0]) for item in self._soul_hand_cards())
+        # 守护之印不占容量；不依赖当前阵容是否配置守护之印。
+        x, y, w, h = self.HAND_AREA
+        protect = self.hakuzosu_protect_rule.image
+        region = image[y:y+h, x:x+w]
+        protect_x = []
+        if region.shape[0] >= protect.shape[0] and region.shape[1] >= protect.shape[1]:
+            scores = cv2.matchTemplate(region, protect, cv2.TM_CCOEFF_NORMED)
+            _, xs = np.where(scores >= self.hakuzosu_protect_rule.threshold)
+            protect_x = [x+int(px)+protect.shape[1]/2 for px in xs]
+        positions = []
+        for _, center in sorted(candidates, reverse=True):
+            if any(abs(center-x) <= 28 for x in protect_x):
+                continue
+            if not any(abs(center-x) <= 28 for x in positions):
+                positions.append(center)
+        logger.debug(f'Chess hand capacity: count={len(positions)}/10, positions={sorted(positions)}')
+        return len(positions)
 
     def _hand_card_rois(self) -> list[tuple[int, int, int, int]]:
         """兼容只需要卡框的分类流程。"""
@@ -1576,6 +1715,7 @@ class ChessHandOperationsMixin:
                 keep = (
                     (result.get('source') == 'frame' and result['type'] == 'unknown')
                     or result['type'] in ('soul', 'discovery', 'duplicator')
+                    or (result['type'] == 'emblem' and self._keep_preferred_emblem(result['name']))
                     or (
                         result['type'] == 'shikigami'
                         and result['name'] in self.shikigami_deploy_positions
@@ -1758,7 +1898,7 @@ class ChessHandOperationsMixin:
         for name in verified_names:
             entry = resolve_shikigami(name)
             position = actual.get(name, self.shikigami_deploy_positions.get(name))
-            if entry is not None and entry.cost == 1 and position in SET_POSITIONS:
+            if entry is not None and entry.cost == 1 and position in range(1, 13):
                 targets.append((name, int(position)))
         return sorted(targets, key=lambda item: (item[1], item[0]))
 
@@ -1816,7 +1956,9 @@ class ChessHandOperationsMixin:
             for item in SHIKIGAMI_BONDS_BY_ROMAJI.get(name, ())
         }
         # 阵容内完全不存在该羁绊时，纹章没有转化目标，直接进入出售。
-        if bond is None or bond not in lineup_bonds:
+        assigned = any(emblem_name in unit.get('preferred_emblems', ())
+                       for unit in strategy_shikigami.values())
+        if bond is None or (not assigned and bond not in lineup_bonds):
             return []
         targets = []
         for name in verified_names:
@@ -1826,13 +1968,24 @@ class ChessHandOperationsMixin:
             preferred_souls = config.get('preferred_souls', ())
             preferred_emblems = config.get('preferred_emblems', ())
             # 声明了专属御魂的式神默认不接受纹章；只有显式白名单可放行。
-            if preferred_souls and emblem_name not in preferred_emblems:
+            if (preferred_souls or preferred_emblems) and emblem_name not in preferred_emblems:
                 continue
             _, soul_1, soul_2 = self._shikigami_attributes(name)
-            if soul_1 is not None and soul_2 is not None:
+            if emblem_name in (soul_1, soul_2) or (soul_1 is not None and soul_2 is not None):
                 continue
             targets.append((name, int(config['position'])))
         return sorted(targets, key=lambda item: item[1])
+
+    def _keep_preferred_emblem(self, emblem_name: str) -> bool:
+        """保留尚未装备给指定式神的专属纹章。"""
+        strategy = self.get_lineup_strategy()
+        for name, unit in strategy['shikigami'].items():
+            if emblem_name not in unit.get('preferred_emblems', ()):
+                continue
+            _, first, second = self._shikigami_attributes(name)
+            if emblem_name not in (first, second) and (first is None or second is None):
+                return True
+        return False
 
     def equip_emblems_from_hand(
         self,
@@ -1844,7 +1997,11 @@ class ChessHandOperationsMixin:
             cards = self._recognized_emblem_hand_cards()
             if not cards:
                 break
-            card = cards[0]
+            card = next((item for item in cards
+                         if self._emblem_targets(item['name'], verified_names)
+                         or not self._keep_preferred_emblem(item['name'])), None)
+            if card is None:
+                break
             targets = self._emblem_targets(card['name'], verified_names)
             succeeded = False
             for target_name, set_index in targets:
@@ -1856,6 +2013,8 @@ class ChessHandOperationsMixin:
                     f'检测到{card["name"]}(纹章)，'
                     f'尝试移动到{set_index}号位({target_name})'
                 )
+                goldfish_baseline = (self._goldfish_formation_baseline(target_name, emblem=True)
+                                     if card['name'] == '荒川纹章' else None)
                 if not self._equip_soul_card(
                     source=card['position'],
                     set_index=set_index,
@@ -1892,6 +2051,9 @@ class ChessHandOperationsMixin:
                         f'{card["name"]} -> {target_name}'
                     )
                     break
+                if goldfish_baseline is not None:
+                    self._pending_goldfish_probe = goldfish_baseline
+                    self._detect_pending_arakawa_goldfish()
                 equipped.append(card['name'])
                 succeeded = True
                 logger.info(
@@ -1902,6 +2064,8 @@ class ChessHandOperationsMixin:
 
             if succeeded:
                 continue
+            if self._keep_preferred_emblem(card['name']):
+                break
             latest = next((
                 item for item in self._recognized_emblem_hand_cards()
                 if item['name'] == card['name']
@@ -1922,7 +2086,7 @@ class ChessHandOperationsMixin:
     def _find_badge_hand_card(self) -> dict | None:
         """返回最左侧已确认种类的纹章，未识别的纹章保留。"""
         cards = self._recognized_emblem_hand_cards()
-        return cards[0] if cards else None
+        return next((card for card in cards if not self._keep_preferred_emblem(card['name'])), None)
 
     def _recall_one_system_board_card(
         self,
@@ -1930,12 +2094,6 @@ class ChessHandOperationsMixin:
     ) -> int | None:
         """满员上卡时只下阵一个系统卡位，成功则返回对应站位。"""
         if not self._is_preparation_mode():
-            return None
-        if self._is_boss_challenge_round():
-            logger.debug(
-                'Skip Chess system-card recall in boss round: fixed jade '
-                f'areas are unavailable, round={self._current_round_no}'
-            )
             return None
         if not self._ensure_shop_closed():
             logger.warning(
@@ -1968,6 +2126,9 @@ class ChessHandOperationsMixin:
             source = self._set_position(set_index)
             goldfish_kept_at_target = False
             for attempt in range(1, self.ACTION_ICON_MAX_ATTEMPTS + 1):
+                if self._hand_capacity_count() >= 10:
+                    logger.info('Pause Chess system-card recall: hand is full, no room for recalled card')
+                    return None
                 drag_source = (
                     source
                     if attempt == 1
@@ -1986,7 +2147,7 @@ class ChessHandOperationsMixin:
                     ),
                 )
                 if self._wait_chess_action_state(
-                    lambda: not self._board_set_has_shikigami(set_index)
+                    lambda: self._board_set_is_empty(set_index)
                 ):
                     tracked_names = set(
                         getattr(self, '_board_lineup_names', set())
@@ -2053,12 +2214,6 @@ class ChessHandOperationsMixin:
 
     def recall_all_board_cards(self) -> bool:
         """按系统自动上阵顺序，快速回收棋盘右侧四个候选位置。"""
-        if self._is_boss_challenge_round():
-            logger.debug(
-                'Defer Chess board recall in boss round: fixed jade areas '
-                f'are unavailable, round={self._current_round_no}'
-            )
-            return False
         if not self._ensure_shop_closed():
             logger.warning(
                 'Abort Chess board recall: shop could not be closed'
@@ -2125,6 +2280,9 @@ class ChessHandOperationsMixin:
             source = self._set_position(set_index)
             goldfish_handled = False
             for attempt in range(1, self.ACTION_ICON_MAX_ATTEMPTS + 1):
+                if self._hand_capacity_count() >= 10:
+                    logger.info('Pause Chess board recall: hand is full, no room for recalled card')
+                    return False
                 drag_source = (
                     source
                     if attempt == 1
@@ -2143,7 +2301,7 @@ class ChessHandOperationsMixin:
                     ),
                 )
                 if self._wait_chess_action_state(
-                    lambda: not self._board_set_has_shikigami(set_index)
+                    lambda: self._board_set_is_empty(set_index)
                 ):
                     logger.debug(
                         'Chess board recall confirmed by jade marker: '
@@ -2195,8 +2353,8 @@ class ChessHandOperationsMixin:
 
         self.screenshot()
         count = self._read_shikigami_count()
-        # 只清除脚本记录中确实位于本次回收区域的式神。若 9 号位是脚本
-        # 上阵的卡，或场上仍有 1-8 号位的式神，则保留对应记录。
+        # 只清除脚本记录中确实位于本次回收区域的式神。若 5 号位是脚本
+        # 上阵的卡，或场上仍有其他站位的式神，则保留对应记录。
         self._board_lineup_names = {
             name
             for name in tracked_names

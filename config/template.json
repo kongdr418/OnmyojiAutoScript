@@ -1710,7 +1710,8 @@
       "limit_time": "00:30:00",
       "matchmaking_timeout_seconds": 60,
       "coin_full_exit": false,
-      "continue_grigri_refresh_below_nine": true
+      "continue_grigri_refresh_below_nine": true,
+      "custom_lineup": ""
     }
   },
   "collective_missions": {

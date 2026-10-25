@@ -197,17 +197,32 @@ class ScriptTask(GameUi, GeneralBattle, DemonEncounterAssets, SwitchSoul):
             logger.info('Unknown scene Or Boss fight failed.waiting for Prepare_Button appear...')
             self.wait_until_appear(self.I_PREPARE_HIGHLIGHT, wait_time=2)
 
-        # 等待回到挑战boss主界面
-        self.wait_until_appear(self.I_BOSS_GATHER)
-        while 1:
+        self._finish_boss_result()
+
+    def _boss_result_visible(self):
+        if not self.appear(self.I_BOSS_DONE_CHECK):
+            return False
+        title = ''.join(str(self.O_BOSS_RESULT_TITLE.ocr(self.device.image)).split())
+        return '通关评价' in title
+
+    def _finish_boss_result(self):
+        """主动关闭胜利评价面板并返回地图，避免等待被面板遮挡的集结页。"""
+        deadline = time.monotonic() + 60
+        while time.monotonic() < deadline:
             self.screenshot()
+            if self._boss_result_visible():
+                logger.info('Demon boss victory evaluation visible; click settlement area to close')
+                self.click(self._battle_settlement_click(), interval=0.8)
+                continue
             if self.appear(self.I_DE_LOCATION):
-                break
+                logger.info('Demon boss settlement completed: returned to encounter map')
+                return True
             if self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
                 continue
             if self.appear_then_click(self.I_BOSS_BACK_WHITE, interval=1):
                 continue
-        # 返回到封魔主界面
+            sleep(0.2)
+        raise GameStuckError('Demon boss settlement did not return to encounter map within 60 seconds')
 
     def execute_lantern(self):
         """

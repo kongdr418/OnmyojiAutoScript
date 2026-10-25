@@ -43,6 +43,39 @@ class GeneralInvite(BaseTask, GeneralInviteAssets):
     timer_wait = None
     timer_emoji = None  # 等待期间如果没有操作的话，可能会导致长时间无响应报错
 
+    def _room_cooperation(self):
+        task = getattr(self, '_battle_cooperation_task', '')
+        runtime = getattr(self.config, 'cooperation_runtime', None)
+        peer = runtime.peers.get(task, '') if runtime and task else ''
+        return runtime, task, peer
+
+    def screenshot(self):
+        runtime, task, peer = self._room_cooperation()
+        token = runtime.pending_room_check(task, peer) if peer else None
+        result = super().screenshot()
+        if token:
+            ready = self.is_in_room(False)
+            runtime.answer_room_check(task, peer, token, ready)
+            logger.info(f'Cooperation: room check requested by {peer}, in room: {ready}')
+        return result
+
+    def _cooperation_rooms_ready(self):
+        runtime, task, peer = self._room_cooperation()
+        if not peer:
+            return True
+        token = getattr(self, '_cooperation_room_token', None)
+        if token:
+            ready = runtime.room_check_result(task, peer, token)
+            if ready is None:
+                return False
+            self._cooperation_room_token = None
+            if ready:
+                logger.info(f'Cooperation: {peer} confirmed in team room, start challenge')
+                return True
+        self._cooperation_room_token = runtime.request_room_check(task, peer)
+        logger.info(f'Cooperation: ask {peer} to confirm team room before challenge')
+        return False
+
     def prepare_battle_cooperation(self, task: str) -> None:
         from module.cooperation import prepare_battle_cooperation
         prepare_battle_cooperation(self, task)
@@ -92,8 +125,8 @@ class GeneralInvite(BaseTask, GeneralInviteAssets):
 
             # 点击挑战
             if self.room_check_can_fire(config):
-                self.click_fire()
-                return True
+                if self.click_fire() is not False:
+                    return True
             if self.timer_invite and self.timer_invite.reached():
                 if is_first:
                     logger.info('Invitation is triggered every 20s')
@@ -245,13 +278,18 @@ class GeneralInvite(BaseTask, GeneralInviteAssets):
         return False
 
     def click_fire(self):
+        started = False
         while 1:
             self.screenshot()
             if not self.is_in_room(False):
                 break
+            if not started and not self._cooperation_rooms_ready():
+                return False
             if self.appear_then_click(self.I_FIRE, interval=1):
+                started = True
                 continue
             if self.appear_then_click(self.I_FIRE_SEA, interval=1):
+                started = True
                 continue
 
     @cached_property

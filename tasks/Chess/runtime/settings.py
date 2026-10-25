@@ -30,9 +30,9 @@ class ChessRuntimeSettings:
     HAND_DEPLOY_SAFETY_LIMIT = 20
     HAND_CLEANUP_SAFETY_LIMIT = 30
     HAND_CLEANUP_CLEAN_CONFIRM_FRAMES = 3
-    # 系统自动上阵优先占用棋盘右侧 11、12、9、10 号位。百鬼结束后
-    # 只需要依次回收这些候选格；若 9 号位由脚本亲自部署，则保留该格。
-    BOARD_RECALL_POSITIONS = (11, 12, 9, 10)
+    # 系统自动上阵优先占用棋盘右侧 6、12、5、11 号位。百鬼结束后
+    # 只需要依次回收这些候选格；若 5 号位由脚本亲自部署，则保留该格。
+    BOARD_RECALL_POSITIONS = (6, 12, 5, 11)
     # c_card_1/2/3.png 专用于检测棋盘式神头顶的三种勾玉颜色。
     BOARD_OCCUPANCY_TEMPLATE_THRESHOLD = 0.68
     ROUND_CONFIRM_FRAMES = 2
@@ -64,7 +64,7 @@ class ChessRuntimeSettings:
     SOUL_EQUIP_SAFETY_LIMIT = 20
     DISCOVER_SOUL_SAFETY_LIMIT = 10
     DISCOVER_SOUL_UI_TIMEOUT = 8.0
-    SOUL_ODD_SET_Y_OFFSET = -5
+    SOUL_FRONT_ROW_Y_OFFSET = -5
     SOUL_TEMPLATE_THRESHOLD = 0.60
     SOUL_TEMPLATE_SCALES = (0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.15, 1.20)
     SOUL_DISPLAY_NAMES = {

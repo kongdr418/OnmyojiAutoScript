@@ -2,6 +2,7 @@
 
 # This Python file uses the following encoding: utf-8
 
+from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
 
@@ -22,6 +23,18 @@ CHESS_TASK_DIR = Path(__file__).resolve().parents[1]
 class ChessRecognitionMixin(ChessFrameCardsMixin):
     """Internal mixin; use through ``ScriptTask`` only."""
 
+    def _configured_lineup_key(self, reload=False):
+        if reload:
+            self.config.reload()
+        task = getattr(self.config, 'chess', None)
+        config = getattr(task, 'chess_config', None)
+        selected = getattr(config, 'lineup_bond', self.DEFAULT_LINEUP_KEY)
+        if getattr(selected, 'value', selected) == '自定义阵容':
+            selected = getattr(config, 'custom_lineup', '')
+            if not selected.startswith(('builtin:', 'custom:')):
+                selected = 'custom:' + selected
+        return selected
+
     def get_lineup_strategy(
         self,
         lineup_key: str | None = None,
@@ -32,28 +45,28 @@ class ChessRecognitionMixin(ChessFrameCardsMixin):
             or getattr(self, '_active_lineup_key', None)
             or self.DEFAULT_LINEUP_KEY
         )
-        key = resolve_lineup_key(selected)
-        entry = self.LINEUP_REGISTRY.get(key)
+        snapshot = getattr(self, '_lineup_snapshot', None)
+        if snapshot is not None and (lineup_key is None or str(selected) == self._active_lineup_key):
+            return snapshot
+        if str(selected).startswith('custom:'):
+            from tasks.Chess.strategy.custom_lineups import load_strategy
+            return load_strategy(str(selected).removeprefix('custom:'))
+        from tasks.Chess.strategy.lineup_loader import load_lineup_registry
+        registry = load_lineup_registry()
+        key = str(selected).removeprefix('builtin:') if str(selected).startswith('builtin:') else resolve_lineup_key(selected)
+        entry = registry.get(key)
         if entry is None:
-            logger.warning(
-                f'Unknown Chess lineup strategy [{selected}], fallback to '
-                f'[{self.DEFAULT_LINEUP_KEY}]'
-            )
-            entry = self.LINEUP_REGISTRY[self.DEFAULT_LINEUP_KEY]
+            raise ValueError(f'阵容不存在：{selected}；请在 chesslineup 中重新选择')
         return entry['strategy']
 
     def select_lineup_strategy(self, lineup_key: str) -> dict:
-        """切换当前阵容，并清除依赖阵容的图片规则缓存。"""
-        strategy = self.get_lineup_strategy(lineup_key)
+        """在对局边界加载一次配置，此后所有操作使用本局快照。"""
+        self.__dict__.pop('_lineup_snapshot', None)
+        strategy = deepcopy(self.get_lineup_strategy(lineup_key))
         self._active_lineup_key = strategy['key']
-        for cache_name in (
-            'hakuzosu_protect_rule',
-        ):
-            self.__dict__.pop(cache_name, None)
-        logger.info(
-            f'Select Chess lineup strategy: '
-            f'{strategy["key"]} ({strategy["display_name"]})'
-        )
+        self._lineup_snapshot = strategy
+        self.__dict__.pop('hakuzosu_protect_rule', None)
+        logger.info(f'Select Chess lineup snapshot: {strategy["key"]} ({strategy["display_name"]})')
         return strategy
 
     def _shikigami_display_name(self, name: str | None) -> str:

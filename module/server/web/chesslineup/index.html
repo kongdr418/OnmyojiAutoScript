@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ChessLineup · 百鬼阵容工坊</title>
+  <link rel="stylesheet" href="/tool/chesslineup/static/style.css">
+  <script defer src="/tool/chesslineup/static/app.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">棋</span><div><h1>百鬼阵容工坊</h1><span>CHESS LINEUP</span></div></div>
+  <div class="top-actions"><select id="presets" aria-label="打开阵容"><option value="">打开已有阵容…</option></select><button id="new">新建</button><button id="save-as">另存为</button><button id="promote" disabled>转为内置</button><button id="rename" disabled>重命名</button><button id="delete" disabled>删除</button><button id="export">导出</button><button id="import">导入</button><input type="file" id="import-file" accept="application/json,.json" hidden><button id="save" class="primary">保存阵容</button></div>
+</header>
+<main>
+  <aside id="library" class="library" aria-label="素材库与移除区域">
+    <div class="library-heading"><span class="eyebrow">素材库</span><span class="small">拖取后保留原卡</span></div>
+    <nav id="tabs" class="tabs"><button data-kind="shikigami" class="active">式神</button><button data-kind="soul">御魂</button><button data-kind="emblem">纹章</button></nav>
+    <input id="search" type="search" placeholder="搜索式神、羁绊或装备" aria-label="搜索素材">
+    <div id="costs" class="costs"><button data-cost="0" class="active">全部</button><button data-cost="5">5 金</button><button data-cost="4">4 金</button><button data-cost="3">3 金</button><button data-cost="2">2 金</button><button data-cost="1">1 金</button></div>
+    <div id="cards" class="cards" aria-label="可拖取卡牌"></div>
+    <div class="remove-hint"><span>↶</span><div>拖回左侧，移除配置<small>式神连同装备移除 · 装备长按后单独拖回</small></div></div>
+  </aside>
+  <section class="workspace">
+    <div class="lineup-heading"><div><span class="eyebrow">阵容编辑</span><input id="name" aria-label="阵容名称" placeholder="阵容名称" maxlength="40"></div><div class="population"><strong id="population">0</strong><span>/ 10 人口</span><small id="dirty">未保存</small></div></div>
+    <div class="board" id="board"><div class="row-label"><span>前 排</span><span>01 — 06</span></div><div id="front" class="board-row"></div><div class="row-label"><span>后 排</span><span>07 — 12</span></div><div id="back" class="board-row"></div></div>
+    <section class="bond-panel"><div id="bond-summary" class="bond-summary" aria-label="当前阵容羁绊"></div><div class="bond-actions"><span id="selected-bond" class="small">点击羁绊以指定次要羁绊</span><button id="force-secondary" disabled>设为次要羁绊</button><button id="clear-secondary">恢复自动</button></div></section>
+    <section class="detail-panel"><div class="detail-title"><strong id="selected-name">选择一个式神</strong><span id="selected-bonds" class="small">拖入式神后，将御魂或纹章拖到卡片上</span></div><div class="detail-body"><label>上阵权重<input id="weight" type="number" min="0" max="99" disabled></label><span class="small weight-help">数值越小，越优先上阵</span><div id="equipment-detail" class="equipment-detail"></div></div></section>
+    <section class="strategy-panel"><label>阵容标识<input id="key" maxlength="48" placeholder="例：my_lineup"></label><label>主要羁绊<select id="primary-bond"></select></label><div class="special-help" id="special-help">荒川达到 2 时出现可拖动金鱼；上阵白藏主后，可从御魂区拖取守护之印。</div></section>
+    <div class="bottom-bar"><span class="small">特殊位置通过拖放指定</span><div class="apply"><select id="config" aria-label="应用到脚本配置"></select><button id="apply">保存并应用</button></div></div>
+    <p class="footnote">两行各六个槽位。每名式神最多装备两件御魂 / 纹章；长按右上角装备后可拖回左侧移除。</p>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

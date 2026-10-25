@@ -14,6 +14,7 @@ from tasks.Chess.runtime.recognition import ChessRecognitionMixin
 from tasks.Chess.runtime.round_state import ChessRoundStateMixin
 from tasks.Chess.runtime.settings import ChessRuntimeSettings
 from tasks.Chess.runtime.state_loop import ChessStateLoopMixin
+from tasks.Chess.runtime.activity_watchdog import ChessActivityWatchdog
 from tasks.Component.GeneralBattle.general_battle import GeneralBattle
 from tasks.GameUi.game_ui import GameUi
 from tasks.GameUi.page import page_chess
@@ -56,15 +57,14 @@ class ChessLegacyScriptTask(
         return bool(condition())
 
     def run(self):
+        with ChessActivityWatchdog(timeout=300):
+            self._run_chess_task()
+
+    def _run_chess_task(self):
         """按执行次数循环百鬼棋局，并可在鼬乐币刷满时提前结束。"""
         chess_task_config = getattr(self.config, 'chess', None)
         chess_config = getattr(chess_task_config, 'chess_config', None)
-        selected_lineup = getattr(
-            chess_config,
-            'lineup_bond',
-            self.DEFAULT_LINEUP_KEY,
-        )
-        strategy = self.select_lineup_strategy(selected_lineup)
+        strategy = self.select_lineup_strategy(self._configured_lineup_key())
 
         # 启动恢复会主动退出遗留对局；正常循环只保留保段位退两局。
         self._recover_interrupted_chess_game()
@@ -960,6 +960,7 @@ class ChessLegacyScriptTask(
 
     def _start_chess_game(self) -> None:
         """从棋局大厅开战，确认进入局内后直接开始回合流程。"""
+        self.select_lineup_strategy(self._configured_lineup_key(reload=True))
         logger.debug('Chess game start')
         # 式神本局属性：(守护之印, 御魂1, 御魂2)。
         # 守护之印不占普通御魂槽，三个属性均允许为空。
@@ -968,6 +969,8 @@ class ChessLegacyScriptTask(
         self._board_actual_positions = {}
         self._player_deployed_positions = set()
         self._arakawa_goldfish_current_position = None
+        self._pending_goldfish_probe = None
+        self._goldfish_relocation_pending = False
         self._board_special_units = {}
         self._last_game_rank = None
         self._reset_economy_state()

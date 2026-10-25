@@ -424,7 +424,7 @@ class ChessRoundStateMixin:
 
     # 特殊回合标志优先于文字 OCR；后续回合标志在此登记阶段。
     SPECIAL_STAGE_RULES = (('I_STAGE_HYAKKI', '鬼'),)
-    BOARD_MARKER_DISABLED_RULES = ('I_STAGE_ORCHI', 'I_STAGE_DEMON')
+    BOSS_STAGE_RULES = ('I_STAGE_ORCHI', 'I_STAGE_DEMON')
 
     def _stage_marker_visible(self, rule) -> bool:
         """回合预告中的灰色图案也会模板命中，只接受金色激活图案。"""
@@ -470,103 +470,41 @@ class ChessRoundStateMixin:
         return '待' if raw else None
 
     def _is_boss_challenge_round(self, round_no=None) -> bool:
-        """大蛇、逢魔标志出现过的本回合不使用勾玉上阵检测。"""
+        """以大蛇、逢魔激活标志确定首领回合，切换专用棋盘布局。"""
         key = (self.chess_state.game_number,
                self._current_round_no if round_no is None else round_no)
         if any(self._stage_marker_visible(getattr(self, name))
-               for name in self.BOARD_MARKER_DISABLED_RULES):
-            self._board_marker_disabled_round = key
+               for name in self.BOSS_STAGE_RULES):
+            self._boss_challenge_round_key = key
             return True
-        return getattr(self, '_board_marker_disabled_round', None) == key
-
-    def _tracked_board_positions(self) -> set[int]:
-        """汇总无需依赖勾玉模板即可确认的本局站位。"""
-        positions = {
-            int(position)
-            for position in getattr(
-                self,
-                '_player_deployed_positions',
-                set(),
-            )
-        }
-        actual_positions = getattr(self, '_board_actual_positions', {})
-        for name in getattr(self, '_board_lineup_names', set()):
-            position = actual_positions.get(
-                name,
-                self.shikigami_deploy_positions.get(name),
-            )
-            if position is not None:
-                positions.add(int(position))
-        for unit in getattr(self, '_board_special_units', {}).values():
-            position = unit.get('position')
-            if position is not None:
-                positions.add(int(position))
-        return positions
+        return getattr(self, '_boss_challenge_round_key', None) == key
 
     def _board_set_has_shikigami(self, set_index: int) -> bool:
-        """判断站位是否有人；首领回合仅采用本局动态站位记录。"""
-        if self._is_boss_challenge_round():
-            occupied = int(set_index) in self._tracked_board_positions()
-            logger.debug(
-                'Chess boss-round board occupancy by runtime state: '
-                f'round={self._current_round_no}, set={set_index}, '
-                f'occupied={occupied}'
-            )
-            return occupied
-
+        """按当前普通或首领棋盘的 Frame 判断占位。"""
         return self._board_set_has_shikigami_visual(set_index)
 
     def _board_set_has_shikigami_visual(self, set_index: int) -> bool:
-        """仅按当前截图中的勾玉标志判断指定站位是否有人。"""
+        """按表情开关定位的 Frame 判断指定站位是否有人。"""
 
-        if self._is_boss_challenge_round():
-            return int(set_index) in self._tracked_board_positions()
+        index = int(set_index)
+        if not 1 <= index <= 12:
+            raise ValueError(f'Chess board set position is not configured: {set_index}')
+        slots = self._board_frame_scan()
+        return bool(slots and slots[index - 1]['occupied'])
 
-        x, y, width, height = self._set_jade_area(set_index)
-        image_height, image_width = self.device.image.shape[:2]
-        if (
-            x < 0
-            or y < 0
-            or x >= image_width
-            or y >= image_height
-        ):
-            logger.warning(
-                f'Chess set jade area is outside screenshot: '
-                f'set={set_index}, area={(x, y, width, height)}'
-            )
-            return False
-        width = min(width, image_width - x)
-        height = min(height, image_height - y)
-        if width <= 0 or height <= 0:
-            logger.warning(
-                f'Chess set jade area is empty after clipping: '
-                f'set={set_index}, area={(x, y, width, height)}'
-            )
-            return False
-
-        roi = [x, y, width, height]
-        return any(
-            bool(rule.match_all_any(
-                self.device.image,
-                roi=roi,
-                threshold=self.BOARD_OCCUPANCY_TEMPLATE_THRESHOLD,
-                nms_threshold=0.3,
-                frame_id=self.device.image_frame_id,
-            ))
-            for rule in self.board_occupancy_rules
-        )
+    def _board_set_is_empty(self, set_index: int) -> bool:
+        """普通或首领 Frame 确认原站位为空，锚点缺失不算下阵成功。"""
+        index = int(set_index)
+        if not 1 <= index <= 12:
+            raise ValueError(f'Chess board set position is not configured: {set_index}')
+        slots = self._board_frame_scan()
+        return bool(slots and not slots[index - 1]['occupied'])
 
     def _reconcile_lineup_after_hyakki_round(
         self,
         next_round_no: int | None = None,
     ) -> list[str]:
         """百鬼夜行结束后移除已不在原站位上的式神上阵记录。"""
-        if self._is_boss_challenge_round(round_no=next_round_no):
-            logger.info(
-                'Skip post-Hyakki lineup check during boss round: '
-                f'round={next_round_no}'
-            )
-            return []
         deployed_names = set(
             getattr(self, '_board_lineup_names', set())
         )
@@ -606,22 +544,6 @@ class ChessRoundStateMixin:
 
     def _read_board_position_count(self) -> dict:
         """统计 12 个站位勾玉区域中检测到图标的位置数量。"""
-        if self._is_boss_challenge_round():
-            occupied_positions = sorted(self._tracked_board_positions())
-            count = len(occupied_positions)
-            raw = ','.join(str(index) for index in occupied_positions)
-            logger.debug(
-                'Chess boss-round board position count by runtime state: '
-                f'round={self._current_round_no}, count={count}/12, '
-                f'occupied={occupied_positions}'
-            )
-            return {
-                'current': count,
-                'total': 12,
-                'raw': raw,
-                'occupied_positions': occupied_positions,
-            }
-
         occupied_positions = [
             set_index
             for set_index in range(1, 13)

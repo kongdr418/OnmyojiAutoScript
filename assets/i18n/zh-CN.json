@@ -366,5 +366,7 @@
   "min_fish_value_help": "只蹭体力收益不低于此值的斗鱼卡（5星118-134，6星134-151），0为不限制",
   "save_touch_fish": "惠比寿的摸鱼行动",
   "save_touch_fish_help": "默认使用全部存储按钮，主要目的是为了配合真蛇每周打一次即可获得俩次奖励(并不会节省体力)",
-  "hyakki_draft_enabled":"百鬼环节自动投掷"
+  "hyakki_draft_enabled":"百鬼优先所需御魂",
+  "custom_lineup": "自定义阵容标识",
+  "custom_lineup_help": "在 chesslineup 工具中保存并应用的阵容标识"
 }

@@ -38,6 +38,40 @@ class ChessFrameCardsMixin:
     # Only portrait identity matching uses grayscale; badge/OCR/Frame outputs stay RGB.
     FRAME_PORTRAIT_GRAYSCALE = True
 
+    def _board_frame_scan(self):
+        """用表情开关定位，一帧读取十二个站位的勾玉及星级。"""
+        image = self.device.image
+        boss = self._is_boss_challenge_round()
+        key = (getattr(self.device, 'image_frame_id', None), id(image), boss)
+        cached = getattr(self, '_board_frame_cache', None)
+        if cached is not None and cached[0] == key:
+            return cached[1]
+        frame = self.F_BOSS_BOARD_OCCUPANCY if boss else self.F_BOARD_OCCUPANCY
+        result = frame.run(self, *([None] * len(frame.roi_ranges)))
+        slots = []
+        if result.matched:
+            for crop, area in zip(result[:12], frame.matched_ranges[:12]):
+                scores = []
+                for star, rule in enumerate(self.board_occupancy_rules, 1):
+                    front = rule.image
+                    if front.shape[0] > crop.shape[0] or front.shape[1] > crop.shape[1]:
+                        continue
+                    score = float(cv2.minMaxLoc(cv2.matchTemplate(
+                        crop, front, cv2.TM_CCOEFF_NORMED,
+                    ))[1])
+                    if np.isfinite(score) and score >= self.BOARD_OCCUPANCY_TEMPLATE_THRESHOLD:
+                        scores.append((score, star))
+                scores.sort(reverse=True)
+                star = (scores[0][1] if scores and
+                        (len(scores) == 1 or scores[0][0] - scores[1][0] >= .05)
+                        else None)
+                slots.append({'occupied': bool(scores), 'star': star,
+                              'roi': tuple(int(round(v)) for v in area)})
+        else:
+            logger.debug('Chess board Frame: emoji anchor not found')
+        self._board_frame_cache = (key, slots)
+        return slots
+
     @cached_property
     def golden_copy_portrait(self):
         return self._frame_matching_portrait(read_image(ROOT / 'fetter/golden_copy.png'))
@@ -250,7 +284,7 @@ class ChessFrameCardsMixin:
                 'star': None if kind == 'store' else self._frame_star(frame.files[index]),
                 'action': None,
             })
-            logger.debug(f'Chess Frame {kind}: name={name}, score={identity_score:.3f}, roi={roi}, text={text}')
+            logger.debug(f'Chess Frame {kind}: name={name}, star={cards[-1]["star"]}, badge={Path(frame.files[index]).name}, score={identity_score:.3f}, roi={roi}, text={text}')
         cache[1][kind] = cards
         return cards
 

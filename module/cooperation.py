@@ -3,6 +3,7 @@ import json
 import sqlite3
 import threading
 import time
+import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -45,6 +46,9 @@ class Cooperation:
                    PRIMARY KEY(name, task));
                 CREATE TABLE IF NOT EXISTS assignments
                   (name TEXT, task TEXT, peer TEXT, PRIMARY KEY(name, task));
+                CREATE TABLE IF NOT EXISTS room_checks
+                  (source TEXT PRIMARY KEY, target TEXT, task TEXT, token TEXT,
+                   created REAL, ready INTEGER, answered REAL);
             ''')
 
     @contextmanager
@@ -57,9 +61,13 @@ class Cooperation:
             db.close()
 
     def publish(self, task=None):
+        changed = task is not None and task != self.active_task
         if task is not None:
             self.active_task = task
         with self.connect() as db:
+            if changed:
+                db.execute('DELETE FROM room_checks WHERE source=? OR target=?',
+                           (self.name, self.name))
             db.execute('INSERT OR REPLACE INTO runners VALUES (?, ?, ?)',
                        (self.name, self.active_task, time.time()))
 
@@ -86,7 +94,45 @@ class Cooperation:
         if self._thread:
             self._thread.join(timeout=6)
         with self.connect() as db:
+            db.execute('DELETE FROM room_checks WHERE source=? OR target=?',
+                           (self.name, self.name))
             db.execute('DELETE FROM runners WHERE name=?', (self.name,))
+
+    def request_room_check(self, task, peer):
+        token = uuid.uuid4().hex
+        with self.connect() as db:
+            db.execute('INSERT OR REPLACE INTO room_checks VALUES (?, ?, ?, ?, ?, NULL, NULL)',
+                       (self.name, peer, task, token, time.time()))
+        return token
+
+    def pending_room_check(self, task, peer):
+        with self.connect() as db:
+            row = db.execute('SELECT token, created FROM room_checks WHERE source=? '
+                             'AND target=? AND task=? AND answered IS NULL',
+                             (peer, self.name, task)).fetchone()
+        return row[0] if row and 0 <= time.time() - row[1] <= 5 else None
+
+    def answer_room_check(self, task, peer, token, ready):
+        with self.connect() as db:
+            db.execute('UPDATE room_checks SET ready=?, answered=? WHERE source=? '
+                       'AND target=? AND task=? AND token=? AND answered IS NULL',
+                       (bool(ready), time.time(), peer, self.name, task, token))
+
+    def room_check_result(self, task, peer, token):
+        now = time.time()
+        with self.connect() as db:
+            row = db.execute('SELECT ready, answered, created FROM room_checks '
+                             'WHERE source=? AND target=? AND task=? AND token=?',
+                             (self.name, peer, task, token)).fetchone()
+            runner = db.execute('SELECT task, heartbeat FROM runners WHERE name=?',
+                                (peer,)).fetchone()
+        if not row or not runner or runner[0] != task or now - runner[1] >= 30:
+            return False
+        if now - row[2] > 5:
+            return False
+        if row[1] is None:
+            return None
+        return bool(row[0]) and 0 <= now - row[1] <= 3
 
     def read(self, name):
         name = instance_name(name)
@@ -232,6 +278,8 @@ def prepare_task_cooperation(config, task):
     if peer:
         if runtime is None:
             runtime = Cooperation(config.config_name)
+            config.cooperation_runtime = runtime
+        runtime.peers[task] = peer
         runtime.prepare(config, task, peer)
 
 
@@ -240,4 +288,5 @@ def prepare_battle_cooperation(owner, task):
     if getattr(owner, '_battle_cooperation_prepared', False):
         return
     prepare_task_cooperation(owner.config, task)
+    owner._battle_cooperation_task = task
     owner._battle_cooperation_prepared = True

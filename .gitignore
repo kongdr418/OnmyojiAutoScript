@@ -275,3 +275,36 @@ console.bat
 .vscode/*
 tasks/AutoCheckinBigGod/frida-server-17.6.2-android-x86_64
 oas.bat
+/data/frog_oas/
+/data/cooperation/
+# User-defined Chess lineups; builtin lineup_strategy.json stays tracked.
+/tasks/Chess/strategy/custom_lineups.json
+/tasks/Chess/strategy/custom_lineups.v1.bak.json
+/tasks/Chess/strategy/custom_lineups.tmp
+
+# Local group access credentials and SSH host cache
+**/git_ssh.key
+**/git_ssh.key.pub
+/config/git_ssh_known_hosts
+
+# Local development notes, generated reports, and checks
+/docs/
+/tests/
+*.md
+**/test_*.py
+**/*_test.py
+/dev_tools/check_*.py
+/dev_tools/chess/
+/module/atom/check_rule_frame.py
+/module/script/check_scheduler.py
+/module/server/check_frame_annotator.js
+/tasks/check_binary_controls.py
+/tasks/FrogBoss/check_result_markers.py
+/tasks/GameUi/check_navigation.py
+/tasks/GameUi/export_pages.py
+/tasks/GameUi/MINIMAL_RESOURCE_CLEANUP.json
+/tasks/GameUi/page_asset_ownership.json
+/tasks/GameUi/page_checks/*.md
+
+# Locks for local lineup editor writes
+/tasks/Chess/strategy/*.lock

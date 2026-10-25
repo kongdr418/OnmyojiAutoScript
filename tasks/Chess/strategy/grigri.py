@@ -184,7 +184,12 @@ def lineup_bond_context(strategy: dict) -> dict:
         for shikigami_name in strategy.get('shikigami', {})
         for bond in SHIKIGAMI_BONDS_BY_ROMAJI.get(shikigami_name, ())
     )
-    primary = strategy.get('display_name', '')
+    for unit in strategy.get('shikigami', {}).values():
+        for emblem in unit.get('preferred_emblems', ()):
+            bond = grigri_bond_name(emblem)
+            if bond:
+                counts[bond] += 1
+    primary = strategy.get('primary_bond') or strategy.get('display_name', '')
     primary_count = counts.get(primary, 0)
     # 次要羁绊只保留计数第二多的一项。Counter 保留阵容式神与羁绊的
     # 首次出现顺序，因此并列时稳定选择阵容配置中先出现的羁绊。

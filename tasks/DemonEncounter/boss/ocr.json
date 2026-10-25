@@ -16,5 +16,14 @@
     "method": "Default",
     "keyword": "",
     "description": "Ocr-description"
+  },
+  {
+    "itemName": "boss_result_title",
+    "roiFront": "621,174,241,64",
+    "roiBack": "621,174,241,64",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "通关评价",
+    "description": "胜利结算通关评价标题"
   }
 ]

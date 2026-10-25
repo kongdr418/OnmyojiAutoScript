@@ -9,6 +9,7 @@
     "description": "手牌识别框",
     "roiBadge": "264,552,20,19",
     "badgeSerial": 0,
+    "badgeGrayscale": false,
     "roiRange": [
       "279,665,66,24",
       "279,639,66,24",
@@ -67,6 +68,7 @@
     "description": "",
     "roiBadge": "1042,267,21,23",
     "badgeSerial": 0,
+    "badgeGrayscale": false,
     "roiRange": [
       "908,261,134,32",
       "931,224,134,32",
@@ -126,6 +128,7 @@
     "description": "纹章识别",
     "roiBadge": "574,548,65,20",
     "badgeSerial": 1,
+    "badgeGrayscale": true,
     "roiRange": [
       "564,665,79,23",
       "562,551,86,137",
@@ -152,7 +155,288 @@
         "threshold": 0.8,
         "type": "image"
       }
+    ]
+  },
+  {
+    "itemName": "board_occupancy",
+    "imageName": "board/board_badge_emoji.png",
+    "roiBack": "145,290,950,340",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "profile": "High",
+    "description": "前排1-6、后排7-12；1-12项占位Image，13-24项对应上阵Click",
+    "roiBadge": "154,498,32,32",
+    "badgeSerial": 0,
+    "badgeGrayscale": false,
+    "roiRange": [
+      "311,309,33,32",
+      "414,308,33,32",
+      "516,309,33,32",
+      "619,308,33,32",
+      "723,308,33,32",
+      "826,308,33,32",
+      "281,414,33,32",
+      "396,413,33,32",
+      "510,413,33,32",
+      "624,414,33,32",
+      "737,413,33,32",
+      "851,413,33,32",
+      "365,386,24,24",
+      "461,386,24,24",
+      "563,386,24,24",
+      "664,386,24,24",
+      "766,386,24,24",
+      "865,386,24,24",
+      "337,493,24,24",
+      "449,493,24,24",
+      "557,493,24,24",
+      "666,493,24,24",
+      "783,493,24,24",
+      "890,493,24,24"
     ],
-    "badgeGrayscale": true
+    "badges": [
+      {
+        "imageName": "board/board_badge_emoji.png"
+      }
+    ],
+    "rangeOperations": [
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      }
+    ]
+  },
+  {
+    "itemName": "boss_board_occupancy",
+    "imageName": "board/board_badge_emoji.png",
+    "roiBack": "145,280,950,350",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "profile": "High",
+    "description": "前排1-6、后排7-12；1-12项占位Image，13-24项对应上阵Click",
+    "roiBadge": "154,498,32,32",
+    "badgeSerial": 0,
+    "badgeGrayscale": false,
+    "roiRange": [
+      "275,290,33,32",
+      "398,290,33,32",
+      "519,290,33,32",
+      "640,290,33,32",
+      "761,290,33,32",
+      "882,290,33,32",
+      "219,399,33,32",
+      "364,399,33,32",
+      "508,399,33,32",
+      "652,399,33,32",
+      "795,399,33,32",
+      "939,399,33,32",
+      "335,380,24,24",
+      "451,381,24,24",
+      "566,382,24,24",
+      "681,381,24,24",
+      "797,379,24,24",
+      "910,383,24,24",
+      "284,495,24,24",
+      "420,494,24,24",
+      "557,493,24,24",
+      "685,493,24,24",
+      "825,492,24,24",
+      "958,495,24,24"
+    ],
+    "badges": [
+      {
+        "imageName": "board/board_badge_emoji.png"
+      }
+    ],
+    "rangeOperations": [
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "method": "Template matching",
+        "threshold": 0.68,
+        "type": "image"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      }
+    ]
   }
 ]

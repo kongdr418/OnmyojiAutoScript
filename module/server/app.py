@@ -18,6 +18,7 @@ from module.server.log_router import log_app
 from module.server.script_router import script_app
 from module.server.stats_router import stats_app
 from module.server.tool_router import tool_app
+from module.server.chesslineup_router import chesslineup_app
 from starlette import status
 from starlette.responses import JSONResponse
 from module.server.setting import State
@@ -53,6 +54,10 @@ app.include_router(income_app)
 app.include_router(screen_app)
 app.include_router(log_app)
 app.include_router(tool_app)
+app.include_router(chesslineup_app)
+
+app.mount('/tool/chesslineup/static', StaticFiles(directory=str(
+    Path(__file__).resolve().parent / 'web/chesslineup/static')), name='chesslineup_static')
 
 annotator_static_dir = Path(__file__).resolve().parent / "web" / "annotator" / "static"
 if annotator_static_dir.exists():

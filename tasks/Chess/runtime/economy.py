@@ -425,6 +425,20 @@ class ChessEconomyMixin:
                     f'shop slot {slot_index}'
                 )
                 return False
+            hand_count = self._hand_capacity_count()
+            if hand_count >= 10:
+                logger.info(f'Chess hand full before purchase: count={hand_count}/10; clear space first')
+                if emergency_cleanup_done and lineup_sale_done:
+                    logger.warning(f'Cancel Chess purchase {matched_name}: hand still full after cleanup')
+                    return False
+                sell_lineup = emergency_cleanup_done
+                recovery = self._free_one_hand_slot_for_purchase(sell_lineup=sell_lineup)
+                if recovery is None:
+                    return False
+                emergency_cleanup_done = True
+                if sell_lineup or recovery.get('type') == 'lineup':
+                    lineup_sale_done = True
+                continue
             attempts += 1
             logger.info(
                 f'Buy Chess card: '

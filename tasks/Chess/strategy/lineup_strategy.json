@@ -1,0 +1,331 @@
+{
+  "version": 2,
+  "lineups": [
+    {
+      "key": "qijiaoshan",
+      "display_name": "七角山",
+      "slots": [
+        {
+          "shikigami": "kaoru",
+          "weight": 1,
+          "equipment": [
+            {
+              "kind": "soul",
+              "key": "wangliangzhixia"
+            },
+            {
+              "kind": "soul",
+              "key": "diaopinghuo"
+            }
+          ]
+        },
+        {
+          "shikigami": "keisei_chihime",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "ichimoku_ren",
+          "weight": 2,
+          "equipment": []
+        },
+        {
+          "shikigami": "hotarugusa",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "hakurou",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "komatsumaru",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "yamakaze",
+          "weight": 2,
+          "equipment": []
+        },
+        {
+          "shikigami": "shiki",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        }
+      ],
+      "primary_bond": "",
+      "secondary_bond": "",
+      "hakuzosu_protect_position": null,
+      "arakawa_goldfish_position": null
+    },
+    {
+      "key": "minghuo",
+      "display_name": "冥火",
+      "slots": [
+        {
+          "shikigami": "omoikane",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "jinkougyou",
+          "weight": 2,
+          "equipment": []
+        },
+        {
+          "shikigami": "odokuro",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "kuro_douji",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "shiro_douji",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "shiro_mujou",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "hangan",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "kuro_mujou",
+          "weight": 2,
+          "equipment": []
+        },
+        {
+          "shikigami": "taira_no_masakado",
+          "weight": 2,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        }
+      ],
+      "primary_bond": "",
+      "secondary_bond": "",
+      "hakuzosu_protect_position": null,
+      "arakawa_goldfish_position": null
+    },
+    {
+      "key": "pinganjing",
+      "display_name": "平安京",
+      "slots": [
+        {
+          "shikigami": "aoandon",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "miketsu",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "kachou_fuugetsu",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "yasha",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "yume_san_byakuzou",
+          "weight": 1,
+          "equipment": [
+            {
+              "kind": "soul",
+              "key": "zhaocaimao"
+            },
+            {
+              "kind": "soul",
+              "key": "zheng"
+            }
+          ]
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "ubume",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "youtou_hime",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "onikiri",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "yamausagi",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        }
+      ],
+      "primary_bond": "",
+      "secondary_bond": "追击",
+      "hakuzosu_protect_position": 1,
+      "arakawa_goldfish_position": null
+    },
+    {
+      "key": "haiguo",
+      "display_name": "荒川",
+      "slots": [
+        {
+          "shikigami": "zashiki_Warashi",
+          "weight": 1,
+          "equipment": [
+            {
+              "kind": "soul",
+              "key": "wangliangzhixia"
+            }
+          ]
+        },
+        {
+          "shikigami": "shouzu",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "umibouzu",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "hotarugusa",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "kujira",
+          "weight": 1,
+          "equipment": [
+            {
+              "kind": "soul",
+              "key": "beichuifang"
+            }
+          ]
+        },
+        {
+          "shikigami": "kappa",
+          "weight": 1,
+          "equipment": []
+        },
+        {
+          "shikigami": "kingyohime",
+          "weight": 1,
+          "equipment": [
+            {
+              "kind": "soul",
+              "key": "kuanggu"
+            },
+            {
+              "kind": "soul",
+              "key": "wangqie"
+            }
+          ]
+        },
+        {
+          "shikigami": "arakawa_no_nushi",
+          "weight": 1,
+          "equipment": [
+            {
+              "kind": "emblem",
+              "key": "huixiang"
+            },
+            {
+              "kind": "soul",
+              "key": "wangqie"
+            }
+          ]
+        },
+        {
+          "shikigami": null,
+          "weight": 1,
+          "equipment": []
+        }
+      ],
+      "primary_bond": "",
+      "secondary_bond": "护佑",
+      "hakuzosu_protect_position": null,
+      "arakawa_goldfish_position": 7
+    }
+  ]
+}

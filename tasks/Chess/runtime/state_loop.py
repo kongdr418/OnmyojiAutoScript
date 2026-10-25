@@ -107,12 +107,6 @@ class ChessStateLoopMixin:
                 'confirmed within 5 seconds'
             )
             return True
-        if self._is_boss_challenge_round(round_no=current_round):
-            logger.info(
-                'Skip post-grigri lineup check during boss round: '
-                f'round={current_round}'
-            )
-            return True
         logger.info(f'Chess post-grigri lineup check: round={current_round}')
         self._reconcile_lineup_after_hyakki_round(next_round_no=current_round)
         return True

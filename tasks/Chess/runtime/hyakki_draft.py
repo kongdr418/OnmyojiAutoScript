@@ -185,7 +185,9 @@ class ChessHyakkiDraftMixin:
         score = cv2.minMaxLoc(cv2.matchTemplate(region, front, cv2.TM_CCOEFF_NORMED))[1]
         return score < .55
 
-    def _hyakki_target_pool(self, candidates, needed):
+    def _hyakki_target_pool(self, candidates, needed, prefer_needed=True):
+        if not prefer_needed:
+            return candidates
         preferred = [item for item in candidates if item['name'] in needed]
         if preferred:
             return preferred
@@ -197,8 +199,7 @@ class ChessHyakkiDraftMixin:
 
     def _handle_hyakki_draft(self):
         config = getattr(getattr(self.config, 'chess', None), 'chess_config', None)
-        if not getattr(config, 'hyakki_draft_enabled', True):
-            return
+        prefer_needed = bool(getattr(config, 'hyakki_draft_enabled', True))
         key = (self.chess_state.game_number, self._current_round_no)
         state = getattr(self, '_hyakki_turn', None)
         if state is None or state.key != key:
@@ -237,8 +238,8 @@ class ChessHyakkiDraftMixin:
                 f'no recognizable soul in throw range; templates={len(self.hyakki_soul_fronts)}, roi={roi}'
             )
             return
-        needed = self._hyakki_needed_souls()
-        pool = self._hyakki_target_pool(candidates, needed)
+        needed = self._hyakki_needed_souls() if prefer_needed else set()
+        pool = self._hyakki_target_pool(candidates, needed, prefer_needed)
         if not pool:
             return
         chosen = random.choice(pool)
@@ -256,7 +257,7 @@ class ChessHyakkiDraftMixin:
         if not fresh:
             self._hyakki_skip('no recognizable soul in throw range on refreshed frame')
             return
-        fresh_pool = self._hyakki_target_pool(fresh, needed)
+        fresh_pool = self._hyakki_target_pool(fresh, needed, prefer_needed)
         if not fresh_pool:
             return
         latest = [item for item in fresh_pool
