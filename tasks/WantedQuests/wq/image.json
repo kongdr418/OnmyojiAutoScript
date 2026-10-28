@@ -6,7 +6,6 @@
     "roiBack": "27,93,693,488",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "封印"
   },
   {
@@ -16,7 +15,6 @@
     "roiBack": "25,147,652,461",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "勾号"
   },
   {
@@ -26,10 +24,7 @@
     "roiBack": "1136,592,94,98",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
-    "description": "一键追踪",
-    "roi_front": "1141,597,84,88",
-    "roi_back": "1136,592,94,98"
+    "description": "一键追踪"
   },
   {
     "itemName": "trace_disable",
@@ -38,10 +33,7 @@
     "roiBack": "1136,592,94,98",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
-    "description": "取消追踪",
-    "roi_front": "1141,597,84,88",
-    "roi_back": "1136,592,94,98"
+    "description": "取消追踪"
   },
   {
     "itemName": "wq_box",
@@ -50,7 +42,6 @@
     "roiBack": "0,72,118,552",
     "method": "Template matching",
     "threshold": 0.7,
-    "profile": "High",
     "description": "奖励宝箱"
   },
   {
@@ -60,7 +51,6 @@
     "roiBack": "173,187,28,29",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "小号追踪"
   },
   {
@@ -70,47 +60,42 @@
     "roiBack": "170,186,31,32",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "小号不追踪"
   },
   {
     "itemName": "goto_1",
     "imageName": "wq_goto_1.png",
-    "roiFront": "978,234,87,45",
-    "roiBack": "978,234,87,60",
+    "roiFront": "1060,279,87,45",
+    "roiBack": "1060,279,87,45",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "description"
   },
   {
     "itemName": "goto_2",
     "imageName": "wq_goto_2.png",
-    "roiFront": "979,305,88,43",
-    "roiBack": "979,305,88,58",
+    "roiFront": "1060,355,88,43",
+    "roiBack": "1060,355,88,43",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "description"
   },
   {
     "itemName": "goto_3",
     "imageName": "wq_goto_3.png",
-    "roiFront": "979,395,88,32",
-    "roiBack": "979,373,88,62",
+    "roiFront": "1060,435,88,32",
+    "roiBack": "1060,435,88,32",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "description"
   },
   {
     "itemName": "goto_4",
     "imageName": "wq_goto_4.png",
-    "roiFront": "979,447,87,42",
-    "roiBack": "979,447,87,57",
+    "roiFront": "1061,507,87,42",
+    "roiBack": "1061,507,87,42",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "description"
   },
   {
@@ -120,7 +105,6 @@
     "roiBack": "73,122,69,459",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "判断是否还有任务"
   },
   {
@@ -130,7 +114,6 @@
     "roiBack": "160,175,120,60",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "庭院悬赏任务界面 单个任务点开后 左上角是否追踪"
   },
   {
@@ -140,7 +123,6 @@
     "roiBack": "160,175,120,60",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "庭院悬赏任务界面 单个任务点开后 左上角是否追踪"
   },
   {
@@ -150,7 +132,6 @@
     "roiBack": "510,175,210,60",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "庭院悬赏任务界面 单个任务点开后的界面 是否打开的 标志"
   },
   {
@@ -160,7 +141,6 @@
     "roiBack": "850,470,180,180",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "庭院悬赏任务界面 单个任务点开后的界面 是否为现世任务标志"
   },
   {
@@ -170,7 +150,6 @@
     "roiBack": "120,125,25,425",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "探索界面,左侧任务列表右上角右下角标志"
   }
 ]
