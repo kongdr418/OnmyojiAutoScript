@@ -14,23 +14,23 @@ class WantedQuestsAssets:
 	# 挑战券的数量 
 	O_WQ_NUMBER = RuleOcr(roi=(523,12,97,41), area=(523,12,97,41), mode="Digit", method="Default", keyword="", name="wq_number")
 	# Ocr-description 
-	O_WQ_TYPE_1 = RuleOcr(roi=(544,248,55,36), area=(544,248,55,36), mode="Single", method="Default", keyword="", name="wq_type_1")
+	O_WQ_TYPE_1 = RuleOcr(roi=(646,283,55,36), area=(646,283,55,36), mode="Single", method="Default", keyword="", name="wq_type_1")
 	# Ocr-description 
-	O_WQ_TYPE_2 = RuleOcr(roi=(544,321,55,30), area=(544,321,55,30), mode="Single", method="Default", keyword="", name="wq_type_2")
+	O_WQ_TYPE_2 = RuleOcr(roi=(645,362,55,30), area=(645,362,55,30), mode="Single", method="Default", keyword="", name="wq_type_2")
 	# Ocr-description 
-	O_WQ_TYPE_3 = RuleOcr(roi=(544,392,54,30), area=(544,392,54,30), mode="Single", method="Default", keyword="", name="wq_type_3")
+	O_WQ_TYPE_3 = RuleOcr(roi=(644,437,54,30), area=(644,437,54,30), mode="Single", method="Default", keyword="", name="wq_type_3")
 	# Ocr-description 
-	O_WQ_TYPE_4 = RuleOcr(roi=(545,462,52,32), area=(545,462,52,32), mode="Single", method="Default", keyword="", name="wq_type_4")
+	O_WQ_TYPE_4 = RuleOcr(roi=(645,511,52,32), area=(645,511,52,32), mode="Single", method="Default", keyword="", name="wq_type_4")
 	# Ocr-description 
-	O_WQ_INFO_1 = RuleOcr(roi=(609,246,309,45), area=(609,246,309,45), mode="Single", method="Default", keyword="", name="wq_info_1")
+	O_WQ_INFO_1 = RuleOcr(roi=(713,276,309,45), area=(713,276,309,45), mode="Single", method="Default", keyword="", name="wq_info_1")
 	# Ocr-description 
-	O_WQ_INFO_2 = RuleOcr(roi=(612,318,298,41), area=(612,318,298,41), mode="Single", method="Default", keyword="", name="wq_info_2")
+	O_WQ_INFO_2 = RuleOcr(roi=(714,356,298,41), area=(714,356,298,41), mode="Single", method="Default", keyword="", name="wq_info_2")
 	# Ocr-description 
-	O_WQ_INFO_3 = RuleOcr(roi=(612,386,305,44), area=(612,386,305,44), mode="Single", method="Default", keyword="", name="wq_info_3")
+	O_WQ_INFO_3 = RuleOcr(roi=(713,431,305,44), area=(713,431,305,44), mode="Single", method="Default", keyword="", name="wq_info_3")
 	# Ocr-description 
-	O_WQ_INFO_4 = RuleOcr(roi=(613,456,315,44), area=(613,456,315,44), mode="Single", method="Default", keyword="", name="wq_info_4")
+	O_WQ_INFO_4 = RuleOcr(roi=(712,505,315,44), area=(712,505,315,44), mode="Single", method="Default", keyword="", name="wq_info_4")
 	# 怪物名称,如酒吞，阎魔等 
-	O_WQ_MONSTER_TYPE = RuleOcr(roi=(165,215,45,175), area=(165,215,45,175), mode="Full", method="Default", keyword="", name="wq_monster_type")
+	O_WQ_MONSTER_TYPE = RuleOcr(roi=(262,175,45,175), area=(262,175,45,175), mode="Full", method="Default", keyword="", name="wq_monster_type")
 	#  
 	O_WQ_TEXT_ALL = RuleOcr(roi=(11,114,96,403), area=(11,114,96,403), mode="Full", method="Default", keyword="", name="wq_text_all")
 	# 是否有悬赏封印检查 
