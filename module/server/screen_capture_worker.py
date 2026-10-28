@@ -60,9 +60,40 @@ def _auto_serial() -> str:
     return online[0]
 
 
+def _ensure_adb_connected(serial: str) -> None:
+    """截图前确保 adb 连着。
+
+    网络类设备（ip:port）掉线后 adb 会把它标成 offline 或直接丢掉，
+    这里先查状态，不通就重连一次，避免整次截图直接失败。
+    """
+    if ':' not in serial:
+        return  # USB 设备不需要 connect
+    try:
+        state = subprocess.run(
+            ['adb', '-s', serial, 'get-state'],
+            capture_output=True,
+            text=True,
+            timeout=ADB_TIMEOUT_SECONDS,
+        )
+        if state.returncode == 0 and state.stdout.strip() == 'device':
+            return
+    except Exception:
+        pass
+    try:
+        subprocess.run(
+            ['adb', 'connect', serial],
+            capture_output=True,
+            text=True,
+            timeout=ADB_TIMEOUT_SECONDS,
+        )
+    except Exception:
+        pass
+
+
 def capture(config_name: str, output_file: str) -> None:
     """adb 抓一帧并覆盖写入 output_file"""
     serial = _configured_serial(config_name) or _auto_serial()
+    _ensure_adb_connected(serial)
     result = subprocess.run(
         ['adb', '-s', serial, 'exec-out', 'screencap', '-p'],
         capture_output=True,
