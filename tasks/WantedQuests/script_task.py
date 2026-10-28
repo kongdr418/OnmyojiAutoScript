@@ -100,11 +100,15 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
         raise TaskEnd('WantedQuests')
 
     def open_wq_info(self) -> bool:
-        """打开对应怪物悬赏详情界面"""
+        """打开对应怪物悬赏详情界面。
+
+        新 UI 的详情页不再显示追踪蓝勾，改为「前往」按钮作为
+        已进入详情页的标志；该按钮只在悬赏详情页出现。
+        """
         timeout_timer = Timer(5).start()
         while not timeout_timer.reached():
             self.screenshot()
-            if self.appear(self.I_TRACE_TRUE):
+            if self.appear(self.I_GOTO_1) or self.appear(self.I_GOTO_2):
                 return True
             self.click(self.O_WQ_TEXT_ALL, interval=1.2)
         return False
