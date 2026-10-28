@@ -1939,12 +1939,78 @@
     el.deleteJsonBtn.classList.toggle("hidden", !canDelete);
   }
 
+  // 任务目录的中文名，取自 OASX lib/translation/cn_parts/cn_menu.dart
+  const TASK_LABELS = {
+    AbyssShadows: "狭间暗域",
+    ActivityShikigami: "当期爬塔",
+    AreaBoss: "地域鬼王",
+    AutoCheckinBigGod: "大神签到",
+    BondlingFairyland: "契灵之境",
+    Chess: "百鬼棋局",
+    CollectiveMissions: "集体任务",
+    Component: "公共组件",
+    DailyTrifles: "每日琐事",
+    Delegation: "式神委派",
+    DemonEncounter: "逢魔之时",
+    DemonRetreat: "首领退治",
+    Dokan: "道馆",
+    Duel: "斗技",
+    DyeTrials: "灵染试炼",
+    EternitySea: "永生之海",
+    EvoZone: "觉醒副本",
+    ExperienceYoukai: "经验妖怪",
+    Exploration: "探索",
+    FallenSun: "日轮之陨",
+    FindJade: "寻找协作任务",
+    FloatParade: "浮世行",
+    FrogBoss: "呱太",
+    GameUi: "游戏界面",
+    GlobalGame: "全局配置",
+    GoldYoukai: "金币妖怪",
+    GoryouRealm: "御灵之境",
+    GotoMain: "回主界面",
+    GuguArtStudio: "呱呱画室",
+    GuildActivityMonitor: "寮活动监控",
+    GuildBanquet: "寮宴会",
+    HeroTest: "英杰试炼",
+    Hunt: "狩猎战",
+    Hyakkiyakou: "百鬼夜行",
+    KekkaiActivation: "结界挂卡",
+    KekkaiUtilize: "结界蹭卡",
+    KittyShop: "喵喵商店",
+    MartialTournament: "武道大会",
+    MemoryScrolls: "绘卷",
+    MetaDemon: "超鬼王",
+    MysteryShop: "神秘商店",
+    Nian: "年兽",
+    Orochi: "八岐大蛇",
+    OrochiMoans: "八岐大蛇·悲鸣",
+    Pets: "小猫咪",
+    Quiz: "答题",
+    RealmRaid: "个人突破",
+    Restart: "重启",
+    RichMan: "大富翁",
+    RyouToppa: "寮突破",
+    Script: "脚本",
+    Secret: "秘闻副本",
+    SixRealms: "六道之门",
+    Sougenbi: "业原火",
+    SoulsTidy: "御魂整理",
+    Tako: "石距",
+    TalismanPass: "花合战",
+    TrueOrochi: "真八岐大蛇",
+    Utils: "工具",
+    WantedQuests: "悬赏封印",
+    WeeklyTrifles: "每周琐事",
+  };
+
   function createBreadcrumbSelect(values, selected, placeholder) {
     const select = document.createElement("select");
     select.className = "breadcrumb-select";
     createOption(select, "", placeholder);
     for (const name of values) {
-      createOption(select, name, name);
+      const zh = TASK_LABELS[name];
+      createOption(select, name, zh ? `${zh}（${name}）` : name);
     }
     if (selected && values.includes(selected)) {
       select.value = selected;
