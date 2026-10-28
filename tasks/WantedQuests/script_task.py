@@ -126,19 +126,32 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
         新 UI 的详情页不再显示追踪蓝勾，改为「前往」按钮作为
         已进入详情页的标志；该按钮只在悬赏详情页出现。
 
-        「神秘妖怪」悬赏的详情页只有线索和进度, 既没有悬赏类型文案也没有「前往」
-        按钮, oas 无法执行。这里只做判断并返回 False, 由调用方负责关闭面板、跳过该悬赏。
+        「神秘妖怪」悬赏在还没击败过时只有线索和进度, 既没有悬赏类型文案也没有
+        「前往」按钮, oas 无法执行; 击败过 1 次之后会显示发现地点和「前往」,
+        这时按正常悬赏执行。所以顺序是: 先看「前往」, 有就当普通悬赏返回 True;
+        确认是神秘妖怪、并且等面板渲染完仍然没有「前往」, 才返回 False 交给调用方跳过。
         """
         timeout_timer = Timer(5).start()
         while not timeout_timer.reached():
             self.screenshot()
-            if self.appear(self.I_GOTO_1) or self.appear(self.I_GOTO_2):
+            if self.appear_any_goto():
                 return True
             if self.is_mystery_wq():
+                # 面板刚打开时右边的「前往」可能还没渲染出来, 等一拍再确认一次
+                sleep(0.6)
+                self.screenshot()
+                if self.appear_any_goto():
+                    logger.info('Mystery wanted quest has goto button, execute it')
+                    return True
                 logger.warning('This is a mystery wanted quest, skip it')
                 return False
             self.click(self.O_WQ_TEXT_ALL, interval=1.2)
         return False
+
+    def appear_any_goto(self) -> bool:
+        """详情页是否出现「前往」按钮, 悬赏最多 4 条, 任意一条有就算可执行"""
+        return any(self.appear(rule) for rule in (
+            self.I_GOTO_1, self.I_GOTO_2, self.I_GOTO_3, self.I_GOTO_4))
 
     def is_mystery_wq(self) -> bool:
         """当前详情页是否是「神秘妖怪」悬赏(只有线索, 没有悬赏类型文案和「前往」按钮)"""
@@ -166,6 +179,25 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
             self.wq_skipped_rows.add(self.wq_current_row)
             self.wq_current_row = None
         self.device.click_record_clear()
+
+    def cancel_trace(self):
+        """取消当前悬赏的追踪
+
+        老写法 ui_click(I_TRACE_TRUE, I_TRACE_FALSE) 是没有超时的死循环: 神秘妖怪这类
+        详情页没有追踪图标, 会一直空转把任务卡死。这里加超时, 拿不到追踪图标
+        (或点了没反应)就把面板关掉并跳过这条。
+        """
+        cancel_timer = Timer(5).start()
+        while not cancel_timer.reached():
+            self.screenshot()
+            if self.appear(self.I_TRACE_FALSE):
+                return
+            if self.appear_then_click(self.I_TRACE_TRUE, interval=1):
+                continue
+            break
+        if not self.appear(self.I_TRACE_FALSE):
+            logger.warning('Cancel trace failed, close the panel instead')
+            self.close_unsupported_wq()
 
     def next_run(self):
         before_end: time = self.get_config().before_end
@@ -320,22 +352,22 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
         :return:
         """
         logger.hr('Start wanted quests')
-        if not self.appear(self.I_GOTO_1):
+        if not self.appear_any_goto():
             # 如果没有出现 '前往'按钮， 那就是这个可能是神秘任务但是没有解锁
             logger.info('This is a secret mission but not unlock')
-            self.ui_click(self.I_TRACE_TRUE, self.I_TRACE_FALSE)
+            self.cancel_trace()
             return False
         # 跳过不想打的
         monster_name = self.O_WQ_MONSTER_TYPE.detect_text(self.device.image)
         if monster_name in self.unwanted_boss_name_list:
             logger.warning(f'unwanted {monster_name}')
-            self.ui_click(self.I_TRACE_TRUE, self.I_TRACE_FALSE)
+            self.cancel_trace()
             return False
         # 获取排序后的悬赏信息列表
         ordered_wq_infos = self.get_ordered_wq_infos(num_want)
         if not ordered_wq_infos:
             logger.info('Current wanted quest skipped all, cancel it')
-            self.ui_click(self.I_TRACE_TRUE, self.I_TRACE_FALSE)
+            self.cancel_trace()
             return False
         wq_call_dict: dict[WQType, Callable] = {
             WQType.CHALLENGE: self.challenge,
@@ -346,7 +378,7 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
         wq_info = self.get_need_exec_wq(ordered_wq_infos)
         if not wq_info:
             logger.info('Current wanted quests can not be executed')
-            self.ui_click(self.I_TRACE_TRUE, self.I_TRACE_FALSE)
+            self.cancel_trace()
             return False
         try:
             logger.info(f'Choose wq: {wq_info}')
@@ -430,13 +462,23 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
         if wq_type not in type_ordered_list:
             logger.warning(f'{wq_type.value} is not in the order list')
             return None
-        wq_info_txt = info_rule.ocr(self.device.image)
-        wq_info_txt = (
-            wq_info_txt.replace('：', ':').replace('（', '(').replace('）', ')')
-        )
         import re
 
-        match = re.search(r"(.+?)\s*\(?[数教]量[:：]\s*(\d+)", wq_info_txt)
+        def parse_info(text: str):
+            text = text.replace('：', ':').replace('（', '(').replace('）', ')')
+            return re.search(r"(.+?)\s*\(?[数教]量[:：]\s*(\d+)", text), text
+
+        wq_info_txt = info_rule.ocr(self.device.image)
+        match, wq_info_txt = parse_info(wq_info_txt)
+        if not match:
+            # 整行 OCR 偶尔会把"数量:N"里的数字吃掉(读成"数量:)。"), 再用检测框结果兜底一次
+            for item in sorted(info_rule.detect_and_ocr(self.device.image),
+                               key=lambda x: -float(x.score)):
+                match, text = parse_info(item.ocr_text)
+                if match:
+                    wq_info_txt = text
+                    logger.info(f'Re-read wq info: {wq_info_txt}')
+                    break
         if not match:
             logger.warning(f'Unknown wq info: {wq_info_txt}')
             return None
