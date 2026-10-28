@@ -21,7 +21,7 @@
     "itemName": "g_jade",
     "imageName": "gg_g_jade.png",
     "roiFront": "661,466,43,46",
-    "roiBack": "661,466,43,46",
+    "roiBack": "543,421,205,176",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "勾玉"
@@ -30,7 +30,7 @@
     "itemName": "g_cat_food",
     "imageName": "gg_g_cat_food.png",
     "roiFront": "565,463,59,65",
-    "roiBack": "565,463,59,65",
+    "roiBack": "543,421,205,176",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "猫粮"
@@ -39,7 +39,7 @@
     "itemName": "g_dog_food",
     "imageName": "gg_g_dog_food.png",
     "roiFront": "565,464,60,63",
-    "roiBack": "565,464,60,63",
+    "roiBack": "543,421,205,176",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "狗粮"
@@ -96,7 +96,6 @@
     "roiBack": "814,430,117,110",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": ""
   },
   {
@@ -106,7 +105,6 @@
     "roiBack": "819,536,108,101",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": ""
   },
   {
@@ -116,7 +114,6 @@
     "roiBack": "849,65,48,48",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": ""
   }
 ]
