@@ -36,9 +36,17 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
     unwanted_boss_name_list: list = []
     # 已经执行过的悬赏封印(仅记录执行过的, 不一定成功运行)
     wq_executed_set: set[WQInfo] = set()
+    # 本轮已跳过的不支持悬赏(用 "进度文本, 行y" 标识), 防止同一条被反复选中
+    wq_skipped_rows: set[tuple] = set()
+    # 当前正在处理的悬赏所在行, 由 find_wq() 写入
+    wq_current_row: Optional[tuple] = None
+    # find_wq() 的附带结果: 本次是否为"候选全被跳过"(即可见悬赏全是不支持的类型)
+    wq_skipped_only: bool = False
 
     def run(self):
         con = self.config.model.wanted_quests
+        self.wq_skipped_rows = set()
+        self.wq_current_row = None
         unwanted_boss_names = con.wanted_quests_config.unwanted_boss_names
         if unwanted_boss_names is not None and unwanted_boss_names != '':
             import re
@@ -68,6 +76,8 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
             raise TaskEnd('WantedQuests')
 
         error_count = 0
+        # 连续多少轮"可见悬赏全是不支持的", 用于正常收尾而不是报错退出
+        unsupported_rounds = 0
         while 1:
             self.screenshot()
             if not self.is_wq_remained():
@@ -86,13 +96,24 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
                 break
             cu, re, total, self.O_WQ_TEXT_ALL.area = self.find_wq(self.device.image)
             if re == -1:
+                if self.wq_skipped_only:
+                    unsupported_rounds += 1
+                    if unsupported_rounds >= 3:
+                        # 可见的悬赏全是不支持的(如神秘妖怪), 再滑动也不会出现新的, 正常收尾
+                        logger.info('Only unsupported wanted quests remained, exit')
+                        break
+                else:
+                    unsupported_rounds = 0
                 error_count += 1
                 # 没找到任务 尝试上滑
                 self.swipe(self.S_WQ_LIST_UP, interval=1)
                 sleep(1)
                 continue
             error_count = 0
+            unsupported_rounds = 0
             if not self.open_wq_info():
+                # 打不开详情页(例如神秘妖怪): 关掉面板并跳过这一条, 否则会被面板挡住的列表误判成任务已做完
+                self.close_unsupported_wq()
                 continue
             self.execute_mission(total - cu)
             sleep(1.5)
@@ -104,14 +125,47 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
 
         新 UI 的详情页不再显示追踪蓝勾，改为「前往」按钮作为
         已进入详情页的标志；该按钮只在悬赏详情页出现。
+
+        「神秘妖怪」悬赏的详情页只有线索和进度, 既没有悬赏类型文案也没有「前往」
+        按钮, oas 无法执行。这里只做判断并返回 False, 由调用方负责关闭面板、跳过该悬赏。
         """
         timeout_timer = Timer(5).start()
         while not timeout_timer.reached():
             self.screenshot()
             if self.appear(self.I_GOTO_1) or self.appear(self.I_GOTO_2):
                 return True
+            if self.is_mystery_wq():
+                logger.warning('This is a mystery wanted quest, skip it')
+                return False
             self.click(self.O_WQ_TEXT_ALL, interval=1.2)
         return False
+
+    def is_mystery_wq(self) -> bool:
+        """当前详情页是否是「神秘妖怪」悬赏(只有线索, 没有悬赏类型文案和「前往」按钮)"""
+        monster_name = self.O_WQ_MONSTER_TYPE.detect_text(self.device.image)
+        return '神秘' in monster_name
+
+    def close_unsupported_wq(self):
+        """关闭打不开/无法执行的悬赏详情页, 并在本轮运行中跳过这条悬赏
+
+        不关面板: 左栏的"悬赏封印"被盖住, is_wq_remained() 会误判成"没有悬赏了",
+        导致整个任务提前结束; 不记入跳过列表: 下一轮还会选中同一条, 原地打转。
+        """
+        # NOTE 必须限定 WantedQuestsAssets.I_EXIT: 本任务同时继承了 GeneralBattle,
+        # GeneralBattleAssets 也定义了 I_EXIT(战斗内退出按钮), self.I_EXIT 会被它盖掉
+        close_timer = Timer(5).start()
+        while not close_timer.reached():
+            self.screenshot()
+            if not self.appear(WantedQuestsAssets.I_EXIT):
+                break
+            self.appear_then_click(WantedQuestsAssets.I_EXIT, interval=1.2)
+        else:
+            logger.warning('Close the wanted quest detail page failed')
+        if self.wq_current_row is not None:
+            logger.warning(f'Skip unsupported wanted quest: {self.wq_current_row}')
+            self.wq_skipped_rows.add(self.wq_current_row)
+            self.wq_current_row = None
+        self.device.click_record_clear()
 
     def next_run(self):
         before_end: time = self.get_config().before_end
@@ -694,6 +748,17 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
         ismatch = regex.match(res)
         return ismatch is not None
 
+    def is_wq_row_skipped(self, text: str, row_y: float) -> bool:
+        """这一行是否已被判定为本轮不支持的悬赏
+
+        按 "进度文本 + y 容差" 匹配: 同一行在不同截图之间 OCR 文字框会抖动几个像素,
+        行距约 75px, 所以 20px 容差既能区分相邻行, 也不会漏掉同一条。
+        """
+        for skipped_text, skipped_y in self.wq_skipped_rows:
+            if skipped_text == text and abs(row_y - skipped_y) <= 20:
+                return True
+        return False
+
     def find_wq(self, img) -> tuple[int, int, int, List[int]]:
         """
         在探索页面从悬赏列表中找到可以执行的任务, 自动过滤已完成的任务(根据下方数字判断, 例12/12)
@@ -727,6 +792,8 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
         reg_XX = re.compile(r'^(\d+)\1$')
         # 过滤掉协或者未知悬赏等其他无用字符
         reg_other = re.compile(r'[?？协边]')
+        self.wq_current_row = None
+        self.wq_skipped_only = False
         for index, res in enumerate(res_list):
             if reg_fengyin.match(res.ocr_text):
                 continue
@@ -737,6 +804,11 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
             if match := reg_progress.match(res.ocr_text):
                 spliter_index = match.start(2)
                 xywh = calc_xywh(res.box)
+                if self.is_wq_row_skipped(res.ocr_text, xywh[1]):
+                    # 本轮已判定为不支持的悬赏(如神秘妖怪), 跳过它去处理下一条
+                    logger.info(f'Skip unsupported wq {res.ocr_text} @ {xywh}')
+                    self.wq_skipped_only = True
+                    continue
                 cu, re, total = (
                     int(res.ocr_text[:spliter_index]),
                     1,
@@ -754,6 +826,7 @@ class ScriptTask(WQExplore, SecretScriptTask, WantedQuestsAssets):
                 if cu == total:
                     # 该任务已完成，一般是悬赏任务，邀请人没有做导致的
                     continue
+                self.wq_current_row = (res.ocr_text, xywh[1])
                 logger.info(f'find wq {res.ocr_text} @ {xywh}')
                 return cu, re, total, xywh
             # 例如：1414 66 1212

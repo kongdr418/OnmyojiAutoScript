@@ -151,5 +151,14 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "探索界面,左侧任务列表右上角右下角标志"
+  },
+  {
+    "itemName": "exit",
+    "imageName": "wq_exit.png",
+    "roiFront": "1189,111,36,36",
+    "roiBack": "1189,111,36,36",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "悬赏详细页的退出"
   }
 ]
