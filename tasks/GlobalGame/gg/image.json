@@ -88,5 +88,35 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "description"
+  },
+  {
+    "itemName": "ng_accept",
+    "imageName": "gg_ng_accept.png",
+    "roiFront": "846,476,56,46",
+    "roiBack": "814,430,117,110",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": ""
+  },
+  {
+    "itemName": "ng_reject",
+    "imageName": "gg_ng_reject.png",
+    "roiFront": "846,562,53,51",
+    "roiBack": "819,536,108,101",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": ""
+  },
+  {
+    "itemName": "ng_ignore",
+    "imageName": "gg_ng_ignore.png",
+    "roiFront": "863,80,21,21",
+    "roiBack": "849,65,48,48",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": ""
   }
 ]
