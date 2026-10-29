@@ -121,7 +121,8 @@ class ScriptTask(GameUi, DelegationAssets):
                 continue
             if check_timer.reached():
                 break
-            if self.ocr_appear_click(self.O_D_DONE, interval=1):
+            # 游戏对「完成」文字正中点击偶尔不响应，改用右移过的点击区
+            if self.ocr_appear_click(self.O_D_DONE, action=self.C_D_DONE, interval=1):
                 check_timer.reset()
                 continue
 
