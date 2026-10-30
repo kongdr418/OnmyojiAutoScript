@@ -12,7 +12,7 @@ class DraftDuelAssets:
 
 	# Ocr Rule Assets
 	# 消耗金币数量 
-	O_GOLD = RuleOcr(roi=(1127,684,141,29), area=(1127,684,141,29), mode="Single", method="Default", keyword="", name="gold")
+	O_GOLD = RuleOcr(roi=(1160,686,70,28), area=(1160,686,70,28), mode="Single", method="Default", keyword="", name="gold")
 
 
 	# Image Rule Assets
