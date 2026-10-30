@@ -15,3 +15,8 @@ class DraftDuelAssets:
 	O_GOLD = RuleOcr(roi=(1127,684,141,29), area=(1127,684,141,29), mode="Single", method="Default", keyword="", name="gold")
 
 
+	# Image Rule Assets
+	# 邀请好友 
+	I_INVITATION = RuleImage(roi_front=(978,328,72,61), roi_back=(978,328,72,61), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_invitation.png")
+
+
