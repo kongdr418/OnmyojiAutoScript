@@ -9,6 +9,7 @@ from tasks.Component.GeneralInvite.general_invite import GeneralInvite
 from tasks.DraftDuel.assets import DraftDuelAssets
 from tasks.DraftDuel.config import DraftDuelConfig, UserStatus
 from tasks.DraftDuel.strategy import CATALOG, choose_pick, normalize_name
+from tasks.DraftDuel.visual_cards import lobby_faces, match_hand
 from tasks.GameUi.game_ui import GameUi
 from tasks.GameUi.page import page_draft_duel
 
@@ -226,6 +227,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             if self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL):
                 logger.info('DraftDuel: selection finished')
                 logger.info(f'DraftDuel: lineup {self.picked_roles}')
+                self._bind_lobby_faces()
                 return True
             if not self.appear(self.I_SELECTION_PAGE):
                 self.device.sleep(0.5)
@@ -285,6 +287,31 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.device.sleep(1)
         logger.warning('DraftDuel: selection timeout')
         return False
+
+    def _bind_lobby_faces(self):
+        """选完后把大厅顶部头像按顺序和 picked_roles 绑定。"""
+        faces = lobby_faces(self.device.image)
+        if len(faces) != len(self.picked_roles):
+            logger.warning(
+                f'DraftDuel: lobby faces {len(faces)} != picks {len(self.picked_roles)}'
+            )
+            return
+        self._lobby_faces = list(zip(self.picked_roles, faces))
+        logger.info(f'DraftDuel: lobby faces bound to {self.picked_roles}')
+
+    def _match_hand_cards(self):
+        """上阵界面手牌卡位 -> 式神名；只截图，不点卡。"""
+        pairs = getattr(self, '_lobby_faces', None)
+        if not pairs:
+            logger.warning('DraftDuel: no lobby faces bound, skip hand matching')
+            return {}
+        result = {}
+        for slot, index, score in match_hand(self.device.image, [f for _, f in pairs]):
+            name = pairs[index][0]
+            result[slot] = (name, score)
+            tag = ' (elimination)' if score < 0.6 else ''
+            logger.info(f'DraftDuel: hand card {slot + 1} -> {name}, score={score:.3f}{tag}')
+        return result
 
     def _wait_pick_change(self, index: int, timeout: float = 3) -> bool:
         timer = Timer(timeout).start()
