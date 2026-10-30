@@ -1,0 +1,11 @@
+[
+  {
+    "itemName": "recommend_role",
+    "imageName": "draft_duel_recommend_role.png",
+    "roiFront": "590,492,116,39",
+    "roiBack": "131,483,1048,54",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "队友推荐式神"
+  }
+]

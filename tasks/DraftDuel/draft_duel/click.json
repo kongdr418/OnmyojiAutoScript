@@ -1,0 +1,26 @@
+[
+  {
+    "itemName": "click_to_claim_reward",
+    "roiFront": "133,299,278,376",
+    "roiBack": "133,299,278,376",
+    "description": "奖励弹出后的点击屏幕继续"
+  },
+  {
+    "itemName": "choose_1",
+    "roiFront": "372,635,59,53",
+    "roiBack": "372,635,59,53",
+    "description": "选择1号式神"
+  },
+  {
+    "itemName": "choose_2",
+    "roiFront": "744,632,59,53",
+    "roiBack": "744,632,59,53",
+    "description": "选择2号式神"
+  },
+  {
+    "itemName": "choose_3",
+    "roiFront": "1117,634,59,53",
+    "roiBack": "1117,634,59,53",
+    "description": "选择3号式神"
+  }
+]

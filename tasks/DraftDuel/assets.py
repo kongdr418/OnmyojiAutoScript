@@ -13,6 +13,32 @@ class DraftDuelAssets:
 	# Ocr Rule Assets
 	# 消耗金币数量 
 	O_GOLD = RuleOcr(roi=(1160,686,70,28), area=(1160,686,70,28), mode="Single", method="Default", keyword="", name="gold")
+	# 式神1 
+	O_ROLE_1 = RuleOcr(roi=(212,672,135,34), area=(212,672,135,34), mode="Single", method="Default", keyword="", name="role_1")
+	# 式神2 
+	O_ROLE_2 = RuleOcr(roi=(590,668,136,39), area=(590,668,136,39), mode="Single", method="Default", keyword="", name="role_2")
+	# 式神3 
+	O_ROLE_3 = RuleOcr(roi=(961,668,136,39), area=(961,668,136,39), mode="Single", method="Default", keyword="", name="role_3")
+	# 浮窗提示选择式神 
+	O_HINT_ROLE = RuleOcr(roi=(488,124,202,37), area=(488,124,202,37), mode="Single", method="Default", keyword="", name="hint_role")
+	# 浮窗提示倒计时 
+	O_HINT_TIME = RuleOcr(roi=(735,124,64,38), area=(735,124,64,38), mode="Single", method="Default", keyword="", name="hint_time")
+
+
+	# Click Rule Assets
+	# 奖励弹出后的点击屏幕继续 
+	C_CLICK_TO_CLAIM_REWARD = RuleClick(roi_front=(133,299,278,376), roi_back=(133,299,278,376), name="click_to_claim_reward")
+	# 选择1号式神 
+	C_CHOOSE_1 = RuleClick(roi_front=(372,635,59,53), roi_back=(372,635,59,53), name="choose_1")
+	# 选择2号式神 
+	C_CHOOSE_2 = RuleClick(roi_front=(744,632,59,53), roi_back=(744,632,59,53), name="choose_2")
+	# 选择3号式神 
+	C_CHOOSE_3 = RuleClick(roi_front=(1117,634,59,53), roi_back=(1117,634,59,53), name="choose_3")
+
+
+	# Image Rule Assets
+	# 队友推荐式神 
+	I_RECOMMEND_ROLE = RuleImage(roi_front=(590,492,116,39), roi_back=(131,483,1048,54), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_recommend_role.png")
 
 
 	# Image Rule Assets
@@ -20,5 +46,21 @@ class DraftDuelAssets:
 	I_INVITATION = RuleImage(roi_front=(978,328,72,61), roi_back=(978,328,72,61), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_invitation.png")
 	# 开始 
 	I_START = RuleImage(roi_front=(1161,587,78,73), roi_back=(1161,587,78,73), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_start.png")
+	# 协同完成的奖励 
+	I_REWARD = RuleImage(roi_front=(595,522,72,61), roi_back=(595,522,72,61), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_reward.png")
+	# 未开启对局 
+	I_NEW_MATCH = RuleImage(roi_front=(129,106,109,98), roi_back=(129,106,109,98), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_new_match.png")
+	# 成员等待 
+	I_MEMBERS_AWAIT = RuleImage(roi_front=(1145,603,106,43), roi_back=(1145,603,106,43), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_members_await.png")
+	# 0至4番胜的结算页面 
+	I_SETTLEMENT_0_4 = RuleImage(roi_front=(598,361,106,43), roi_back=(598,361,106,43), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_0-4_settlement_page.png")
+	# 选择式神页面 
+	I_SELECTION_PAGE = RuleImage(roi_front=(378,13,49,86), roi_back=(378,13,49,86), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_selection_page.png")
+	# 选完式神的协同大厅页 
+	I_DRAFT_DUEL_COMPLETED_HALL = RuleImage(roi_front=(420,8,37,92), roi_back=(420,8,37,92), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_draft_duel_completed_hall.png")
+	# 当前0败场 
+	I_LOSS_0 = RuleImage(roi_front=(148,175,110,25), roi_back=(148,175,110,25), threshold=0.95, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_loss_0.png")
+	# 当前1败场 
+	I_LOSS_1 = RuleImage(roi_front=(148,175,59,26), roi_back=(148,175,59,26), threshold=0.95, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_loss_1.png")
 
 

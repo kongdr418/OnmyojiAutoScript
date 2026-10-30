@@ -7,5 +7,50 @@
     "method": "Default",
     "keyword": "",
     "description": "消耗金币数量"
+  },
+  {
+    "itemName": "role_1",
+    "roiFront": "212,672,135,34",
+    "roiBack": "212,672,135,34",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "式神1"
+  },
+  {
+    "itemName": "role_2",
+    "roiFront": "590,668,136,39",
+    "roiBack": "590,668,136,39",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "式神2"
+  },
+  {
+    "itemName": "role_3",
+    "roiFront": "961,668,136,39",
+    "roiBack": "961,668,136,39",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "式神3"
+  },
+  {
+    "itemName": "hint_role",
+    "roiFront": "488,124,202,37",
+    "roiBack": "488,124,202,37",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "浮窗提示选择式神"
+  },
+  {
+    "itemName": "hint_time",
+    "roiFront": "735,124,64,38",
+    "roiBack": "735,124,64,38",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "浮窗提示倒计时"
   }
 ]

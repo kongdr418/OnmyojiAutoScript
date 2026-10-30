@@ -16,5 +16,77 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "开始"
+  },
+  {
+    "itemName": "reward",
+    "imageName": "draft_duel_reward.png",
+    "roiFront": "595,522,72,61",
+    "roiBack": "595,522,72,61",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "协同完成的奖励"
+  },
+  {
+    "itemName": "new_match",
+    "imageName": "draft_duel_new_match.png",
+    "roiFront": "129,106,109,98",
+    "roiBack": "129,106,109,98",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "未开启对局"
+  },
+  {
+    "itemName": "members_await",
+    "imageName": "draft_duel_members_await.png",
+    "roiFront": "1145,603,106,43",
+    "roiBack": "1145,603,106,43",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "成员等待"
+  },
+  {
+    "itemName": "settlement_0_4",
+    "imageName": "draft_duel_0-4_settlement_page.png",
+    "roiFront": "598,361,106,43",
+    "roiBack": "598,361,106,43",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "0至4番胜的结算页面"
+  },
+  {
+    "itemName": "selection_page",
+    "imageName": "draft_duel_selection_page.png",
+    "roiFront": "378,13,49,86",
+    "roiBack": "378,13,49,86",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "选择式神页面"
+  },
+  {
+    "itemName": "draft_duel_completed_hall",
+    "imageName": "draft_duel_draft_duel_completed_hall.png",
+    "roiFront": "420,8,37,92",
+    "roiBack": "420,8,37,92",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "选完式神的协同大厅页"
+  },
+  {
+    "itemName": "loss_0",
+    "imageName": "draft_duel_loss_0.png",
+    "roiFront": "148,175,110,25",
+    "roiBack": "148,175,110,25",
+    "method": "Template matching",
+    "threshold": 0.95,
+    "description": "当前0败场"
+  },
+  {
+    "itemName": "loss_1",
+    "imageName": "draft_duel_loss_1.png",
+    "roiFront": "148,175,59,26",
+    "roiBack": "148,175,59,26",
+    "method": "Template matching",
+    "threshold": 0.95,
+    "description": "当前1败场"
   }
 ]
