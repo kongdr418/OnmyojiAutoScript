@@ -22,5 +22,53 @@
     "roiFront": "1117,634,59,53",
     "roiBack": "1117,634,59,53",
     "description": "选择3号式神"
+  },
+  {
+    "itemName": "field_confirm",
+    "roiFront": "1170,635,60,50",
+    "roiBack": "1170,635,60,50",
+    "description": "上阵确定按钮"
+  },
+  {
+    "itemName": "mine_tab",
+    "roiFront": "1103,664,28,25",
+    "roiBack": "1103,664,28,25",
+    "description": "阵容详情-我的"
+  },
+  {
+    "itemName": "detail_close",
+    "roiFront": "1170,93,60,60",
+    "roiBack": "1170,93,60,60",
+    "description": "关闭阵容详情"
+  },
+  {
+    "itemName": "detail_card_1",
+    "roiFront": "481,30,40,32",
+    "roiBack": "481,30,40,32",
+    "description": "顶部第1个卡面（打开阵容详情）"
+  },
+  {
+    "itemName": "detail_card_2",
+    "roiFront": "568,30,40,32",
+    "roiBack": "568,30,40,32",
+    "description": "顶部第2个卡面（打开阵容详情）"
+  },
+  {
+    "itemName": "detail_card_3",
+    "roiFront": "653,30,40,32",
+    "roiBack": "653,30,40,32",
+    "description": "顶部第3个卡面（打开阵容详情）"
+  },
+  {
+    "itemName": "detail_card_4",
+    "roiFront": "739,30,40,32",
+    "roiBack": "739,30,40,32",
+    "description": "顶部第4个卡面（打开阵容详情）"
+  },
+  {
+    "itemName": "detail_card_5",
+    "roiFront": "824,30,40,32",
+    "roiBack": "824,30,40,32",
+    "description": "顶部第5个卡面（打开阵容详情）"
   }
 ]

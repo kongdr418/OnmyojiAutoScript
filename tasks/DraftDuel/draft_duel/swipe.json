@@ -1,0 +1,107 @@
+[
+  {
+    "itemName": "field_drag_1_1",
+    "roiFront": "287,560,70,70",
+    "roiBack": "165,315,80,60",
+    "mode": "default",
+    "description": "第一轮上第一张卡"
+  },
+  {
+    "itemName": "field_drag_1_2",
+    "roiFront": "287,560,70,70",
+    "roiBack": "336,361,80,60",
+    "mode": "default",
+    "description": "第二轮上第一张卡"
+  },
+  {
+    "itemName": "field_drag_1_3",
+    "roiFront": "285,564,70,70",
+    "roiBack": "509,373,80,60",
+    "mode": "default",
+    "description": "第三轮上第一张卡"
+  },
+  {
+    "itemName": "field_drag_2_1",
+    "roiFront": "405,590,70,70",
+    "roiBack": "169,310,80,60",
+    "mode": "default",
+    "description": "第一轮上第二张"
+  },
+  {
+    "itemName": "field_drag_2_2",
+    "roiFront": "405,590,70,70",
+    "roiBack": "341,351,80,60",
+    "mode": "default",
+    "description": "第二轮上第二张"
+  },
+  {
+    "itemName": "field_drag_2_3",
+    "roiFront": "405,590,70,70",
+    "roiBack": "510,372,80,60",
+    "mode": "default",
+    "description": "第三轮上第二张"
+  },
+  {
+    "itemName": "field_drag_3_1",
+    "roiFront": "512,566,70,70",
+    "roiBack": "162,316,80,60",
+    "mode": "default",
+    "description": "第一轮上第三张"
+  },
+  {
+    "itemName": "field_drag_3_2",
+    "roiFront": "512,566,70,70",
+    "roiBack": "337,350,80,60",
+    "mode": "default",
+    "description": "第二轮上第三张"
+  },
+  {
+    "itemName": "field_drag_3_3",
+    "roiFront": "512,566,70,70",
+    "roiBack": "511,381,80,60",
+    "mode": "default",
+    "description": "第三轮上第三张"
+  },
+  {
+    "itemName": "field_drag_4_1",
+    "roiFront": "626,563,70,70",
+    "roiBack": "166,316,80,60",
+    "mode": "default",
+    "description": "第一轮上第四张"
+  },
+  {
+    "itemName": "field_drag_4_2",
+    "roiFront": "626,563,70,70",
+    "roiBack": "332,359,80,60",
+    "mode": "default",
+    "description": "第二轮上第四张"
+  },
+  {
+    "itemName": "field_drag_4_3",
+    "roiFront": "626,563,70,70",
+    "roiBack": "511,384,80,60",
+    "mode": "default",
+    "description": "第三轮上第四张"
+  },
+  {
+    "itemName": "field_drag_5_1",
+    "roiFront": "744,571,70,70",
+    "roiBack": "164,319,80,60",
+    "mode": "default",
+    "description": "第一轮上第五张"
+  },
+  {
+    "itemName": "field_drag_5_2",
+    "roiFront": "744,571,70,70",
+    "roiBack": "334,360,80,60",
+    "mode": "default",
+    "description": "第二轮上第五张"
+  },
+  {
+    "itemName": "field_drag_5_3",
+    "roiFront": "744,571,70,70",
+    "roiBack": "515,389,80,60",
+    "mode": "default",
+    "description": "第三轮上第五张"
+  }
+]

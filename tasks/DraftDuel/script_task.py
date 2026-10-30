@@ -8,7 +8,8 @@ from module.logger import logger
 from tasks.Component.GeneralInvite.general_invite import GeneralInvite
 from tasks.DraftDuel.assets import DraftDuelAssets
 from tasks.DraftDuel.config import DraftDuelConfig, UserStatus
-from tasks.DraftDuel.strategy import CATALOG, choose_pick, normalize_name
+from tasks.DraftDuel.field_drag import drag_to_field
+from tasks.DraftDuel.strategy import CATALOG, choose_pick, normalize_name, plan_lineup
 from tasks.DraftDuel.visual_cards import lobby_faces, match_hand
 from tasks.GameUi.game_ui import GameUi
 from tasks.GameUi.page import page_draft_duel
@@ -21,6 +22,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     FULL_AMOUNTS = ('100000', '10万')
     # 选卡阶段每个账号选 5 位；上阵阶段再各上 3 位（合计 6）
     TOTAL_PICKS = 5
+    FIELD_ROUNDS = 3
     # 队友推荐在倒计时 30s~15s 之间检查
     RECOMMEND_HIGH = 30
     RECOMMEND_LOW = 15
@@ -61,7 +63,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 logger.warning('DraftDuel: start round failed')
                 self.set_next_run(task='DraftDuel', success=False, finish=True)
                 raise TaskEnd('DraftDuel')
-            logger.info('DraftDuel: round stopped, battle loop is not implemented yet')
+            logger.info('DraftDuel: fielding done; battle/settlement loop is not implemented yet')
         else:
             logger.info('DraftDuel: start disabled, stop after team formed')
 
@@ -103,6 +105,9 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             raise TaskEnd('DraftDuel')
 
         logger.info('DraftDuel: member selection finished')
+        # 同上，暂时不打开阵容详情
+        # self._read_lineup_detail()
+        self._start_fielding()
         self.set_next_run(task='DraftDuel', success=True, finish=True)
         raise TaskEnd('DraftDuel')
 
@@ -204,7 +209,11 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             if not self.wait_until_appear(self.I_SELECTION_PAGE, wait_time=15):
                 logger.warning('DraftDuel: selection page not found')
                 return False
-            return self._draft_phase()
+            if not self._draft_phase():
+                return False
+            # 详细页暂时不打开：速度/防御对上阵决策影响很小，名字用 picked_roles 即可
+            # 后面要用时再放开 self._read_lineup_detail()
+            return self._start_fielding()
 
         if self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL) and \
                 (self.appear(self.I_LOSS_0) or self.appear(self.I_LOSS_1)):
@@ -312,6 +321,223 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             tag = ' (elimination)' if score < 0.6 else ''
             logger.info(f'DraftDuel: hand card {slot + 1} -> {name}, score={score:.3f}{tag}')
         return result
+
+    def _screen_text(self) -> str:
+        try:
+            results = self.O_SCREEN.detect_and_ocr(self.device.image)
+        except Exception as e:
+            logger.warning(f'DraftDuel: screen OCR failed: {e}')
+            return ''
+        return ''.join(str(item.ocr_text or '') for item in results)
+
+    def _read_lineup_detail(self):
+        """选后大厅打开「阵容详情」，OCR 5 个名字并和 picked_roles 对照。"""
+        self.screenshot()
+        opened = False
+        for card in (self.C_DETAIL_CARD_1, self.C_DETAIL_CARD_2, self.C_DETAIL_CARD_3,
+                     self.C_DETAIL_CARD_4, self.C_DETAIL_CARD_5):
+            self.click(card, interval=0.4)
+            self.device.sleep(0.4)
+            self.screenshot()
+            title = str(self.O_DETAIL_TITLE.ocr(self.device.image) or '')
+            if '阵容详情' in title or '阵容详情' in self._screen_text():
+                opened = True
+                break
+        if not opened:
+            logger.warning('DraftDuel: lineup detail not opened')
+            return None
+
+        names = []
+        try:
+            self.click(self.C_MINE_TAB, interval=0.3)
+            self.device.sleep(0.4)
+            for _ in range(3):
+                self.screenshot()
+                names = []
+                for rule in (self.O_LINEUP_NAME_1, self.O_LINEUP_NAME_2,
+                             self.O_LINEUP_NAME_3, self.O_LINEUP_NAME_4,
+                             self.O_LINEUP_NAME_5):
+                    raw = str(rule.ocr(self.device.image) or '')
+                    names.append(normalize_name(raw) or raw)
+                if all(names):
+                    break
+                self.device.sleep(0.3)
+            logger.info(f'DraftDuel: lineup detail names {names}')
+            if all(names) and set(names) != set(self.picked_roles):
+                logger.warning(
+                    f'DraftDuel: lineup detail differs from picks: {names} vs {self.picked_roles}'
+                )
+            self._battle_detail = tuple(names) if all(names) else None
+            return self._battle_detail
+        finally:
+            self.click(self.C_DETAIL_CLOSE, interval=0.2)
+
+    def _prep_button_state(self):
+        """上阵界面右下角：确定/已锁定 + 自动上阵状态。"""
+        label = None
+        auto_on = False
+        try:
+            results = self.O_BATTLE_CONFIRM.detect_and_ocr(self.device.image)
+        except Exception:
+            results = []
+        for item in results:
+            text = str(item.ocr_text or '').replace(' ', '')
+            if '自动' in text:
+                auto_on = True
+            if '锁' in text:
+                label = 'locked'
+            elif '确' in text:
+                label = 'open'
+        if label is None:
+            text = self._screen_text()
+            if '已锁定' in text:
+                label = 'locked'
+            elif '确定' in text:
+                label = 'open'
+            if '自动上阵' in text or '取消自动' in text:
+                auto_on = True
+        return label, auto_on
+
+    def _start_fielding(self) -> bool:
+        """选后大厅点「战」进上阵界面，然后上 3 张。"""
+        self.screenshot()
+        if self.appear(self.I_START):
+            self.appear_then_click(self.I_START, interval=1)
+        else:
+            logger.info('DraftDuel: no start button, wait for leader/prep')
+        timer = Timer(60).start()
+        while not timer.reached():
+            self.screenshot()
+            label, _ = self._prep_button_state()
+            if label in ('open', 'locked'):
+                logger.info(f'DraftDuel: prep screen reached, state={label}')
+                names = getattr(self, '_battle_detail', None) or self.picked_roles
+                return self._field_battle_lineup(names)
+            self.device.sleep(0.5)
+        logger.warning('DraftDuel: prep screen not found')
+        return False
+
+    def _begin_new_battle_field(self):
+        """每场战斗的上阵界面都是空的，单场状态在这里归零。"""
+        self._field_round = 0
+        self._field_seen_open = False
+        self._field_confirms = []
+        self._battle_locked = []
+        self._lock_missing_frames = 0
+
+    def _prep_visible(self) -> bool:
+        label, _ = self._prep_button_state()
+        return label is not None
+
+    def _wait_field_locked(self, timeout: float = 2.5) -> str:
+        timer = Timer(timeout).start()
+        while not timer.reached():
+            self.screenshot()
+            label, _ = self._prep_button_state()
+            if label == 'locked':
+                return 'locked'
+            if label is None:
+                missing = getattr(self, '_lock_missing_frames', 0) + 1
+                self._lock_missing_frames = missing
+                if missing >= 2 and not self._prep_visible():
+                    return 'battle'
+            else:
+                self._lock_missing_frames = 0
+            self.device.sleep(0.3)
+        return 'open'
+
+    def _note_round_closed(self, target, why):
+        self._field_round = getattr(self, '_field_round', 0) + 1
+        self._field_seen_open = False
+        if target:
+            self._battle_locked = (getattr(self, '_battle_locked', []) or []) + [target]
+        logger.info(
+            f'DraftDuel: fielding {self._field_round}/{self.FIELD_ROUNDS} locked ({why})'
+        )
+
+    def _field_round_once(self, target, names) -> bool:
+        """一轮：拖目标卡 -> 点确定 -> 等已锁定。"""
+        for drag_attempt in (1, 2):
+            self.screenshot()
+            label, _ = self._prep_button_state()
+            if label != 'open':
+                return label == 'locked'
+
+            mapping = self._match_hand_cards()
+            inverse = {name: slot for slot, (name, _score) in mapping.items()}
+            slot = inverse.get(target)
+            if slot is None:
+                logger.warning(f'DraftDuel: target {target} not in hand {mapping}')
+                return False
+            swipe = getattr(self, f'S_FIELD_DRAG_{slot + 1}_{self._field_round + 1}')
+            x1, y1, x2, y2 = swipe.coord()
+            logger.info(
+                f'DraftDuel: round {self._field_round + 1} drag {target} '
+                f'card{slot + 1} {(x1, y1)}->{(x2, y2)} (try {drag_attempt})'
+            )
+            drag_to_field(self.device, (x1, y1), (x2, y2),
+                          name=f'dd_field_r{self._field_round + 1}_{drag_attempt}')
+            self.device.sleep(1.6)
+            self.click(self.C_FIELD_CONFIRM, interval=1)
+            outcome = self._wait_field_locked()
+            if outcome in ('locked', 'battle'):
+                self._note_round_closed(target, f'confirm{drag_attempt}')
+                return True
+            logger.warning(f'DraftDuel: round {self._field_round + 1} not locked, retry')
+        return False
+
+    def _field_battle_lineup(self, names) -> bool:
+        """3 轮上阵：以「确定/已锁定」为准推进轮次，不按 loop 下标硬推。"""
+        if not names:
+            return False
+        if getattr(self, '_fielding_active', False):
+            return False
+        self._fielding_active = True
+        try:
+            try:
+                plan = plan_lineup(names, team_size=min(3, len(names)), locked=[],
+                                   max_fire=1)
+            except Exception as e:
+                logger.warning(f'DraftDuel: field plan failed: {e}')
+                return False
+            logger.info(f'DraftDuel: field plan {plan}')
+            self._begin_new_battle_field()
+            timer = Timer(150).start()
+            while self._field_round < self.FIELD_ROUNDS:
+                if timer.reached():
+                    logger.warning('DraftDuel: fielding timeout')
+                    return False
+                if self._field_round >= len(plan):
+                    return True
+                self.screenshot()
+                label, _ = self._prep_button_state()
+                if label is None:
+                    missing = getattr(self, '_prep_missing_frames', 0) + 1
+                    self._prep_missing_frames = missing
+                    if missing >= 4:
+                        logger.info(
+                            f'DraftDuel: prep gone, battle started at '
+                            f'{self._field_round}/3'
+                        )
+                        return True
+                    self.device.sleep(0.35)
+                    continue
+                self._prep_missing_frames = 0
+                if label == 'locked':
+                    if self._field_seen_open:
+                        self._note_round_closed(None, 'system locked')
+                    self.device.sleep(0.35)
+                    continue
+                self._field_seen_open = True
+                target = plan[self._field_round]
+                if not self._field_round_once(target, names):
+                    logger.warning(f'DraftDuel: round {self._field_round + 1} failed')
+                    return False
+                self.device.sleep(0.3)
+            logger.info('DraftDuel: fielding done 3/3')
+            return True
+        finally:
+            self._fielding_active = False
 
     def _wait_pick_change(self, index: int, timeout: float = 3) -> bool:
         timer = Timer(timeout).start()

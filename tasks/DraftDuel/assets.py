@@ -23,6 +23,75 @@ class DraftDuelAssets:
 	O_HINT_ROLE = RuleOcr(roi=(488,124,202,37), area=(488,124,202,37), mode="Single", method="Default", keyword="", name="hint_role")
 	# 浮窗提示倒计时 
 	O_HINT_TIME = RuleOcr(roi=(735,124,64,38), area=(735,124,64,38), mode="Single", method="Default", keyword="", name="hint_time")
+	# 整屏 OCR 
+	O_SCREEN = RuleOcr(roi=(0,0,1280,720), area=(0,0,1280,720), mode="Full", method="Default", keyword="", name="screen")
+	# 上阵右下角确定/自动上阵 
+	O_BATTLE_CONFIRM = RuleOcr(roi=(1060,540,210,110), area=(1060,540,210,110), mode="Single", method="Default", keyword="", name="battle_confirm")
+	# 阵容详情标题 
+	O_DETAIL_TITLE = RuleOcr(roi=(535,20,210,50), area=(535,20,210,50), mode="Single", method="Default", keyword="", name="detail_title")
+	# 阵容详情第1个名字 
+	O_LINEUP_NAME_1 = RuleOcr(roi=(230,172,190,40), area=(230,172,190,40), mode="Single", method="Default", keyword="", name="lineup_name_1")
+	# 阵容详情第2个名字 
+	O_LINEUP_NAME_2 = RuleOcr(roi=(420,172,190,40), area=(420,172,190,40), mode="Single", method="Default", keyword="", name="lineup_name_2")
+	# 阵容详情第3个名字 
+	O_LINEUP_NAME_3 = RuleOcr(roi=(615,172,190,40), area=(615,172,190,40), mode="Single", method="Default", keyword="", name="lineup_name_3")
+	# 阵容详情第4个名字 
+	O_LINEUP_NAME_4 = RuleOcr(roi=(805,172,190,40), area=(805,172,190,40), mode="Single", method="Default", keyword="", name="lineup_name_4")
+	# 阵容详情第5个名字 
+	O_LINEUP_NAME_5 = RuleOcr(roi=(995,172,190,40), area=(995,172,190,40), mode="Single", method="Default", keyword="", name="lineup_name_5")
+	# 阵容详情第1个速度 
+	O_LINEUP_SPEED_1 = RuleOcr(roi=(278,346,85,31), area=(278,346,85,31), mode="Single", method="Default", keyword="", name="lineup_speed_1")
+	# 阵容详情第2个速度 
+	O_LINEUP_SPEED_2 = RuleOcr(roi=(468,346,85,31), area=(468,346,85,31), mode="Single", method="Default", keyword="", name="lineup_speed_2")
+	# 阵容详情第3个速度 
+	O_LINEUP_SPEED_3 = RuleOcr(roi=(663,346,85,31), area=(663,346,85,31), mode="Single", method="Default", keyword="", name="lineup_speed_3")
+	# 阵容详情第4个速度 
+	O_LINEUP_SPEED_4 = RuleOcr(roi=(853,346,85,31), area=(853,346,85,31), mode="Single", method="Default", keyword="", name="lineup_speed_4")
+	# 阵容详情第5个速度 
+	O_LINEUP_SPEED_5 = RuleOcr(roi=(1043,346,85,31), area=(1043,346,85,31), mode="Single", method="Default", keyword="", name="lineup_speed_5")
+	# 阵容详情第1个防御 
+	O_LINEUP_DEFENSE_1 = RuleOcr(roi=(278,303,85,31), area=(278,303,85,31), mode="Single", method="Default", keyword="", name="lineup_defense_1")
+	# 阵容详情第2个防御 
+	O_LINEUP_DEFENSE_2 = RuleOcr(roi=(468,303,85,31), area=(468,303,85,31), mode="Single", method="Default", keyword="", name="lineup_defense_2")
+	# 阵容详情第3个防御 
+	O_LINEUP_DEFENSE_3 = RuleOcr(roi=(663,303,85,31), area=(663,303,85,31), mode="Single", method="Default", keyword="", name="lineup_defense_3")
+	# 阵容详情第4个防御 
+	O_LINEUP_DEFENSE_4 = RuleOcr(roi=(853,303,85,31), area=(853,303,85,31), mode="Single", method="Default", keyword="", name="lineup_defense_4")
+	# 阵容详情第5个防御 
+	O_LINEUP_DEFENSE_5 = RuleOcr(roi=(1043,303,85,31), area=(1043,303,85,31), mode="Single", method="Default", keyword="", name="lineup_defense_5")
+
+
+	# Swipe Rule Assets
+	# 第一轮上第一张卡 
+	S_FIELD_DRAG_1_1 = RuleSwipe(roi_front=(287,560,70,70), roi_back=(165,315,80,60), mode="default", name="field_drag_1_1")
+	# 第二轮上第一张卡 
+	S_FIELD_DRAG_1_2 = RuleSwipe(roi_front=(287,560,70,70), roi_back=(336,361,80,60), mode="default", name="field_drag_1_2")
+	# 第三轮上第一张卡 
+	S_FIELD_DRAG_1_3 = RuleSwipe(roi_front=(285,564,70,70), roi_back=(509,373,80,60), mode="default", name="field_drag_1_3")
+	# 第一轮上第二张 
+	S_FIELD_DRAG_2_1 = RuleSwipe(roi_front=(405,590,70,70), roi_back=(169,310,80,60), mode="default", name="field_drag_2_1")
+	# 第二轮上第二张 
+	S_FIELD_DRAG_2_2 = RuleSwipe(roi_front=(405,590,70,70), roi_back=(341,351,80,60), mode="default", name="field_drag_2_2")
+	# 第三轮上第二张 
+	S_FIELD_DRAG_2_3 = RuleSwipe(roi_front=(405,590,70,70), roi_back=(510,372,80,60), mode="default", name="field_drag_2_3")
+	# 第一轮上第三张 
+	S_FIELD_DRAG_3_1 = RuleSwipe(roi_front=(512,566,70,70), roi_back=(162,316,80,60), mode="default", name="field_drag_3_1")
+	# 第二轮上第三张 
+	S_FIELD_DRAG_3_2 = RuleSwipe(roi_front=(512,566,70,70), roi_back=(337,350,80,60), mode="default", name="field_drag_3_2")
+	# 第三轮上第三张 
+	S_FIELD_DRAG_3_3 = RuleSwipe(roi_front=(512,566,70,70), roi_back=(511,381,80,60), mode="default", name="field_drag_3_3")
+	# 第一轮上第四张 
+	S_FIELD_DRAG_4_1 = RuleSwipe(roi_front=(626,563,70,70), roi_back=(166,316,80,60), mode="default", name="field_drag_4_1")
+	# 第二轮上第四张 
+	S_FIELD_DRAG_4_2 = RuleSwipe(roi_front=(626,563,70,70), roi_back=(332,359,80,60), mode="default", name="field_drag_4_2")
+	# 第三轮上第四张 
+	S_FIELD_DRAG_4_3 = RuleSwipe(roi_front=(626,563,70,70), roi_back=(511,384,80,60), mode="default", name="field_drag_4_3")
+	# 第一轮上第五张 
+	S_FIELD_DRAG_5_1 = RuleSwipe(roi_front=(744,571,70,70), roi_back=(164,319,80,60), mode="default", name="field_drag_5_1")
+	# 第二轮上第五张 
+	S_FIELD_DRAG_5_2 = RuleSwipe(roi_front=(744,571,70,70), roi_back=(334,360,80,60), mode="default", name="field_drag_5_2")
+	# 第三轮上第五张 
+	S_FIELD_DRAG_5_3 = RuleSwipe(roi_front=(744,571,70,70), roi_back=(515,389,80,60), mode="default", name="field_drag_5_3")
 
 
 	# Click Rule Assets
@@ -34,6 +103,22 @@ class DraftDuelAssets:
 	C_CHOOSE_2 = RuleClick(roi_front=(744,632,59,53), roi_back=(744,632,59,53), name="choose_2")
 	# 选择3号式神 
 	C_CHOOSE_3 = RuleClick(roi_front=(1117,634,59,53), roi_back=(1117,634,59,53), name="choose_3")
+	# 上阵确定按钮 
+	C_FIELD_CONFIRM = RuleClick(roi_front=(1170,635,60,50), roi_back=(1170,635,60,50), name="field_confirm")
+	# 阵容详情-我的 
+	C_MINE_TAB = RuleClick(roi_front=(1103,664,28,25), roi_back=(1103,664,28,25), name="mine_tab")
+	# 关闭阵容详情 
+	C_DETAIL_CLOSE = RuleClick(roi_front=(1170,93,60,60), roi_back=(1170,93,60,60), name="detail_close")
+	# 顶部第1个卡面（打开阵容详情） 
+	C_DETAIL_CARD_1 = RuleClick(roi_front=(481,30,40,32), roi_back=(481,30,40,32), name="detail_card_1")
+	# 顶部第2个卡面（打开阵容详情） 
+	C_DETAIL_CARD_2 = RuleClick(roi_front=(568,30,40,32), roi_back=(568,30,40,32), name="detail_card_2")
+	# 顶部第3个卡面（打开阵容详情） 
+	C_DETAIL_CARD_3 = RuleClick(roi_front=(653,30,40,32), roi_back=(653,30,40,32), name="detail_card_3")
+	# 顶部第4个卡面（打开阵容详情） 
+	C_DETAIL_CARD_4 = RuleClick(roi_front=(739,30,40,32), roi_back=(739,30,40,32), name="detail_card_4")
+	# 顶部第5个卡面（打开阵容详情） 
+	C_DETAIL_CARD_5 = RuleClick(roi_front=(824,30,40,32), roi_back=(824,30,40,32), name="detail_card_5")
 
 
 	# Image Rule Assets

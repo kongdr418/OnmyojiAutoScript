@@ -52,5 +52,167 @@
     "method": "Default",
     "keyword": "",
     "description": "浮窗提示倒计时"
+  },
+  {
+    "itemName": "screen",
+    "roiFront": "0,0,1280,720",
+    "roiBack": "0,0,1280,720",
+    "mode": "Full",
+    "method": "Default",
+    "keyword": "",
+    "description": "整屏 OCR"
+  },
+  {
+    "itemName": "battle_confirm",
+    "roiFront": "1060,540,210,110",
+    "roiBack": "1060,540,210,110",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "上阵右下角确定/自动上阵"
+  },
+  {
+    "itemName": "detail_title",
+    "roiFront": "535,20,210,50",
+    "roiBack": "535,20,210,50",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情标题"
+  },
+  {
+    "itemName": "lineup_name_1",
+    "roiFront": "230,172,190,40",
+    "roiBack": "230,172,190,40",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第1个名字"
+  },
+  {
+    "itemName": "lineup_name_2",
+    "roiFront": "420,172,190,40",
+    "roiBack": "420,172,190,40",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第2个名字"
+  },
+  {
+    "itemName": "lineup_name_3",
+    "roiFront": "615,172,190,40",
+    "roiBack": "615,172,190,40",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第3个名字"
+  },
+  {
+    "itemName": "lineup_name_4",
+    "roiFront": "805,172,190,40",
+    "roiBack": "805,172,190,40",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第4个名字"
+  },
+  {
+    "itemName": "lineup_name_5",
+    "roiFront": "995,172,190,40",
+    "roiBack": "995,172,190,40",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第5个名字"
+  },
+  {
+    "itemName": "lineup_speed_1",
+    "roiFront": "278,346,85,31",
+    "roiBack": "278,346,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第1个速度"
+  },
+  {
+    "itemName": "lineup_speed_2",
+    "roiFront": "468,346,85,31",
+    "roiBack": "468,346,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第2个速度"
+  },
+  {
+    "itemName": "lineup_speed_3",
+    "roiFront": "663,346,85,31",
+    "roiBack": "663,346,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第3个速度"
+  },
+  {
+    "itemName": "lineup_speed_4",
+    "roiFront": "853,346,85,31",
+    "roiBack": "853,346,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第4个速度"
+  },
+  {
+    "itemName": "lineup_speed_5",
+    "roiFront": "1043,346,85,31",
+    "roiBack": "1043,346,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第5个速度"
+  },
+  {
+    "itemName": "lineup_defense_1",
+    "roiFront": "278,303,85,31",
+    "roiBack": "278,303,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第1个防御"
+  },
+  {
+    "itemName": "lineup_defense_2",
+    "roiFront": "468,303,85,31",
+    "roiBack": "468,303,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第2个防御"
+  },
+  {
+    "itemName": "lineup_defense_3",
+    "roiFront": "663,303,85,31",
+    "roiBack": "663,303,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第3个防御"
+  },
+  {
+    "itemName": "lineup_defense_4",
+    "roiFront": "853,303,85,31",
+    "roiBack": "853,303,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第4个防御"
+  },
+  {
+    "itemName": "lineup_defense_5",
+    "roiFront": "1043,303,85,31",
+    "roiBack": "1043,303,85,31",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "阵容详情第5个防御"
   }
 ]

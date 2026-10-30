@@ -20,9 +20,10 @@ try:
 except Exception:  # 离线单文件测试时允许缺统计模块
     duel_stats = None
 
-CATALOG_PATH = Path(__file__).with_name('catalog.json')
-ENCYCLOPEDIA_PATH = Path(__file__).with_name('encyclopedia.json')
-STRENGTH_PATH = Path(__file__).with_name('strength_scores.json')
+DATA_DIR = Path(__file__).resolve().parents[2] / 'assets' / 'DraftDuel'
+CATALOG_PATH = DATA_DIR / 'catalog.json'
+ENCYCLOPEDIA_PATH = DATA_DIR / 'encyclopedia.json'
+STRENGTH_PATH = DATA_DIR / 'strength_scores.json'
 TIER_POINTS = {'特等': 40, '上等': 30, '中等': 20, '下等': 10}
 ENCYCLOPEDIA_POINTS = {'SS': 12, 'S': 8, 'A': 4, 'B': 0,
                        'C': -4, 'D': -8, 'E': -12}
