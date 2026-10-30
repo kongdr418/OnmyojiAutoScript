@@ -24,10 +24,17 @@ class DraftDuelConfig(ConfigBase):
         default=Time(minute=30),
         description='limit_time_help',
     )
-    # 选式神流程还没接，默认关闭，避免点「战」之后卡在对局里
-    start_enable: bool = Field(
-        default=False,
-        description='draft_duel_start_enable_help',
+    completion_count: int = Field(
+        title='完成局数',
+        default=1,
+        ge=-1,
+        le=20,
+        description='执行次数，-1表示无限制；队员忽略此项，跟队长走',
+    )
+    stop_when_full: bool = Field(
+        title='刷满即停',
+        default=True,
+        description='免费次数刷满后停止；关闭则继续花金币打',
     )
 
 

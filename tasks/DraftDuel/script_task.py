@@ -1,5 +1,8 @@
 # This Python file uses the following encoding: utf-8
+import json
 import re
+import time
+from datetime import datetime, timedelta
 
 from module.base.timer import Timer
 from module.exception import TaskEnd
@@ -9,10 +12,14 @@ from tasks.Component.GeneralInvite.general_invite import GeneralInvite
 from tasks.DraftDuel.assets import DraftDuelAssets
 from tasks.DraftDuel.config import DraftDuelConfig, UserStatus
 from tasks.DraftDuel.field_drag import drag_to_field
-from tasks.DraftDuel.strategy import CATALOG, choose_pick, normalize_name, plan_lineup
+from tasks.DraftDuel.strategy import (CATALOG, DATA_DIR, choose_pick, normalize_name,
+                                      plan_duel_lineup, plan_lineup)
 from tasks.DraftDuel.visual_cards import lobby_faces, match_hand
 from tasks.GameUi.game_ui import GameUi
 from tasks.GameUi.page import page_draft_duel
+
+
+DUEL_SHARE_DIR = DATA_DIR / 'duel_share'
 
 
 class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
@@ -23,6 +30,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     # 选卡阶段每个账号选 5 位；上阵阶段再各上 3 位（合计 6）
     TOTAL_PICKS = 5
     FIELD_ROUNDS = 3
+    AUTO_FORM_AFTER_FIRST = True
     # 队友推荐在倒计时 30s~15s 之间检查
     RECOMMEND_HIGH = 30
     RECOMMEND_LOW = 15
@@ -32,11 +40,49 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     def run(self):
         con: DraftDuelConfig = self.config.draft_duel.draft_duel_config
         logger.hr('Draft Duel', 2)
+        self._require_open_for_match()
 
         if con.user_status == UserStatus.MEMBER:
             self._run_member(con)
         else:
             self._run_leader(con)
+
+    @staticmethod
+    def _completion_target(con: DraftDuelConfig) -> tuple[int, bool]:
+        raw = int(con.completion_count)
+        if raw < 0:
+            return 1, True
+        return max(1, raw), False
+
+    @staticmethod
+    def _activity_open(now: datetime) -> bool:
+        # 周一~周五 10:00-23:00，周六~周日 8:00-23:00
+        start = 8 if now.weekday() >= 5 else 10
+        return start <= now.hour < 23
+
+    def _require_open_for_match(self):
+        now = datetime.now()
+        if self._activity_open(now):
+            return
+        target = now.replace(hour=8 if now.weekday() >= 5 else 10,
+                             minute=0, second=0, microsecond=0)
+        if now >= target:
+            target += timedelta(days=1)
+        logger.info(f'DraftDuel: closed, next attempt after {target}')
+        self.set_next_run(task='DraftDuel', success=None, finish=False, target=target)
+        raise TaskEnd('DraftDuel')
+
+    def _wait_member_selection(self, con: DraftDuelConfig) -> bool:
+        """队员：等「等待中」消失，再等选人页；多局时也走这里。"""
+        self.screenshot()
+        if self.appear(self.I_MEMBERS_AWAIT):
+            wait_seconds = (con.limit_time.hour * 3600 + con.limit_time.minute * 60
+                            + con.limit_time.second)
+            self.wait_until_disappear(self.I_MEMBERS_AWAIT, timeout=wait_seconds)
+            self.screenshot()
+            if self.appear(self.I_MEMBERS_AWAIT):
+                return False
+        return self.wait_until_appear(self.I_SELECTION_PAGE, wait_time=120)
 
     def _run_leader(self, con: DraftDuelConfig):
         self.goto_page(page_draft_duel)
@@ -44,28 +90,43 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         logger.info(f'DraftDuel: limit_time={con.limit_time}')
 
         state = self._cost_state()
-        if state == 'full':
-            logger.info('DraftDuel: weekly attempts are full')
-            self.set_next_run(task='DraftDuel', success=True, finish=True)
-            raise TaskEnd('DraftDuel')
         if state == 'unknown':
             logger.warning('DraftDuel: unrecognized cost text, stop without entering a match')
             self.set_next_run(task='DraftDuel', success=False, finish=True)
             raise TaskEnd('DraftDuel')
+        if state == 'full':
+            if con.stop_when_full:
+                logger.info('DraftDuel: weekly attempts full, stop_when_full -> stop')
+                self.set_next_run(task='DraftDuel', success=True, finish=True)
+                raise TaskEnd('DraftDuel')
+            logger.info('DraftDuel: weekly attempts full, continue by paying gold')
 
         if not self._invite_teammate():
             logger.warning('DraftDuel: invite friend failed')
             self.set_next_run(task='DraftDuel', success=False, finish=True)
             raise TaskEnd('DraftDuel')
 
-        if con.start_enable:
+        target, unlimited = self._completion_target(con)
+        target_label = '∞' if unlimited else target
+        limit_seconds = (con.limit_time.hour * 3600 + con.limit_time.minute * 60
+                         + con.limit_time.second)
+        deadline = time.monotonic() + limit_seconds
+        completed = 0
+        if self._resume_match():
+            completed = 1
+        while (unlimited or completed < target) and time.monotonic() < deadline:
+            self._reset_match_state()
+            self._duel_share_reset()
             if not self._start_round():
                 logger.warning('DraftDuel: start round failed')
                 self.set_next_run(task='DraftDuel', success=False, finish=True)
                 raise TaskEnd('DraftDuel')
-            logger.info('DraftDuel: fielding done; battle/settlement loop is not implemented yet')
-        else:
-            logger.info('DraftDuel: start disabled, stop after team formed')
+            if not self._wait_battle_return():
+                logger.warning('DraftDuel: battle wait failed')
+                self.set_next_run(task='DraftDuel', success=False, finish=True)
+                raise TaskEnd('DraftDuel')
+            completed += 1
+            logger.info(f'DraftDuel: match {completed}/{target_label} finished')
 
         self.set_next_run(task='DraftDuel', success=True, finish=True)
         raise TaskEnd('DraftDuel')
@@ -78,36 +139,33 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.set_next_run(task='DraftDuel', success=False, finish=True)
             raise TaskEnd('DraftDuel')
 
-        logger.info('DraftDuel: joined team, waiting for leader')
-        self.screenshot()
-        if not self.appear(self.I_MEMBERS_AWAIT):
-            logger.info('DraftDuel: member lobby not found, leader may already start')
-            self.set_next_run(task='DraftDuel', success=True, finish=True)
-            raise TaskEnd('DraftDuel')
-
-        # 队员只有「等待中」，不能提前结束，否则调度器会切回主界面解散队伍
-        wait_seconds = con.limit_time.hour * 3600 + con.limit_time.minute * 60 + con.limit_time.second
-        self.wait_until_disappear(self.I_MEMBERS_AWAIT, timeout=wait_seconds)
-        self.screenshot()
-        if self.appear(self.I_MEMBERS_AWAIT):
-            logger.warning('DraftDuel: leader did not start in time')
-            self.set_next_run(task='DraftDuel', success=False, finish=True)
-            raise TaskEnd('DraftDuel')
-
-        logger.info('DraftDuel: leader started, entering selection')
-        if not self.wait_until_appear(self.I_SELECTION_PAGE, wait_time=15):
-            logger.warning('DraftDuel: selection page not found')
-            self.set_next_run(task='DraftDuel', success=False, finish=True)
-            raise TaskEnd('DraftDuel')
-        if not self._draft_phase():
-            logger.warning('DraftDuel: member selection failed')
-            self.set_next_run(task='DraftDuel', success=False, finish=True)
-            raise TaskEnd('DraftDuel')
-
-        logger.info('DraftDuel: member selection finished')
-        # 同上，暂时不打开阵容详情
-        # self._read_lineup_detail()
-        self._start_fielding()
+        logger.info('DraftDuel: joined team, waiting for leader; follow leader count')
+        target_label = '∞'
+        limit_seconds = (con.limit_time.hour * 3600 + con.limit_time.minute * 60
+                         + con.limit_time.second)
+        deadline = time.monotonic() + limit_seconds
+        completed = 0
+        while time.monotonic() < deadline:
+            self._reset_match_state()
+            if not self._wait_member_selection(con):
+                if completed > 0:
+                    logger.info('DraftDuel: leader stopped, member exits')
+                    break
+                logger.warning('DraftDuel: member selection not found')
+                self.set_next_run(task='DraftDuel', success=False, finish=True)
+                raise TaskEnd('DraftDuel')
+            if not self._draft_phase():
+                logger.warning('DraftDuel: member selection failed')
+                self.set_next_run(task='DraftDuel', success=False, finish=True)
+                raise TaskEnd('DraftDuel')
+            logger.info(f'DraftDuel: member match {completed + 1}/{target_label}')
+            self._duel_share_write(self.picked_roles)
+            self._battle_mate_names = self._duel_share_read_mate()
+            # 同上，暂时不打开阵容详情
+            # self._read_lineup_detail()
+            self._start_fielding()
+            self._wait_battle_return()
+            completed += 1
         self.set_next_run(task='DraftDuel', success=True, finish=True)
         raise TaskEnd('DraftDuel')
 
@@ -200,7 +258,18 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
 
     def _start_round(self) -> bool:
         """点「战」：新局先进选式神，已选好阵容则不再选。"""
-        self.screenshot()
+        # 最终番胜面板可能不在主大厅：先把「点击屏幕继续/确定」点掉再找新局
+        for _ in range(5):
+            self.screenshot()
+            if self.appear(self.I_NEW_MATCH):
+                break
+            text = self._screen_text()
+            if '番胜' in text or '点击屏幕继续' in text:
+                self._dismiss_settlement()
+                self.device.sleep(1.0)
+                continue
+            break
+
         if self.appear(self.I_NEW_MATCH):
             logger.info('DraftDuel: new match, enter selection')
             if not self.appear_then_click(self.I_START, interval=1):
@@ -211,14 +280,11 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 return False
             if not self._draft_phase():
                 return False
+            self._duel_share_write(self.picked_roles)
+            self._battle_mate_names = self._duel_share_read_mate()
             # 详细页暂时不打开：速度/防御对上阵决策影响很小，名字用 picked_roles 即可
             # 后面要用时再放开 self._read_lineup_detail()
             return self._start_fielding()
-
-        if self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL) and \
-                (self.appear(self.I_LOSS_0) or self.appear(self.I_LOSS_1)):
-            logger.info('DraftDuel: lineup ready, battle flow is not implemented yet')
-            return True
 
         logger.warning('DraftDuel: unknown lobby state, stop')
         return False
@@ -389,13 +455,26 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             elif '确' in text:
                 label = 'open'
         if label is None:
-            text = self._screen_text()
-            if '已锁定' in text:
-                label = 'locked'
-            elif '确定' in text:
-                label = 'open'
-            if '自动上阵' in text or '取消自动' in text:
-                auto_on = True
+            height, width = self.device.image.shape[:2]
+            try:
+                results = self.O_SCREEN.detect_and_ocr(self.device.image)
+            except Exception:
+                results = []
+            for item in results:
+                text = str(item.ocr_text or '').replace(' ', '')
+                x, y = item.box.mean(axis=0)
+                if x < width * 0.80 or y < height * 0.62:
+                    continue
+                if '锁' in text:
+                    label = 'locked'
+                elif '确' in text:
+                    label = 'open'
+                if '自动' in text:
+                    auto_on = True
+            if label is None:
+                text = self._screen_text()
+                if '自动上阵' in text or '取消自动' in text:
+                    auto_on = True
         return label, auto_on
 
     def _start_fielding(self) -> bool:
@@ -412,6 +491,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             if label in ('open', 'locked'):
                 logger.info(f'DraftDuel: prep screen reached, state={label}')
                 names = getattr(self, '_battle_detail', None) or self.picked_roles
+                self._battle_fielded = True
                 return self._field_battle_lineup(names)
             self.device.sleep(0.5)
         logger.warning('DraftDuel: prep screen not found')
@@ -494,9 +574,20 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             return False
         self._fielding_active = True
         try:
+            mate = getattr(self, '_battle_mate_names', None)
             try:
-                plan = plan_lineup(names, team_size=min(3, len(names)), locked=[],
-                                   max_fire=1)
+                if mate:
+                    try:
+                        plan, _mate_plan = plan_duel_lineup(
+                            names, mate, locked=[], team_size=min(3, len(names)))
+                        logger.info(f'DraftDuel: joint plan own={plan} mate={_mate_plan}')
+                    except Exception as e:
+                        logger.warning(f'DraftDuel: joint plan failed, fallback: {e}')
+                        plan = plan_lineup(names, team_size=min(3, len(names)),
+                                           locked=[], max_fire=1)
+                else:
+                    plan = plan_lineup(names, team_size=min(3, len(names)), locked=[],
+                                       max_fire=1)
             except Exception as e:
                 logger.warning(f'DraftDuel: field plan failed: {e}')
                 return False
@@ -538,6 +629,186 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             return True
         finally:
             self._fielding_active = False
+
+    def _reset_match_state(self):
+        self._run_wins = 0
+        self._run_losses = 0
+        self._result_counted = False
+        self._battle_fielded = False
+        self._battle_count = 0
+        self._battle_mate_names = None
+
+    def _configured_role(self) -> str:
+        con = self.config.draft_duel.draft_duel_config
+        return 'member' if con.user_status == UserStatus.MEMBER else 'captain'
+
+    def _duel_share_reset(self):
+        for role in ('captain', 'member'):
+            path = DUEL_SHARE_DIR / f'draft_share_{role}.json'
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
+            except Exception as e:
+                logger.warning(f'DraftDuel: share reset failed: {e}')
+
+    def _duel_share_write(self, names):
+        if not names:
+            return
+        role = self._configured_role()
+        try:
+            DUEL_SHARE_DIR.mkdir(parents=True, exist_ok=True)
+            payload = {'role': role, 'names': list(names),
+                       'ts': time.time(), 'state': 'ready'}
+            (DUEL_SHARE_DIR / f'draft_share_{role}.json').write_text(
+                json.dumps(payload, ensure_ascii=False), encoding='utf-8')
+            logger.info(f'DraftDuel: share written ({role}): {list(names)}')
+        except Exception as e:
+            logger.warning(f'DraftDuel: share write failed: {e}')
+
+    def _duel_share_read(self, role: str, max_age: float = 600):
+        try:
+            data = json.loads((DUEL_SHARE_DIR / f'draft_share_{role}.json')
+                              .read_text(encoding='utf-8'))
+        except Exception:
+            return None
+        if data.get('state') != 'ready':
+            return None
+        names = [normalize_name(raw) for raw in data.get('names', [])]
+        names = [name for name in names if name]
+        if len(names) < 3 or time.time() - float(data.get('ts') or 0) > max_age:
+            return None
+        return names
+
+    def _duel_share_read_own(self):
+        return self._duel_share_read(self._configured_role())
+
+    def _duel_share_read_mate(self, timeout: float = 6.0):
+        role = 'member' if self._configured_role() == 'captain' else 'captain'
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            names = self._duel_share_read(role, max_age=300)
+            if names:
+                logger.info(f'DraftDuel: mate share read ({role}): {names}')
+                return names
+            time.sleep(0.5)
+        return None
+
+    def _resume_match(self) -> bool:
+        """重启后如果已经在半局里，直接续接，不重新选人。"""
+        self.screenshot()
+        if self.appear(self.I_NEW_MATCH):
+            return False
+        if not (self._prep_visible()
+                or self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL)
+                or self.appear(self.I_START)):
+            return False
+        names = self._duel_share_read_own()
+        self.picked_roles = names or []
+        self._reset_match_state()
+        logger.info(f'DraftDuel: resume existing match, names={self.picked_roles}')
+        self._wait_battle_return()
+        return True
+
+    def _auto_form_field(self) -> bool:
+        """本局第一把之后交给游戏自动上阵：点自动上阵 + 确定。"""
+        try:
+            results = self.O_SCREEN.detect_and_ocr(self.device.image)
+        except Exception:
+            results = []
+        height, width = self.device.image.shape[:2]
+        already = False
+        point = None
+        for item in results:
+            text = str(item.ocr_text or '').replace(' ', '')
+            x, y = item.box.mean(axis=0)
+            if x < width * 0.60 or y < height * 0.62:
+                continue
+            if '取消自动' in text:
+                already = True
+            elif '自动' in text or '上阵' in text:
+                point = (int(x), int(y))
+        if not already:
+            if point is None:
+                return False
+            self.device.click(point[0], point[1], control_name='dd_auto_form')
+            self.device.sleep(0.8)
+        self.click(self.C_FIELD_CONFIRM, interval=1)
+        self.device.sleep(1.0)
+        return True
+
+    def _run_finished(self) -> bool:
+        return getattr(self, '_run_wins', 0) >= 6 or getattr(self, '_run_losses', 0) >= 2
+
+    def _dismiss_settlement(self) -> bool:
+        """结算页：优先点 OCR 到的确定/点击屏幕继续，失败再点 JSON 兜底区域。"""
+        try:
+            results = self.O_SCREEN.detect_and_ocr(self.device.image)
+        except Exception:
+            results = []
+        for item in results:
+            text = str(item.ocr_text or '').strip()
+            if text in ('确定', '確定', '点击屏幕继续', '點擊屏幕繼續'):
+                x, y = item.box.mean(axis=0)
+                self.device.click(int(x), int(y), control_name='dd_settle_ok')
+                return True
+        self.click(self.C_SETTLEMENT_FALLBACK, interval=1)
+        return False
+
+    def _wait_battle_return(self, timeout: float = 3600) -> bool:
+        """打完一局（6胜或2负）：处理上阵、结算、下一场战斗。"""
+        names = getattr(self, '_battle_detail', None) or self.picked_roles
+        timer = Timer(timeout).start()
+        while not timer.reached():
+            self.device.stuck_record_clear()
+            self.screenshot()
+            if self._run_finished():
+                self._dismiss_settlement()
+                return True
+            text = self._screen_text()
+
+            if self._prep_visible():
+                if not getattr(self, '_battle_fielded', False):
+                    self._battle_fielded = True
+                    if self.AUTO_FORM_AFTER_FIRST and getattr(self, '_battle_count', 0) >= 1:
+                        if not self._auto_form_field():
+                            if not self._field_battle_lineup(names):
+                                logger.warning('DraftDuel: fielding failed')
+                                return False
+                    elif not self._field_battle_lineup(names):
+                        logger.warning('DraftDuel: fielding failed')
+                        return False
+                self.device.sleep(0.3)
+                continue
+            self._battle_fielded = False
+
+            if '点击屏幕继续' in text:
+                self._dismiss_settlement()
+                continue
+            if '失败' in text or '胜利' in text:
+                if not getattr(self, '_result_counted', False):
+                    self._result_counted = True
+                    if '失败' in text:
+                        self._run_losses = getattr(self, '_run_losses', 0) + 1
+                    else:
+                        self._run_wins = getattr(self, '_run_wins', 0) + 1
+                    self._battle_count = getattr(self, '_battle_count', 0) + 1
+                    logger.info(
+                        f'DraftDuel: result {self._run_wins}W{self._run_losses}L'
+                    )
+                    if self._run_finished():
+                        self._dismiss_settlement()
+                        return True
+                self._dismiss_settlement()
+                continue
+            if self.appear(self.I_START):
+                self._result_counted = False
+                self._battle_fielded = False
+                self.appear_then_click(self.I_START, interval=1)
+                continue
+            self.device.sleep(0.5)
+        logger.warning('DraftDuel: battle timeout')
+        return self._run_finished()
 
     def _wait_pick_change(self, index: int, timeout: float = 3) -> bool:
         timer = Timer(timeout).start()

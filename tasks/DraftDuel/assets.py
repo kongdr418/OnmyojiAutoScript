@@ -119,6 +119,8 @@ class DraftDuelAssets:
 	C_DETAIL_CARD_4 = RuleClick(roi_front=(739,30,40,32), roi_back=(739,30,40,32), name="detail_card_4")
 	# 顶部第5个卡面（打开阵容详情） 
 	C_DETAIL_CARD_5 = RuleClick(roi_front=(824,30,40,32), roi_back=(824,30,40,32), name="detail_card_5")
+	# 结算页兜底点击 
+	C_SETTLEMENT_FALLBACK = RuleClick(roi_front=(600,640,80,50), roi_back=(600,640,80,50), name="settlement_fallback")
 
 
 	# Image Rule Assets

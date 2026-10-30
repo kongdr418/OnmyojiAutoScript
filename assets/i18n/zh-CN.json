@@ -13,7 +13,6 @@
   "DraftDuel": "协同对弈",
   "draft_duel_config": "协同对弈配置",
   "draft_duel_user_status_help": "队长负责邀请好友和开始匹配；队员原地等待组队邀请",
-  "draft_duel_start_enable_help": "选式神流程尚未实现，开启后组队完成会点「战」进入选式神；先保持关闭，避免卡在对局里",
   "rank_protection": "保段位",
   "rank_protection_help": "勾选启用保段位。",
   "run_count": "执行次数",

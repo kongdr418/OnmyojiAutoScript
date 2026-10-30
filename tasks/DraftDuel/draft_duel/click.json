@@ -70,5 +70,11 @@
     "roiFront": "824,30,40,32",
     "roiBack": "824,30,40,32",
     "description": "顶部第5个卡面（打开阵容详情）"
+  },
+  {
+    "itemName": "settlement_fallback",
+    "roiFront": "600,640,80,50",
+    "roiBack": "600,640,80,50",
+    "description": "结算页兜底点击"
   }
 ]
