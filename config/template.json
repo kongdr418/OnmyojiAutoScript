@@ -1834,8 +1834,7 @@
       "friend_list": "",
       "find_mode": "auto_find",
       "wait_time": "00:02:00",
-      "default_invite": true,
-      "cooperation_script": ""
+      "default_invite": true
     }
   },
   "chess": {

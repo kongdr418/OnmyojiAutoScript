@@ -106,8 +106,13 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.set_next_run(task='DraftDuel', success=False, finish=True)
             raise TaskEnd('DraftDuel')
 
-        target, unlimited = self._completion_target(con)
-        target_label = '∞' if unlimited else target
+        if con.stop_when_full:
+            # 勾选刷满即停：忽略完成局数，打到十把 30 万刷满为止
+            target, unlimited = 1, True
+            target_label = '刷满'
+        else:
+            target, unlimited = self._completion_target(con)
+            target_label = '∞' if unlimited else target
         limit_seconds = (con.limit_time.hour * 3600 + con.limit_time.minute * 60
                          + con.limit_time.second)
         deadline = time.monotonic() + limit_seconds
@@ -115,6 +120,11 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         if self._resume_match():
             completed = 1
         while (unlimited or completed < target) and time.monotonic() < deadline:
+            if con.stop_when_full and completed > 0:
+                state = self._cost_state()
+                if state == 'full':
+                    logger.info('DraftDuel: 10把30万已刷满, stop')
+                    break
             self._reset_match_state()
             self._duel_share_reset()
             if not self._start_round():
