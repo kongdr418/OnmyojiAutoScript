@@ -1,0 +1,2077 @@
+{
+  "source": "协同对弈式神强度组合评分表.xlsx",
+  "scores": {
+    "遥念烟烟罗": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 91,
+      "overall": 92.8,
+      "overall_tier": "T0",
+      "partners": "神启荒 + 输出；避开月读"
+    },
+    "流光追月神": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 88,
+      "overall": 91.6,
+      "overall_tier": "T0",
+      "partners": "高耗火输出体系；避开言灵"
+    },
+    "空相面灵气": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 88,
+      "overall": 91.6,
+      "overall_tier": "T0",
+      "partners": "帝释天/纺愿缘结神 + 群控（大夜摩天阎魔）"
+    },
+    "灶门炭治郎": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 88,
+      "overall": 91.6,
+      "overall_tier": "T0",
+      "partners": "自拉条解控 + 心眼/破势爆发"
+    },
+    "帝释天": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 87,
+      "overall": 91.2,
+      "overall_tier": "T0",
+      "partners": "纺愿缘结神/空相面灵气（避免多个单拉重复）"
+    },
+    "椒图": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "单体爆发对手的克星 + 反击队（犬神/吸血姬/妖刀姬）"
+    },
+    "虫师": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "群奶驱散体系 + 高速队"
+    },
+    "雨女": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "解控体系 + 需要驱散的队"
+    },
+    "鲤鱼精": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "护盾体系（厚盾）+ 输出"
+    },
+    "因幡辉夜姬": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "高耗火输出（烬天/炼狱茨木/玉藻前）"
+    },
+    "大夜摩天阎魔": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "神启荒/群体输出 + 拉条"
+    },
+    "天火命铃彦姬": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "出世螺 + 拉条体系（纺愿缘结神）"
+    },
+    "寻森小鹿男": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "招财拉条体系；避开月读"
+    },
+    "心友犬神": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "食灵 + 提供护盾的队友（一目连/鲤鱼精）"
+    },
+    "情思日和坊": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "挡伤体系 + 群输出"
+    },
+    "晨辉惠比寿": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "火机奶妈体系；避免与禅心云外镜同队"
+    },
+    "本真三尾狐": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "兵主部单核 + 保人"
+    },
+    "梦引蝴蝶精": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "珍珠群奶 + 需要续航的队；避开季/云外镜/镜音"
+    },
+    "灼华桃花妖": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "群奶复活体系；避开阎魔/SP吸血姬"
+    },
+    "纺愿缘结神": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "空相面灵气 + 单体爆发；避免与帝释天等单拉重复"
+    },
+    "蚀月吸血姬": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "克制复活体系；伤魂鸟单核"
+    },
+    "鲸汐千姬": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "初音未来 + 群体海月输出"
+    },
+    "龙吟铃鹿御前": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "制裁盾体系 + 拉条"
+    },
+    "匣中少女": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "保命盾体系；避开SP06（缚骨清姬等封被动）"
+    },
+    "日和坊": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "群奶体系；避开季/云外镜/镜音铃连"
+    },
+    "湍津姬": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "迦楼罗": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "追月神": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "火机体系；避开言灵/伊邪那美"
+    },
+    "一目连": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "护盾体系 + 群输出；避开SP06"
+    },
+    "大天狗": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "天照": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "隐念复制攻击 + 增伤体系"
+    },
+    "季": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "犬神/伪回合体系 + 群奶（避免单奶）"
+    },
+    "毗沙门天": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "葛叶": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "地藏伤魂鸟 + 保人体系"
+    },
+    "言灵": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "鬼金羊/涂佛体系；对面无因幡时发挥更好"
+    },
+    "辉夜姬": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "防御抵抗体系 + 高耗火输出"
+    },
+    "铃彦姬": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "一目连/匣中少女（护盾）+ 拉条"
+    },
+    "鬼切": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "脆皮核心输出（须佐之男/烬天玉藻前）"
+    },
+    "鬼金羊": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "言灵对策 + 火机体系；避开白镜"
+    },
+    "龙珏": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "歌留多（间伤秒人）+ 保人（荒骷髅/入内雀）"
+    },
+    "巡音流歌": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "驱散护盾体系 + 高速队"
+    },
+    "灶门祢豆子": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "破盾体系 + 魅妖控制"
+    },
+    "闻人翊悬": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 86,
+      "overall": 90.8,
+      "overall_tier": "T0",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "云间不见岳": {
+      "strength": 90,
+      "strength_tier": "T0",
+      "combo": 88,
+      "overall": 89.2,
+      "overall_tier": "T0",
+      "partners": "炼狱茨木童子/烬天玉藻前/福悦座敷童子（火系爆发体系）"
+    },
+    "鬼王酒吞童子": {
+      "strength": 90,
+      "strength_tier": "T0",
+      "combo": 88,
+      "overall": 89.2,
+      "overall_tier": "T0",
+      "partners": "禅心云外镜（双辅95分体系）+ 群体输出"
+    },
+    "坂田银时": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 95,
+      "overall": 89,
+      "overall_tier": "T0",
+      "partners": "隐念群控输出 + 高抵抗体系"
+    },
+    "云外镜": {
+      "strength": 88,
+      "strength_tier": "T0",
+      "combo": 89,
+      "overall": 88.4,
+      "overall_tier": "T0",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "神无月": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 93,
+      "overall": 88.2,
+      "overall_tier": "T0",
+      "partners": "普攻/御魂触发体系（不知火/姑获鸟）"
+    },
+    "浮世青行灯": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 92,
+      "overall": 87.8,
+      "overall_tier": "T1",
+      "partners": "心狩鬼女红叶 + 阎魔/古笼火（火山鬼火压制队）"
+    },
+    "嘴平伊之助": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 92,
+      "overall": 87.8,
+      "overall_tier": "T1",
+      "partners": "免控群输出 + 针女体系"
+    },
+    "心狩鬼女红叶": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 89,
+      "overall": 86.6,
+      "overall_tier": "T1",
+      "partners": "浮世青行灯 + 阎魔/古笼火（火山队）"
+    },
+    "鬼童丸": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 89,
+      "overall": 86.6,
+      "overall_tier": "T1",
+      "partners": "拉条（空相面灵气/纺愿缘结神）+ 食灵协战"
+    },
+    "青行灯": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 87,
+      "overall": 85.8,
+      "overall_tier": "T1",
+      "partners": "火系体系（云间不见岳）+ 拉条（空相面灵气）"
+    },
+    "夜刀神": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 87,
+      "overall": 85.8,
+      "overall_tier": "T1",
+      "partners": "遗念火封召唤物 + 高抵抗"
+    },
+    "不知火": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 86,
+      "overall": 85.4,
+      "overall_tier": "T1",
+      "partners": "酒吞童子/吸血姬/鬼童丸（普攻队）+ 椒图"
+    },
+    "平将门": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 86,
+      "overall": 85.4,
+      "overall_tier": "T1",
+      "partners": "云间不见岳 + 隐念体系"
+    },
+    "歌留多": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 86,
+      "overall": 85.4,
+      "overall_tier": "T1",
+      "partners": "龙珏（间伤联动秒人）"
+    },
+    "荒骷髅": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 86,
+      "overall": 85.4,
+      "overall_tier": "T1",
+      "partners": "被保核心（龙珏/雪御前）连环输出"
+    },
+    "天井下": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 85,
+      "overall": 85,
+      "overall_tier": "T1",
+      "partners": "火机拉条一体 + 高速队"
+    },
+    "市加美": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 84,
+      "overall": 84.6,
+      "overall_tier": "T1",
+      "partners": "回合外输出体系（食灵/鬼童丸/心友犬神）"
+    },
+    "食灵": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 84,
+      "overall": 84.6,
+      "overall_tier": "T1",
+      "partners": "姑获鸟/鬼童丸/心友犬神（协战队核心）"
+    },
+    "我妻善逸": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 84,
+      "overall": 84.6,
+      "overall_tier": "T1",
+      "partners": "免疫自拉条 + 单体爆发"
+    },
+    "木之本樱": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 84,
+      "overall": 84.6,
+      "overall_tier": "T1",
+      "partners": "季配合（穿盾控）+ 控制体系"
+    },
+    "思金神": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 83,
+      "overall": 84.2,
+      "overall_tier": "T1",
+      "partners": "高耗火输出（烬天玉藻前/炼狱茨木童子/玉藻前）"
+    },
+    "禅心云外镜": {
+      "strength": 80,
+      "strength_tier": "T1",
+      "combo": 90,
+      "overall": 84,
+      "overall_tier": "T1",
+      "partners": "鬼王酒吞童子（增伤解控体系）；避免与单奶同队"
+    },
+    "黑童子": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 82,
+      "overall": 83.8,
+      "overall_tier": "T1",
+      "partners": "脆皮核心输出（须佐之男/烬天玉藻前）"
+    },
+    "姑获鸟": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 98,
+      "overall": 83.6,
+      "overall_tier": "T1",
+      "partners": "食灵 + 协战输出（鬼童丸/心友犬神）"
+    },
+    "时曜泷夜叉姬": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 81,
+      "overall": 83.4,
+      "overall_tier": "T1",
+      "partners": "隐念免控体系；避开泷/巡音流歌"
+    },
+    "犬神": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 81,
+      "overall": 83.4,
+      "overall_tier": "T1",
+      "partners": "季（伪回合联动）+ 椒图"
+    },
+    "玉藻前": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 81,
+      "overall": 83.4,
+      "overall_tier": "T1",
+      "partners": "云间不见岳 + 打火机"
+    },
+    "茨木童子": {
+      "strength": 95,
+      "strength_tier": "T0",
+      "combo": 81,
+      "overall": 83.4,
+      "overall_tier": "T1",
+      "partners": "云间不见岳 + 打火机（流光追月神/因幡辉夜姬）"
+    },
+    "阿修罗": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 81,
+      "overall": 83.4,
+      "overall_tier": "T1",
+      "partners": "云间不见岳 + 打火机 + 拉条"
+    },
+    "梦寻山兔": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 80,
+      "overall": 83,
+      "overall_tier": "T1",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "花鸟卷": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 80,
+      "overall": 83,
+      "overall_tier": "T1",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "孔雀明王": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 96,
+      "overall": 82.8,
+      "overall_tier": "T1",
+      "partners": "针女群输出体系 + 增伤（食灵/不见岳）"
+    },
+    "朽木露琪亚": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 79,
+      "overall": 82.6,
+      "overall_tier": "T1",
+      "partners": "穿盾控制 + 遗念火"
+    },
+    "李小狼": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 79,
+      "overall": 82.6,
+      "overall_tier": "T1",
+      "partners": "轮入道秒人 + 拉条"
+    },
+    "初音未来": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 95,
+      "overall": 82.4,
+      "overall_tier": "T1",
+      "partners": "鲸汐千姬 + 群体海月输出"
+    },
+    "蜜桃芥子": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 95,
+      "overall": 82.4,
+      "overall_tier": "T1",
+      "partners": "拉条奶妈体系；避开迦楼罗/粉婆婆/禅心云外镜"
+    },
+    "万年竹": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 78,
+      "overall": 82.2,
+      "overall_tier": "T1",
+      "partners": "连环输出拉人 + 椒图反击体系"
+    },
+    "兵勇": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "垢尝": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "怕控制的队（雨女/数珠体系）"
+    },
+    "影鳄": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "脆皮核心输出（须佐之男/烬天玉藻前）"
+    },
+    "数珠": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "怕控的输出核心"
+    },
+    "跳跳妹妹": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "食发鬼": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "控制队（大夜摩天阎魔/遥念烟烟罗）"
+    },
+    "鸦天狗": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "怕控的输出核心"
+    },
+    "修罗鬼童丸": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "待宵姑获鸟": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "梦山白藏主": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "减伤肉盾 + 输出；避开九命猫"
+    },
+    "渺念萤草": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "神酿星熊童子": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "稻荷神御馔津": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "绘世花鸟卷": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "召唤物体系；避免与禅心云外镜同队"
+    },
+    "缚骨清姬": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "针对禅心云外镜体系；单核队"
+    },
+    "麓铭大岳丸": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "入内雀": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "保单核（龙珏/雪御前/荒骷髅）"
+    },
+    "天逆每": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "惠比寿": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "需要续航的消耗队；避开禅心云外镜"
+    },
+    "慧明灯": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "桃花妖": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "珍珠群奶；避开季/云外镜/镜音铃连"
+    },
+    "樱花妖": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "需要续航的消耗队；避开禅心云外镜"
+    },
+    "百目鬼": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "粉婆婆": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "络新妇": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "般若": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "薰": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "高耗火输出（烬天玉藻前/炼狱茨木童子/玉藻前）"
+    },
+    "镰鼬": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "鸩": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "伊邪那美": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "八岐大蛇": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "卑弥呼": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "核心输出（须佐之男/烬天玉藻前/龙珏）"
+    },
+    "大岳丸": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "妖刀姬": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "封阳君": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "控制队（大夜摩天阎魔/遥念烟烟罗）"
+    },
+    "月读": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "日女推条体系 + 输出；克制召唤物队"
+    },
+    "泷": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "泷夜叉姬": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "猫川": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "怕控制的队（雨女/数珠体系）"
+    },
+    "白藏主": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "对抗单体爆发；配合九命猫之外的输出"
+    },
+    "祸津神": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "脆皮核心输出（须佐之男/烬天玉藻前）"
+    },
+    "荒川之主": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "酒吞童子": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 94,
+      "overall": 95,
+      "overall_tier": "T0",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "铃鹿御前": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "雪御前": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "荒骷髅/入内雀保人 + 隐念输出"
+    },
+    "雪童子": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "克制椒图体系；返魂香控制"
+    },
+    "须佐之男": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "饭笥": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "夏目猫老师": {
+      "strength": 85,
+      "strength_tier": "T1",
+      "combo": 77,
+      "overall": 81.8,
+      "overall_tier": "T1",
+      "partners": "推条群奶体系；避开单奶/禅心云外镜"
+    },
+    "福悦座敷童子": {
+      "strength": 70,
+      "strength_tier": "T2",
+      "combo": 98,
+      "overall": 81.2,
+      "overall_tier": "T1",
+      "partners": "云间不见岳 + 火系输出（炼狱茨木/烬天玉藻前）"
+    },
+    "古笼火": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 90,
+      "overall": 80.4,
+      "overall_tier": "T1",
+      "partners": "火山队（浮世青行灯/心狩鬼女红叶）"
+    },
+    "孟婆": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 89,
+      "overall": 80,
+      "overall_tier": "T1",
+      "partners": "控制队（大夜摩天阎魔/遥念烟烟罗）"
+    },
+    "赤影妖刀姬": {
+      "strength": 83,
+      "strength_tier": "T1",
+      "combo": 75,
+      "overall": 79.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "聆海金鱼姬": {
+      "strength": 80,
+      "strength_tier": "T1",
+      "combo": 79,
+      "overall": 79.6,
+      "overall_tier": "T2",
+      "partners": "拉条体系；避免与禅心云外镜、单奶重复"
+    },
+    "炼狱茨木童子": {
+      "strength": 70,
+      "strength_tier": "T2",
+      "combo": 93,
+      "overall": 79.2,
+      "overall_tier": "T2",
+      "partners": "云间不见岳 + 打火（因幡辉夜姬/流光追月神）"
+    },
+    "烬天玉藻前": {
+      "strength": 70,
+      "strength_tier": "T2",
+      "combo": 93,
+      "overall": 79.2,
+      "overall_tier": "T2",
+      "partners": "云间不见岳 + 打火（因幡辉夜姬/流光追月神）"
+    },
+    "苍风一目连": {
+      "strength": 81,
+      "strength_tier": "T1",
+      "combo": 76,
+      "overall": 79,
+      "overall_tier": "T2",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "面灵气": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 84,
+      "overall": 78,
+      "overall_tier": "T2",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "镜音铃连": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 84,
+      "overall": 78,
+      "overall_tier": "T2",
+      "partners": "免疫体系 + 高速（170）；避止单奶冲突"
+    },
+    "莹草": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 95,
+      "overall": 94.8,
+      "overall_tier": "T1",
+      "partners": "需要续航的消耗队；避开禅心云外镜"
+    },
+    "妙主九命猫": {
+      "strength": 80,
+      "strength_tier": "T1",
+      "combo": 72,
+      "overall": 76.8,
+      "overall_tier": "T2",
+      "partners": "狰反击 + 克制白藏主"
+    },
+    "少羽大天狗": {
+      "strength": 80,
+      "strength_tier": "T1",
+      "combo": 72,
+      "overall": 76.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "神堕八岐大蛇": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 78,
+      "overall": 75.6,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "千姬": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 78,
+      "overall": 75.6,
+      "overall_tier": "T2",
+      "partners": "高耗火输出（烬天玉藻前/炼狱茨木童子/玉藻前）"
+    },
+    "神启荒": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 77,
+      "overall": 75.2,
+      "overall_tier": "T2",
+      "partners": "控制式神（大夜摩天阎魔/遥念烟烟罗）跟伤"
+    },
+    "小松丸": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 98,
+      "overall": 75.2,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "不相狐禅": {
+      "strength": 78,
+      "strength_tier": "T2",
+      "combo": 71,
+      "overall": 75.2,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "阎魔": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 98,
+      "overall": 75.2,
+      "overall_tier": "T2",
+      "partners": "火山队（浮世青行灯/心狩鬼女红叶）"
+    },
+    "申屠子夜": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 98,
+      "overall": 75.2,
+      "overall_tier": "T2",
+      "partners": "冰冻控制体系（雪女/雪童子）+ 变身输出"
+    },
+    "海忍": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 76,
+      "overall": 74.8,
+      "overall_tier": "T2",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "初翎山风": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 73,
+      "overall": 73.6,
+      "overall_tier": "T2",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "化鲸": {
+      "strength": 94,
+      "strength_tier": "T0",
+      "combo": 94,
+      "overall": 94,
+      "overall_tier": "T0",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "不见岳": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 73,
+      "overall": 73.6,
+      "overall_tier": "T2",
+      "partners": "核心输出（须佐之男/烬天玉藻前/龙珏）"
+    },
+    "山风": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 73,
+      "overall": 73.6,
+      "overall_tier": "T2",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "夜溟彼岸花": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 72,
+      "overall": 73.2,
+      "overall_tier": "T2",
+      "partners": "魅妖控制 + 保命体系"
+    },
+    "丑时之女": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 71,
+      "overall": 72.8,
+      "overall_tier": "T2",
+      "partners": "快速拆人体系 + 单体爆发"
+    },
+    "山兔": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 71,
+      "overall": 72.8,
+      "overall_tier": "T2",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "久次良": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 71,
+      "overall": 72.8,
+      "overall_tier": "T2",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "星熊童子": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 92,
+      "overall": 72.8,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "神乐定春": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 71,
+      "overall": 72.8,
+      "overall_tier": "T2",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "白童子": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 70,
+      "overall": 72.4,
+      "overall_tier": "T2",
+      "partners": "脆皮核心输出（须佐之男/烬天玉藻前）"
+    },
+    "御怨般若": {
+      "strength": 75,
+      "strength_tier": "T2",
+      "combo": 67,
+      "overall": 71.8,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "兔丸": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 68,
+      "overall": 71.6,
+      "overall_tier": "T2",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "小袖之手": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 68,
+      "overall": 71.6,
+      "overall_tier": "T2",
+      "partners": "核心输出（须佐之男/烬天玉藻前/龙珏）"
+    },
+    "座敷童子": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 68,
+      "overall": 71.6,
+      "overall_tier": "T2",
+      "partners": "高耗火输出（烬天玉藻前/炼狱茨木童子/玉藻前）"
+    },
+    "蝴蝶精": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 68,
+      "overall": 71.6,
+      "overall_tier": "T2",
+      "partners": "群奶体系；避开季/云外镜/镜音铃连"
+    },
+    "书翁": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 68,
+      "overall": 71.6,
+      "overall_tier": "T2",
+      "partners": "需要续航的消耗队；避开禅心云外镜"
+    },
+    "灵海蝶": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 68,
+      "overall": 71.6,
+      "overall_tier": "T2",
+      "partners": "需要续航的消耗队；避开禅心云外镜"
+    },
+    "雪女": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 68,
+      "overall": 71.6,
+      "overall_tier": "T2",
+      "partners": "脆皮核心输出（须佐之男/烬天玉藻前）"
+    },
+    "独眼小僧": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "童女": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "需要续航的消耗队；避开禅心云外镜"
+    },
+    "瑶音紧那罗": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "蝉冰雪女": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "判官": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "吸血姬": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "夜叉": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "妖狐": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "妖琴师": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "清姬": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "烟烟罗": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "盗人神": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "通用输出/增伤体系"
+    },
+    "纸舞": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "蟹姬": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "金鱼姬": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "通用输出/增伤体系"
+    },
+    "食梦貘": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "饴细工": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "通用输出/增伤体系"
+    },
+    "鬼使白": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "鬼使黑": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "鬼女红叶": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "彼岸花": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "御馔津": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "紧那罗": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "缘结神": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "需要续航的消耗队；避开禅心云外镜"
+    },
+    "荒": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "奴良陆生": {
+      "strength": 74,
+      "strength_tier": "T2",
+      "combo": 66,
+      "overall": 70.8,
+      "overall_tier": "T2",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "天剑韧心鬼切": {
+      "strength": 72,
+      "strength_tier": "T2",
+      "combo": 64,
+      "overall": 68.8,
+      "overall_tier": "T3",
+      "partners": "脆皮核心输出（须佐之男/烬天玉藻前）"
+    },
+    "山童": {
+      "strength": 68,
+      "strength_tier": "T3",
+      "combo": 67,
+      "overall": 67.6,
+      "overall_tier": "T3",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "妖刀姬绯夜猎刃": {
+      "strength": 61,
+      "strength_tier": "T3",
+      "combo": 75,
+      "overall": 66.6,
+      "overall_tier": "T3",
+      "partners": "狰反击体系 + 椒图/白藏主"
+    },
+    "凤凰火": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 74,
+      "overall": 65.6,
+      "overall_tier": "T3",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "黑崎一护": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 71,
+      "overall": 64.4,
+      "overall_tier": "T3",
+      "partners": "空相面灵气/帝释天 + 高爆发输出"
+    },
+    "鬼灯": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 68,
+      "overall": 63.2,
+      "overall_tier": "T3",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "铁鼠": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 66,
+      "overall": 62.4,
+      "overall_tier": "T3",
+      "partners": "核心输出（须佐之男/烬天玉藻前/龙珏）"
+    },
+    "杀生丸": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 65,
+      "overall": 62,
+      "overall_tier": "T3",
+      "partners": "群输出消耗队"
+    },
+    "桔梗": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 64,
+      "overall": 61.6,
+      "overall_tier": "T3",
+      "partners": "怕控制的队（雨女/数珠体系）"
+    },
+    "狸猫": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 63,
+      "overall": 61.2,
+      "overall_tier": "T3",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "川猿": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 63,
+      "overall": 61.2,
+      "overall_tier": "T3",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "骁浪荒川之主": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 60,
+      "overall": 60,
+      "overall_tier": "T3",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "一反木绵": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 60,
+      "overall": 60,
+      "overall_tier": "T3",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "青坊主": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 60,
+      "overall": 60,
+      "overall_tier": "T3",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "两面佛": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 60,
+      "overall": 60,
+      "overall_tier": "T3",
+      "partners": "控制队（大夜摩天阎魔/遥念烟烟罗）"
+    },
+    "小鹿男": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 60,
+      "overall": 60,
+      "overall_tier": "T3",
+      "partners": "控制队（大夜摩天阎魔/遥念烟烟罗）"
+    },
+    "犬夜叉": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 60,
+      "overall": 60,
+      "overall_tier": "T3",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "海坊主": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 55,
+      "overall": 58,
+      "overall_tier": "T4",
+      "partners": "需要续航的消耗队；避开禅心云外镜"
+    },
+    "阿香": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 55,
+      "overall": 58,
+      "overall_tier": "T4",
+      "partners": "神启荒/群体输出跟伤"
+    },
+    "三尾狐": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "九命猫": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "巫蛊师": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "武士之灵": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "河童": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "童男": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "群输出消耗队"
+    },
+    "管狐": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "觉": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "跳跳弟弟": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "青蛙瓷器": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "饿鬼": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "首无": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "二口女": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "人面树": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "以津真天": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "傀儡师": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "入殓师": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "奕": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "於菊虫": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "猫掌柜": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "白狼": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "蝎女": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "跳跳哥哥": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "群输出消耗队"
+    },
+    "风狸": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "骨女": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "寻香行": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "卖药郎": {
+      "strength": 60,
+      "strength_tier": "T3",
+      "combo": 52,
+      "overall": 56.8,
+      "overall_tier": "T4",
+      "partners": "增伤（食灵/云间不见岳/因幡辉夜姬）+ 拉条"
+    },
+    "大道寺芝士": {
+      "strength": null,
+      "strength_tier": "待定",
+      "combo": null,
+      "overall": null,
+      "overall_tier": "待定",
+      "partners": "通用输出/增伤体系"
+    },
+    "雪兔": {
+      "strength": null,
+      "strength_tier": "待定",
+      "combo": null,
+      "overall": null,
+      "overall_tier": "待定",
+      "partners": "通用输出/增伤体系"
+    }
+  },
+  "combinations": [
+    {
+      "name": "火系爆发队",
+      "members": "云间不见岳 + 炼狱茨木童子/烬天玉藻前 + 福悦座敷童子",
+      "score": 95,
+      "tier": "T0",
+      "caution": "核心是云间不见岳，无它则降为T1"
+    },
+    {
+      "name": "鬼吞禅镜双辅队",
+      "members": "鬼王酒吞童子 + 禅心云外镜 + 群体输出",
+      "score": 95,
+      "tier": "T0",
+      "caution": "禅镜有鬼吞时评分80→95，务必同队"
+    },
+    {
+      "name": "火山鬼火压制队",
+      "members": "浮世青行灯 + 心狩鬼女红叶 + 阎魔/古笼火",
+      "score": 93,
+      "tier": "T0",
+      "caution": "单拿浮灯/红叶只有上等，成队才是特等"
+    },
+    {
+      "name": "协战追击队",
+      "members": "食灵 + 姑获鸟 + 鬼童丸/心友犬神",
+      "score": 92,
+      "tier": "T0",
+      "caution": "姑获鸟单上中等，协战队特等"
+    },
+    {
+      "name": "拉条速控队",
+      "members": "空相面灵气 + 帝释天/纺愿缘结神 + 大夜摩天阎魔",
+      "score": 93,
+      "tier": "T0",
+      "caution": "单拉只上一个，避免帝释天与SP缘重复"
+    },
+    {
+      "name": "龙珏间伤秒人队",
+      "members": "龙珏 + 歌留多 + 荒骷髅/入内雀",
+      "score": 93,
+      "tier": "T0",
+      "caution": "歌留多单独只有上等，有龙珏才特等"
+    },
+    {
+      "name": "普攻队",
+      "members": "不知火 + 酒吞童子/吸血姬 + 椒图",
+      "score": 90,
+      "tier": "T0",
+      "caution": "不知火第一命脆，注意保护"
+    },
+    {
+      "name": "鲸初增伤队",
+      "members": "鲸汐千姬 + 初音未来 + 群体海月输出",
+      "score": 90,
+      "tier": "T0",
+      "caution": "初音单上中等，配SP千姬上等；怕言灵"
+    },
+    {
+      "name": "季伪回合队",
+      "members": "季 + 犬神 + 群奶（虫师/梦引蝴蝶精）",
+      "score": 91,
+      "tier": "T0",
+      "caution": "别搭单奶（桃花/日和坊会浪费）"
+    },
+    {
+      "name": "护盾消耗队",
+      "members": "一目连/鲤鱼精 + 匣中少女 + 日和坊/虫师",
+      "score": 88,
+      "tier": "T1",
+      "caution": "怕缚骨清姬等封被动（SP06）与穿盾控"
+    },
+    {
+      "name": "克制复活队",
+      "members": "蚀月吸血姬 + 阎魔 + 单体爆发",
+      "score": 89,
+      "tier": "T1",
+      "caution": "对面无复活时收益下降"
+    },
+    {
+      "name": "反击狰队",
+      "members": "妖刀姬绯夜猎刃/犬神/吸血姬 + 椒图 + 白藏主",
+      "score": 86,
+      "tier": "T1",
+      "caution": "怕雪童子破椒图、怕群体爆发"
+    },
+    {
+      "name": "控制跟伤队",
+      "members": "神启荒 + 大夜摩天阎魔/遥念烟烟罗 + 增伤",
+      "score": 88,
+      "tier": "T1",
+      "caution": "友方控不到人时荒输出骤降"
+    },
+    {
+      "name": "召唤物体系",
+      "members": "月读/猫川/千姬 + 荒骷髅/雪御前 + 增伤",
+      "score": 85,
+      "tier": "T1",
+      "caution": "抢召唤物冲突，全队只上一个召唤位"
+    },
+    {
+      "name": "双拉速攻队",
+      "members": "镰鼬 + 孟婆/星熊童子 + 高速群体输出",
+      "score": 87,
+      "tier": "T1",
+      "caution": "孟婆/小松丸/星熊220速以上才特等"
+    },
+    {
+      "name": "言灵鬼火污染队",
+      "members": "言灵 + 鬼金羊 + 群体输出",
+      "score": 90,
+      "tier": "T0",
+      "caution": "鬼金羊怕成白镜内鬼；被羊洗鬼火时慎用"
+    },
+    {
+      "name": "驱散解控队",
+      "members": "雨女/垢尝/数珠 + 输出核心 + 火机",
+      "score": 84,
+      "tier": "T1",
+      "caution": "怕封被动"
+    },
+    {
+      "name": "单核保人队",
+      "members": "入内雀 + 荒骷髅 + 龙珏/雪御前",
+      "score": 88,
+      "tier": "T1",
+      "caution": "入内雀可能附身奶妈，注意站位"
+    }
+  ]
+}

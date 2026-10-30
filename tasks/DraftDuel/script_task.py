@@ -8,6 +8,7 @@ from module.logger import logger
 from tasks.Component.GeneralInvite.general_invite import GeneralInvite
 from tasks.DraftDuel.assets import DraftDuelAssets
 from tasks.DraftDuel.config import DraftDuelConfig, UserStatus
+from tasks.DraftDuel.strategy import choose_pick, normalize_name
 from tasks.GameUi.game_ui import GameUi
 from tasks.GameUi.page import page_draft_duel
 
@@ -17,8 +18,8 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
 
     AVAILABLE_AMOUNTS = ('30万', '300000')
     FULL_AMOUNTS = ('100000', '10万')
-    # 一局协同对弈双方一共选 6 位式神
-    TOTAL_PICKS = 6
+    # 选卡阶段每个账号选 5 位；上阵阶段再各上 3 位（合计 6）
+    TOTAL_PICKS = 5
     # 队友推荐在倒计时 30s~15s 之间检查
     RECOMMEND_HIGH = 30
     RECOMMEND_LOW = 15
@@ -213,10 +214,11 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         return False
 
     def _draft_phase(self) -> bool:
-        """选满 6 位式神：优先跟队友推荐，没有推荐时走策略。"""
+        """选满 5 位式神：优先跟队友推荐，没有推荐时走 strategy。"""
         logger.hr('Draft selection', 2)
         picked = set()
         self.picked_roles = []
+        self._team = []
         last_hint = None
         timer = Timer(300).start()
         while not timer.reached():
@@ -274,6 +276,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 self.device.sleep(1)
                 continue
             self.picked_roles.append(name)
+            self._team.append(name)
             logger.info(f'DraftDuel: pick {index} slot {slot + 1} -> {name}')
             picked.add(index)
             self.device.sleep(1)
@@ -317,8 +320,28 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         return None
 
     def _choose_by_strategy(self):
-        """队友没有推荐时的选式神策略，待定；返回卡槽下标 0~2。"""
-        return None
+        """队友没有推荐时用 strategy.choose_pick，返回卡槽下标 0~2。"""
+        raw = [self._role_name(slot) for slot in range(3)]
+        names = [normalize_name(name) for name in raw]
+        offers = [name for name in names if name]
+        if not offers:
+            logger.warning(f'DraftDuel: strategy no offers, raw={raw}')
+            return None
+        try:
+            decision = choose_pick(offers, self._team, team_size=self.TOTAL_PICKS)
+        except Exception as e:
+            logger.warning(f'DraftDuel: strategy failed: {e}')
+            return None
+        try:
+            slot = names.index(decision.name)
+        except ValueError:
+            logger.warning(f'DraftDuel: strategy pick {decision.name} not in {names}')
+            return None
+        logger.info(
+            f'DraftDuel: strategy {decision.name} score={decision.score:.1f} '
+            f'reasons={decision.reasons} souls={decision.suggested_souls}'
+        )
+        return slot
 
     @staticmethod
     def _parse_pick_index(text: str) -> int:
