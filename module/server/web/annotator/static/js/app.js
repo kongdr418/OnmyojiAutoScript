@@ -141,6 +141,8 @@
     description: null,
 
     testRuleBtn: document.getElementById("testRuleBtn"),
+    testV6Row: document.getElementById("testV6Row"),
+    testUseV6: document.getElementById("testUseV6"),
     saveImageBtn: document.getElementById("saveImageBtn"),
     saveRulesBtn: document.getElementById("saveRulesBtn"),
   };
@@ -2536,6 +2538,10 @@
 
     el.testRuleBtn.classList.toggle("hidden", !canUse);
     el.testRuleBtn.textContent = state.testOverlayActive ? "清除" : "测试";
+    const isOcrRule = state.ruleType === "ocr";
+    if (el.testV6Row) {
+      el.testV6Row.classList.toggle("hidden", !(canUse && isOcrRule));
+    }
   }
 
   async function testCurrentRule() {
@@ -2576,6 +2582,10 @@
         roiBack: state.listMeta.roiBack,
         description: state.listMeta.description,
       };
+    }
+
+    if (state.ruleType === "ocr" && el.testUseV6 && el.testUseV6.checked) {
+      payload.use_v6 = true;
     }
 
     const res = await api(`${API_PREFIX}/api/rules/test`, {

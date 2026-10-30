@@ -1293,6 +1293,55 @@ class AnnotatorManager:
             raise AnnotatorError("invalid_image_data", "源图片读取失败", 400)
         return raw, image.path
 
+    _v6_ocr_model = None
+
+    @classmethod
+    def _get_v6_ocr_model(cls):
+        if cls._v6_ocr_model is None:
+            from tasks.DraftDuel.v6_rec import V6Rec
+            cls._v6_ocr_model = V6Rec()
+        return cls._v6_ocr_model
+
+    def _detect_ocr_detail_v6(self, source_path: str, target) -> dict[str, Any]:
+        """标注工具里用 DraftDuel 的 v6-small 识别模型测试，不改全局 OCR。"""
+        from dev_tools.assets_test import load_image
+
+        img = load_image(source_path, strict_size=False)
+        if img is None:
+            return {
+                "matched": False,
+                "similarity": 0.0,
+                "text": "",
+                "roiFront": "",
+                "roiBack": "",
+                "message": "image_load_failed",
+            }
+
+        x, y, w, h = (int(v) for v in target.roi)
+        height, width = img.shape[:2]
+        x = max(0, min(x, width - 1))
+        y = max(0, min(y, height - 1))
+        w = max(1, min(w, width - x))
+        h = max(1, min(h, height - y))
+        crop = img[y:y + h, x:x + w]
+
+        try:
+            model = self._get_v6_ocr_model()
+        except Exception as e:
+            raise AnnotatorError("v6_ocr_unavailable", f"v6 识别模型加载失败: {e}", 500) from e
+
+        text, score = model.recognize_single(crop)
+        matched = score >= 0.6
+        return {
+            "matched": matched,
+            "similarity": float(score),
+            "text": text,
+            "roiFront": f"{x},{y},{w},{h}",
+            "roiBack": f"{x},{y},{w},{h}",
+            "message": "match" if matched else "not_match",
+            "backend": "v6_small_rec",
+        }
+
     def test_rule(
         self,
         session_id: str,
@@ -1302,6 +1351,7 @@ class AnnotatorManager:
         rule_type: str,
         rule: dict[str, Any],
         list_meta: dict[str, Any] | None = None,
+        use_v6: bool = False,
     ) -> dict[str, Any]:
         session = self._get_session(session_id)
         _, source_path = self._load_session_bgr_image(session, image_id)
@@ -1359,7 +1409,10 @@ class AnnotatorManager:
                 area=roi_back,
                 keyword=keyword,
             )
-            detail = detect_ocr_detail(str(source_path), target)
+            if use_v6:
+                detail = self._detect_ocr_detail_v6(str(source_path), target)
+            else:
+                detail = detect_ocr_detail(str(source_path), target)
             return {
                 "rule_type": "ocr",
                 "item_name": item_name,

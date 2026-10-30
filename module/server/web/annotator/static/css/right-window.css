@@ -264,3 +264,25 @@
     grid-column: span 1;
   }
 }
+
+#testV6Row {
+  align-items: center;
+}
+
+#testV6Row label {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+#testV6Row input[type="checkbox"] {
+  width: auto;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  accent-color: var(--accent);
+}

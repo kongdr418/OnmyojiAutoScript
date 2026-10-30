@@ -177,6 +177,7 @@ class RuleTestBody(BaseModel):
     rule_type: str
     rule: dict[str, Any]
     list_meta: dict[str, Any] | None = None
+    use_v6: bool = False
 
 def _raise_annotator_error(e: AnnotatorError) -> None:
     raise HTTPException(
@@ -431,6 +432,7 @@ async def annotator_test_rule(data: RuleTestBody):
             rule_type=data.rule_type,
             rule=data.rule,
             list_meta=data.list_meta,
+            use_v6=data.use_v6,
         )
         return {"code": "ok", "result": result}
     except AnnotatorError as e:
