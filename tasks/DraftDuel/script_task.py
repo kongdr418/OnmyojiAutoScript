@@ -184,11 +184,14 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         """选满 6 位式神：优先跟队友推荐，没有推荐时走策略。"""
         logger.hr('Draft selection', 2)
         picked = set()
+        self.picked_roles = []
+        last_hint = None
         timer = Timer(300).start()
         while not timer.reached():
             self.screenshot()
             if self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL):
                 logger.info('DraftDuel: selection finished')
+                logger.info(f'DraftDuel: lineup {self.picked_roles}')
                 return True
             if not self.appear(self.I_SELECTION_PAGE):
                 self.device.sleep(0.5)
@@ -198,9 +201,12 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             time_text = self.O_HINT_TIME.ocr(self.device.image)
             index = self._parse_pick_index(role_text)
             seconds = self._parse_seconds(time_text)
-            logger.info(
-                f'DraftDuel: pick={index}, hint=[{role_text}] [{time_text}], {seconds}s'
-            )
+            hint = (index, seconds)
+            if hint != last_hint:
+                logger.info(
+                    f'DraftDuel: pick={index}, hint=[{role_text}] [{time_text}], {seconds}s'
+                )
+                last_hint = hint
 
             if not 1 <= index <= self.TOTAL_PICKS or index in picked:
                 self.device.sleep(0.5)
@@ -210,23 +216,33 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 self.device.sleep(0.5)
                 continue
 
-            choice = self._recommended_choice()
-            if choice is None and seconds <= self.RECOMMEND_LOW:
-                choice = self._choose_by_strategy()
-            if choice is None:
+            slot = self._recommended_slot()
+            if slot is None and seconds <= self.RECOMMEND_LOW:
+                slot = self._choose_by_strategy()
+            if slot is None:
                 if seconds > self.RECOMMEND_LOW:
                     # 推荐可能晚一点才出现，继续等
                     self.device.sleep(0.5)
                     continue
-                logger.warning('DraftDuel: no recommendation and no pick strategy')
+                # 到 15s 还没有推荐和策略：不退出，等系统倒计时结束自动选，
+                # 否则任务提前结束，调度器会把队伍带走
+                logger.warning(f'DraftDuel: pick {index} wait auto select')
+                if self._wait_pick_change(index, timeout=seconds + 2):
+                    self.picked_roles.append('')
+                    picked.add(index)
+                    logger.info(f'DraftDuel: pick {index} auto selected')
+                    continue
+                logger.warning('DraftDuel: pick did not advance after countdown')
                 return False
 
-            self.click(choice, interval=1)
-            logger.info(f'DraftDuel: pick {index} -> {choice.name}')
+            name = self._role_name(slot)
+            self.click(self._choose_slots()[slot], interval=1)
             if not self._wait_pick_change(index):
                 logger.warning('DraftDuel: pick did not advance, retry')
                 self.device.sleep(1)
                 continue
+            self.picked_roles.append(name)
+            logger.info(f'DraftDuel: pick {index} slot {slot + 1} -> {name}')
             picked.add(index)
             self.device.sleep(1)
         logger.warning('DraftDuel: selection timeout')
@@ -242,7 +258,18 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.device.sleep(0.5)
         return False
 
-    def _recommended_choice(self):
+    def _choose_slots(self):
+        return (self.C_CHOOSE_1, self.C_CHOOSE_2, self.C_CHOOSE_3)
+
+    def _role_name(self, slot: int) -> str:
+        """读三张卡里对应位置的名字。"""
+        rules = (self.O_ROLE_1, self.O_ROLE_2, self.O_ROLE_3)
+        name = rules[slot].ocr(self.device.image).strip()
+        if not name:
+            logger.warning(f'DraftDuel: role {slot + 1} name OCR empty')
+        return name
+
+    def _recommended_slot(self):
         matches = self.I_RECOMMEND_ROLE.match_all_any(
             self.device.image, frame_id=self.device.image_frame_id
         )
@@ -250,16 +277,15 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             return None
         # 匹配结果是 (score, x, y, w, h)，按 x 中心归到左中右三张卡
         slot_centers = (273, 648, 1023)
-        choices = (self.C_CHOOSE_1, self.C_CHOOSE_2, self.C_CHOOSE_3)
         for _, x, y, w, h in matches:
             center = x + w / 2
             slot = min(range(3), key=lambda i: abs(center - slot_centers[i]))
             if abs(center - slot_centers[slot]) <= 150:
-                return choices[slot]
+                return slot
         return None
 
     def _choose_by_strategy(self):
-        """队友没有推荐时的选式神策略，待定。"""
+        """队友没有推荐时的选式神策略，待定；返回卡槽下标 0~2。"""
         return None
 
     @staticmethod
@@ -272,11 +298,14 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
 
     @staticmethod
     def _parse_seconds(text: str) -> int:
-        match = re.search(r'(\d+)\s*s', text or '', re.IGNORECASE)
+        # 倒计时最多 30 秒
+        match = re.search(r'(\d{1,2})\s*[sS]', text or '')
         if match:
-            return int(match.group(1))
-        nums = re.findall(r'\d+', text or '')
-        return int(nums[-1]) if nums else 0
+            return min(30, int(match.group(1)))
+        digits = re.sub(r'\D', '', text or '')
+        if not digits:
+            return 0
+        return min(30, int(digits[:2]))
 
     def _wait_accept_invite(self, con: DraftDuelConfig) -> bool:
         # 队员等邀请的时间用 limit_time，避免队长还没准备好就退出
