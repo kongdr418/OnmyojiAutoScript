@@ -71,6 +71,7 @@
     emulatorControls: document.getElementById("emulatorControls"),
 
     imageUpload: document.getElementById("imageUpload"),
+    imageFolder: document.getElementById("imageFolder"),
     uploadBtn: document.getElementById("uploadBtn"),
     refreshImagesBtn: document.getElementById("refreshImagesBtn"),
     removeImagesBtn: document.getElementById("removeImagesBtn"),
@@ -1091,37 +1092,70 @@
     const res = await api(`${API_PREFIX}/api/images?session_id=${encodeURIComponent(state.sessionId)}`);
     replaceImages(res.images);
   }
+  function collectUploadFiles() {
+    const files = [];
+    if (el.imageUpload && el.imageUpload.files) {
+      files.push(...Array.from(el.imageUpload.files));
+    }
+    if (el.imageFolder && el.imageFolder.files) {
+      files.push(...Array.from(el.imageFolder.files));
+    }
+    const seen = new Set();
+    return files.filter((file) => {
+      // 与服务端 ALLOWED_IMAGE_EXT 保持一致
+      if (!/\.(png|jpe?g|bmp|webp)$/i.test(file.name)) {
+        return false;
+      }
+      // 文件夹和多选可能选到同一张，按名称+大小+修改时间去重
+      const key = `${file.name}:${file.size}:${file.lastModified}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  }
+
   async function uploadImages() {
     if (!state.sessionId) {
       return;
     }
 
-    if (!el.imageUpload.files || el.imageUpload.files.length === 0) {
-      throw new Error("请选择至少一张图片");
+    const files = collectUploadFiles();
+    if (files.length === 0) {
+      throw new Error("请选择至少一张图片或一个文件夹");
     }
 
     setUploadButtonLoading(true);
     try {
-      const files = Array.from(el.imageUpload.files);
-      const images = await Promise.all(
-        files.map(
-          (file) =>
-            new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve({ name: file.name, content_base64: reader.result });
-              reader.onerror = () => reject(new Error(`读取文件失败: ${file.name}`));
-              reader.readAsDataURL(file);
-            }),
-        ),
-      );
+      const appendedImages = [];
+      // 文件夹可能一次带进很多图，分批上传，避免一次性读满内存
+      const chunkSize = 20;
+      for (let index = 0; index < files.length; index += chunkSize) {
+        const chunk = files.slice(index, index + chunkSize);
+        const images = await Promise.all(
+          chunk.map(
+            (file) =>
+              new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve({ name: file.name, content_base64: reader.result });
+                reader.onerror = () => reject(new Error(`读取文件失败: ${file.name}`));
+                reader.readAsDataURL(file);
+              }),
+          ),
+        );
 
-      const payload = await api(`${API_PREFIX}/api/images/upload`, {
-        method: "POST",
-        body: JSON.stringify({ session_id: state.sessionId, images }),
-      });
+        const payload = await api(`${API_PREFIX}/api/images/upload`, {
+          method: "POST",
+          body: JSON.stringify({ session_id: state.sessionId, images }),
+        });
+        appendedImages.push(...normalizeImages(payload.images));
+      }
 
       el.imageUpload.value = "";
-      const appendedImages = normalizeImages(payload.images);
+      if (el.imageFolder) {
+        el.imageFolder.value = "";
+      }
       appendImages(appendedImages);
       showMessage(`上传成功，共 ${appendedImages.length} 张`, "ok");
     } finally {
