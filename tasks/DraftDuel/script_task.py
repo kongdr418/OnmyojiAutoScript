@@ -8,7 +8,7 @@ from module.logger import logger
 from tasks.Component.GeneralInvite.general_invite import GeneralInvite
 from tasks.DraftDuel.assets import DraftDuelAssets
 from tasks.DraftDuel.config import DraftDuelConfig, UserStatus
-from tasks.DraftDuel.strategy import choose_pick, normalize_name
+from tasks.DraftDuel.strategy import CATALOG, choose_pick, normalize_name
 from tasks.GameUi.game_ui import GameUi
 from tasks.GameUi.page import page_draft_duel
 
@@ -269,7 +269,10 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 logger.warning('DraftDuel: pick did not advance after countdown')
                 return False
 
-            name = self._role_name(slot)
+            raw_name = self._role_name(slot)
+            name = normalize_name(raw_name) or raw_name
+            if name != raw_name:
+                logger.info(f'DraftDuel: normalize name {raw_name!r} -> {name!r}')
             self.click(self._choose_slots()[slot], interval=1)
             if not self._wait_pick_change(index):
                 logger.warning('DraftDuel: pick did not advance, retry')
@@ -328,7 +331,9 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             logger.warning(f'DraftDuel: strategy no offers, raw={raw}')
             return None
         try:
-            decision = choose_pick(offers, self._team, team_size=self.TOTAL_PICKS)
+            # OCR 可能把未归一化的名字写进队伍，过滤掉图鉴里没有的，避免 KeyError
+            team = [item for item in self._team if item in CATALOG]
+            decision = choose_pick(offers, team, team_size=self.TOTAL_PICKS)
         except Exception as e:
             logger.warning(f'DraftDuel: strategy failed: {e}')
             return None
