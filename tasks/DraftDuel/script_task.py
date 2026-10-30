@@ -85,7 +85,17 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.set_next_run(task='DraftDuel', success=False, finish=True)
             raise TaskEnd('DraftDuel')
 
-        logger.info('DraftDuel: leader started, member flow after this is not implemented yet')
+        logger.info('DraftDuel: leader started, entering selection')
+        if not self.wait_until_appear(self.I_SELECTION_PAGE, wait_time=15):
+            logger.warning('DraftDuel: selection page not found')
+            self.set_next_run(task='DraftDuel', success=False, finish=True)
+            raise TaskEnd('DraftDuel')
+        if not self._draft_phase():
+            logger.warning('DraftDuel: member selection failed')
+            self.set_next_run(task='DraftDuel', success=False, finish=True)
+            raise TaskEnd('DraftDuel')
+
+        logger.info('DraftDuel: member selection finished')
         self.set_next_run(task='DraftDuel', success=True, finish=True)
         raise TaskEnd('DraftDuel')
 
