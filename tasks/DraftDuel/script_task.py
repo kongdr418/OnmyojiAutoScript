@@ -19,6 +19,9 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     FULL_AMOUNTS = ('100000', '10万')
     # 一局协同对弈双方一共选 6 位式神
     TOTAL_PICKS = 6
+    # 队友推荐在倒计时 30s~15s 之间检查
+    RECOMMEND_HIGH = 30
+    RECOMMEND_LOW = 15
 
     def run(self):
         con: DraftDuelConfig = self.config.draft_duel.draft_duel_config
@@ -202,15 +205,19 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             if not 1 <= index <= self.TOTAL_PICKS or index in picked:
                 self.device.sleep(0.5)
                 continue
-            # 队友的推荐式神只在倒计时 30s~25s 内看
-            if not 25 <= seconds <= 30:
+            # 队友推荐在倒计时 30s~15s 之间看，到 15s 还没有再走策略
+            if not 0 < seconds <= self.RECOMMEND_HIGH:
                 self.device.sleep(0.5)
                 continue
 
             choice = self._recommended_choice()
-            if choice is None:
+            if choice is None and seconds <= self.RECOMMEND_LOW:
                 choice = self._choose_by_strategy()
             if choice is None:
+                if seconds > self.RECOMMEND_LOW:
+                    # 推荐可能晚一点才出现，继续等
+                    self.device.sleep(0.5)
+                    continue
                 logger.warning('DraftDuel: no recommendation and no pick strategy')
                 return False
 
