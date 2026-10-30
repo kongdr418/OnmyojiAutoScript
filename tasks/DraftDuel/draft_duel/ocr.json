@@ -1,0 +1,11 @@
+[
+  {
+    "itemName": "gold",
+    "roiFront": "1127,684,141,29",
+    "roiBack": "1127,684,141,29",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "消耗金币数量"
+  }
+]

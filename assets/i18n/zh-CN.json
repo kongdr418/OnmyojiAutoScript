@@ -10,6 +10,8 @@
   "continuous_task_rest_interval_help": "输入两个正整数，例如60,120。每轮连续执行开始时，在该范围内均匀随机抽取一个整数分钟作为本轮休息触发间隔。",
   "Chess": "百鬼棋局",
   "chess_config": "百鬼棋局配置",
+  "DraftDuel": "协同对弈",
+  "draft_duel_config": "协同对弈配置",
   "rank_protection": "保段位",
   "rank_protection_help": "勾选启用保段位。",
   "run_count": "执行次数",
