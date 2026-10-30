@@ -71,8 +71,21 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
 
         logger.info('DraftDuel: joined team, waiting for leader')
         self.screenshot()
+        if not self.appear(self.I_MEMBERS_AWAIT):
+            logger.info('DraftDuel: member lobby not found, leader may already start')
+            self.set_next_run(task='DraftDuel', success=True, finish=True)
+            raise TaskEnd('DraftDuel')
+
+        # 队员只有「等待中」，不能提前结束，否则调度器会切回主界面解散队伍
+        wait_seconds = con.limit_time.hour * 3600 + con.limit_time.minute * 60 + con.limit_time.second
+        self.wait_until_disappear(self.I_MEMBERS_AWAIT, timeout=wait_seconds)
+        self.screenshot()
         if self.appear(self.I_MEMBERS_AWAIT):
-            logger.info('DraftDuel: member page shows waiting')
+            logger.warning('DraftDuel: leader did not start in time')
+            self.set_next_run(task='DraftDuel', success=False, finish=True)
+            raise TaskEnd('DraftDuel')
+
+        logger.info('DraftDuel: leader started, member flow after this is not implemented yet')
         self.set_next_run(task='DraftDuel', success=True, finish=True)
         raise TaskEnd('DraftDuel')
 
