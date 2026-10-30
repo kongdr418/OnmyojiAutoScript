@@ -24,6 +24,11 @@ class DraftDuelConfig(ConfigBase):
         default=Time(minute=30),
         description='limit_time_help',
     )
+    # 选式神流程还没接，默认关闭，避免点「战」之后卡在对局里
+    start_enable: bool = Field(
+        default=False,
+        description='draft_duel_start_enable_help',
+    )
 
 
 class DraftDuel(ConfigBase):

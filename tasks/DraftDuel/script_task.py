@@ -48,7 +48,15 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.set_next_run(task='DraftDuel', success=False, finish=True)
             raise TaskEnd('DraftDuel')
 
-        logger.info('DraftDuel: attempts available, flow after lobby is not implemented yet')
+        if con.start_enable:
+            if not self._start_match():
+                logger.warning('DraftDuel: start match failed')
+                self.set_next_run(task='DraftDuel', success=False, finish=True)
+                raise TaskEnd('DraftDuel')
+            logger.info('DraftDuel: draft screen reached, selection is not implemented yet')
+        else:
+            logger.info('DraftDuel: start disabled, stop after team formed')
+
         self.set_next_run(task='DraftDuel', success=True, finish=True)
         raise TaskEnd('DraftDuel')
 
@@ -127,6 +135,21 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 logger.warning('DraftDuel: wait teammate timeout')
                 return False
             sleep(1)
+
+    def _start_match(self) -> bool:
+        """点右下角的「战」，进入选式神界面。"""
+        self.screenshot()
+        if not self.appear(self.I_START):
+            logger.warning('DraftDuel: start button not found')
+            return False
+        self.appear_then_click(self.I_START, interval=1)
+        self.wait_until_disappear(self.I_START, timeout=10)
+        self.screenshot()
+        if self.appear(self.I_START):
+            logger.warning('DraftDuel: start button still visible')
+            return False
+        logger.info('DraftDuel: match started')
+        return True
 
     def _wait_accept_invite(self, con: DraftDuelConfig) -> bool:
         # 队员等邀请的时间用 limit_time，避免队长还没准备好就退出

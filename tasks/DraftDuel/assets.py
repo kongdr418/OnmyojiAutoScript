@@ -18,5 +18,7 @@ class DraftDuelAssets:
 	# Image Rule Assets
 	# 邀请好友 
 	I_INVITATION = RuleImage(roi_front=(978,328,72,61), roi_back=(978,328,72,61), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_invitation.png")
+	# 开始 
+	I_START = RuleImage(roi_front=(1161,587,78,73), roi_back=(1161,587,78,73), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_start.png")
 
 

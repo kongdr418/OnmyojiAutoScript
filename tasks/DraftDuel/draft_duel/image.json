@@ -7,5 +7,14 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "邀请好友"
+  },
+  {
+    "itemName": "start",
+    "imageName": "draft_duel_start.png",
+    "roiFront": "1161,587,78,73",
+    "roiBack": "1161,587,78,73",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "开始"
   }
 ]
