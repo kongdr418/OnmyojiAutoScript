@@ -62,13 +62,19 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         # 战斗次数相关
         self.current_count = 0  # 战斗次数
 
+    def _invite_dismiss_button(self) -> RuleImage:
+        """新弹窗没有「忽略」，落选分支退化为点「拒绝」。"""
+        if self.appear(self.I_NG_IGNORE):
+            return self.I_NG_IGNORE
+        return self.I_NG_REJECT
+
     def _burst(self) -> bool:
         """
         游戏界面突发异常检测
         :return: 没有出现返回False, 其他True
         """
         image = self.device.image
-        appear_invitation = self.appear(self.I_G_ACCEPT)
+        appear_invitation = self.appear(self.I_NG_ACCEPT)
         if not appear_invitation:
             return False
         logger.info('Invitation appearing')
@@ -77,28 +83,28 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         match invite_type:
             case FriendInvitation.ACCEPT:
                 logger.info(f"Accept friend invitation")
-                click_button = self.I_G_ACCEPT
+                click_button = self.I_NG_ACCEPT
             case FriendInvitation.REJECT:
                 logger.info(f"Reject friend invitation")
-                click_button = self.I_G_REJECT
+                click_button = self.I_NG_REJECT
             case FriendInvitation.ONLY_JADE:
                 # 勾协
                 logger.info(f"Only accept jade invitation")
                 if self.appear(self.I_G_JADE):
-                    click_button = self.I_G_ACCEPT
+                    click_button = self.I_NG_ACCEPT
                 else:
-                    click_button = self.I_G_IGNORE
+                    click_button = self._invite_dismiss_button()
             case FriendInvitation.JADE_AND_FOOD:
                 # 如果是接受勾协和粮协
                 logger.info(f"Accept jade and food invitation")
                 if self.appear(self.I_G_JADE) or self.appear(self.I_G_CAT_FOOD) or self.appear(self.I_G_DOG_FOOD):
-                    click_button = self.I_G_ACCEPT
+                    click_button = self.I_NG_ACCEPT
                 else:
-                    click_button = self.I_G_IGNORE
+                    click_button = self._invite_dismiss_button()
             case FriendInvitation.IGNORE:
                 # 如果是忽略
                 logger.info(f"Ignore friend invitation")
-                click_button = self.I_G_IGNORE
+                click_button = self._invite_dismiss_button()
             case _:
                 raise ScriptError(f'Unknown friend invitation type: {invite_type}')
         if not click_button:
@@ -113,7 +119,7 @@ class BaseTask(GlobalGameAssets, CostumeBase):
         # 有的时候长战斗 点击后会取消战斗状态
         self.device.detect_record = detect_record
         # 如果接受邀请则立即执行悬赏任务
-        if click_button == self.I_G_ACCEPT:
+        if click_button is self.I_NG_ACCEPT:
             self.set_next_run(task='WantedQuests', target=datetime.now().replace(microsecond=0))
         return True
 

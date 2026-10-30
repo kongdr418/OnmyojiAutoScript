@@ -111,7 +111,7 @@
     "itemName": "ng_ignore",
     "imageName": "gg_ng_ignore.png",
     "roiFront": "863,80,21,21",
-    "roiBack": "849,65,48,48",
+    "roiBack": "761,65,136,80",
     "method": "Template matching",
     "threshold": 0.8,
     "description": ""
