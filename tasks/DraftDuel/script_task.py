@@ -16,7 +16,6 @@ from tasks.GameUi.page import page_draft_duel
 class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     """协同对弈（Draft Duel）。"""
 
-    AVAILABLE_TEXTS = ('本次免费',)
     AVAILABLE_AMOUNTS = ('30万', '300000')
     FULL_AMOUNTS = ('100000', '10万')
 
@@ -74,7 +73,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     @classmethod
     def _parse_cost_text(cls, text: str) -> str:
         text = (text or '').replace(' ', '').replace('\u3000', '')
-        if text in cls.AVAILABLE_TEXTS:
+        if '免费' in text:
             return 'available'
         # 去掉标点，只留数字和万/亿
         amount = re.sub(r'[^\d万亿]', '', text)
