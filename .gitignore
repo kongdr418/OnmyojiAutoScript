@@ -308,3 +308,6 @@ oas.bat
 
 # Locks for local lineup editor writes
 /tasks/Chess/strategy/*.lock
+
+# DraftDuel OCR model (downloaded on first use)
+tasks/DraftDuel/model/*.onnx

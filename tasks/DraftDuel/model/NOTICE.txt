@@ -1,0 +1,11 @@
+PP-OCRv6_small_rec.onnx
+  PaddleOCR PP-OCRv6 small recognition model (ONNX export).
+  Source: https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/tmp/PP-OCRv6_small_rec_0515_onnx.tar
+  License: Apache-2.0
+
+rec_small_dict.txt
+  Character dictionary extracted from the model's inference.yml PostProcess.character_dict.
+
+Recognition preprocessing/decoding in ../v6_rec.py
+  Adapted from ppocrv6_onnx (MIT):
+  https://github.com/Kansallisarkisto-AI/ppocrv6_onnx

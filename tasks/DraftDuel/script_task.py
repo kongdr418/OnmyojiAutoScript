@@ -22,6 +22,8 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     # 队友推荐在倒计时 30s~15s 之间检查
     RECOMMEND_HIGH = 30
     RECOMMEND_LOW = 15
+    # 懒加载的 v6-small 识别模型；False 表示加载失败，回退共享 OCR
+    _v6_ocr_model = None
 
     def run(self):
         con: DraftDuelConfig = self.config.draft_duel.draft_duel_config
@@ -102,8 +104,38 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         self.set_next_run(task='DraftDuel', success=True, finish=True)
         raise TaskEnd('DraftDuel')
 
+    def _load_v6_ocr(self):
+        if self._v6_ocr_model is not None:
+            return self._v6_ocr_model
+        try:
+            from tasks.DraftDuel.v6_rec import V6Rec
+            self._v6_ocr_model = V6Rec()
+            logger.info('DraftDuel: v6-small rec loaded')
+        except Exception as e:
+            logger.warning(f'DraftDuel: v6 OCR unavailable, fallback to shared OCR: {e}')
+            self._v6_ocr_model = False
+        return self._v6_ocr_model
+
+    def _ocr_text(self, rule) -> str:
+        """协同用 v6-small 识别，加载失败就回退到共享的 v2 服务。"""
+        model = self._load_v6_ocr()
+        if model:
+            x, y, w, h = rule.roi
+            crop = self.device.image[y:y + h, x:x + w]
+            try:
+                text, score = model.recognize_single(crop)
+                if score < 0.6:
+                    logger.warning(
+                        f'DraftDuel: v6 OCR {rule.name} low score {score:.3f}: [{text}]'
+                    )
+                    return ''
+                return text.strip()
+            except Exception as e:
+                logger.warning(f'DraftDuel: v6 OCR {rule.name} failed: {e}')
+        return rule.ocr(self.device.image).strip()
+
     def _cost_state(self) -> str:
-        text = self.O_GOLD.ocr(self.device.image)
+        text = self._ocr_text(self.O_GOLD)
         state = self._parse_cost_text(text)
         logger.info(f'DraftDuel: cost OCR [{text}] -> {state}')
         return state
@@ -197,8 +229,8 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 self.device.sleep(0.5)
                 continue
 
-            role_text = self.O_HINT_ROLE.ocr(self.device.image)
-            time_text = self.O_HINT_TIME.ocr(self.device.image)
+            role_text = self._ocr_text(self.O_HINT_ROLE)
+            time_text = self._ocr_text(self.O_HINT_TIME)
             index = self._parse_pick_index(role_text)
             seconds = self._parse_seconds(time_text)
             hint = (index, seconds)
@@ -252,7 +284,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         timer = Timer(timeout).start()
         while not timer.reached():
             self.screenshot()
-            text = self.O_HINT_ROLE.ocr(self.device.image)
+            text = self._ocr_text(self.O_HINT_ROLE)
             if self._parse_pick_index(text) != index:
                 return True
             self.device.sleep(0.5)
@@ -264,7 +296,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     def _role_name(self, slot: int) -> str:
         """读三张卡里对应位置的名字。"""
         rules = (self.O_ROLE_1, self.O_ROLE_2, self.O_ROLE_3)
-        name = rules[slot].ocr(self.device.image).strip()
+        name = self._ocr_text(rules[slot])
         if not name:
             logger.warning(f'DraftDuel: role {slot + 1} name OCR empty')
         return name
