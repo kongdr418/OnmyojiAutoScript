@@ -63,35 +63,35 @@ class DraftDuelAssets:
 
 	# Swipe Rule Assets
 	# 第一轮上第一张卡 
-	S_FIELD_DRAG_1_1 = RuleSwipe(roi_front=(285,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_1_1")
+	S_FIELD_DRAG_1_1 = RuleSwipe(roi_front=(296,523,47,38), roi_back=(289,282,80,60), mode="default", name="field_drag_1_1")
 	# 第二轮上第一张卡 
-	S_FIELD_DRAG_1_2 = RuleSwipe(roi_front=(285,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_1_2")
+	S_FIELD_DRAG_1_2 = RuleSwipe(roi_front=(296,523,47,38), roi_back=(289,282,80,60), mode="default", name="field_drag_1_2")
 	# 第三轮上第一张卡 
-	S_FIELD_DRAG_1_3 = RuleSwipe(roi_front=(285,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_1_3")
+	S_FIELD_DRAG_1_3 = RuleSwipe(roi_front=(296,523,47,38), roi_back=(289,282,80,60), mode="default", name="field_drag_1_3")
 	# 第一轮上第二张 
-	S_FIELD_DRAG_2_1 = RuleSwipe(roi_front=(405,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_2_1")
+	S_FIELD_DRAG_2_1 = RuleSwipe(roi_front=(414,528,43,39), roi_back=(401,287,80,60), mode="default", name="field_drag_2_1")
 	# 第二轮上第二张 
-	S_FIELD_DRAG_2_2 = RuleSwipe(roi_front=(405,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_2_2")
+	S_FIELD_DRAG_2_2 = RuleSwipe(roi_front=(414,528,43,39), roi_back=(401,287,80,60), mode="default", name="field_drag_2_2")
 	# 第三轮上第二张 
-	S_FIELD_DRAG_2_3 = RuleSwipe(roi_front=(405,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_2_3")
+	S_FIELD_DRAG_2_3 = RuleSwipe(roi_front=(414,528,43,39), roi_back=(401,287,80,60), mode="default", name="field_drag_2_3")
 	# 第一轮上第三张 
-	S_FIELD_DRAG_3_1 = RuleSwipe(roi_front=(520,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_3_1")
+	S_FIELD_DRAG_3_1 = RuleSwipe(roi_front=(525,531,43,39), roi_back=(506,280,80,60), mode="default", name="field_drag_3_1")
 	# 第二轮上第三张 
-	S_FIELD_DRAG_3_2 = RuleSwipe(roi_front=(520,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_3_2")
+	S_FIELD_DRAG_3_2 = RuleSwipe(roi_front=(525,531,43,39), roi_back=(506,280,80,60), mode="default", name="field_drag_3_2")
 	# 第三轮上第三张 
-	S_FIELD_DRAG_3_3 = RuleSwipe(roi_front=(520,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_3_3")
+	S_FIELD_DRAG_3_3 = RuleSwipe(roi_front=(525,531,43,39), roi_back=(506,280,80,60), mode="default", name="field_drag_3_3")
 	# 第一轮上第四张 
-	S_FIELD_DRAG_4_1 = RuleSwipe(roi_front=(635,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_4_1")
+	S_FIELD_DRAG_4_1 = RuleSwipe(roi_front=(641,530,43,39), roi_back=(625,286,80,60), mode="default", name="field_drag_4_1")
 	# 第二轮上第四张 
-	S_FIELD_DRAG_4_2 = RuleSwipe(roi_front=(635,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_4_2")
+	S_FIELD_DRAG_4_2 = RuleSwipe(roi_front=(641,530,43,39), roi_back=(625,286,80,60), mode="default", name="field_drag_4_2")
 	# 第三轮上第四张 
-	S_FIELD_DRAG_4_3 = RuleSwipe(roi_front=(635,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_4_3")
+	S_FIELD_DRAG_4_3 = RuleSwipe(roi_front=(641,530,43,39), roi_back=(625,286,80,60), mode="default", name="field_drag_4_3")
 	# 第一轮上第五张 
-	S_FIELD_DRAG_5_1 = RuleSwipe(roi_front=(750,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_5_1")
+	S_FIELD_DRAG_5_1 = RuleSwipe(roi_front=(753,535,43,39), roi_back=(734,285,80,60), mode="default", name="field_drag_5_1")
 	# 第二轮上第五张 
-	S_FIELD_DRAG_5_2 = RuleSwipe(roi_front=(750,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_5_2")
+	S_FIELD_DRAG_5_2 = RuleSwipe(roi_front=(753,535,43,39), roi_back=(734,285,80,60), mode="default", name="field_drag_5_2")
 	# 第三轮上第五张 
-	S_FIELD_DRAG_5_3 = RuleSwipe(roi_front=(750,584,70,70), roi_back=(506,280,80,60), mode="default", name="field_drag_5_3")
+	S_FIELD_DRAG_5_3 = RuleSwipe(roi_front=(753,535,43,39), roi_back=(734,285,80,60), mode="default", name="field_drag_5_3")
 
 
 	# Click Rule Assets
