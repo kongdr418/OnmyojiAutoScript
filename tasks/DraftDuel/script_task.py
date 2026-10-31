@@ -596,6 +596,26 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             f'DraftDuel: fielding {self._field_round}/{self.FIELD_ROUNDS} locked ({why})'
         )
 
+    def _confirm_field(self, target, why: str) -> bool:
+        """点确定；没锁上再点，最多 3 次，避免一次点空就判死。"""
+        for attempt in (1, 2, 3):
+            self.screenshot()
+            label, _ = self._prep_button_state(full_fallback=False)
+            if label == 'locked':
+                self._note_round_closed(target, f'{why}-locked')
+                return True
+            if label != 'open':
+                return False
+            self.click(self.C_FIELD_CONFIRM, interval=1)
+            outcome = self._wait_field_locked()
+            if outcome in ('locked', 'battle'):
+                self._note_round_closed(target, f'{why}{attempt}')
+                return True
+            logger.warning(
+                f'DraftDuel: round {self._field_round + 1} confirm not locked, click again'
+            )
+        return False
+
     def _field_round_once(self, target, names) -> bool:
         """一轮：拖目标卡 -> 点确定 -> 等已锁定。"""
         for drag_attempt in (1, 2, 3):
@@ -640,10 +660,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                     f'DraftDuel: {target} card{slot + 1} not marked after drag, retry'
                 )
                 continue
-            self.click(self.C_FIELD_CONFIRM, interval=1)
-            outcome = self._wait_field_locked()
-            if outcome in ('locked', 'battle'):
-                self._note_round_closed(target, f'confirm{drag_attempt}')
+            if self._confirm_field(target, f'confirm{drag_attempt}'):
                 return True
             logger.warning(f'DraftDuel: round {self._field_round + 1} not locked, retry')
 
@@ -657,10 +674,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             logger.warning(
                 f'DraftDuel: {target} unmarked after 3 tries, confirm anyway'
             )
-            self.click(self.C_FIELD_CONFIRM, interval=1)
-            outcome = self._wait_field_locked()
-            if outcome in ('locked', 'battle'):
-                self._note_round_closed(target, 'confirm-anyway')
+            if self._confirm_field(target, 'confirm-anyway'):
                 return True
         return False
 
