@@ -41,8 +41,9 @@ def _face(image: np.ndarray, box: tuple[int, int, int, int],
     y2 = int((y + iy + ih) * scale)
     crop = image[max(0, y1):max(0, y2), max(0, x1):max(0, x2)]
     if crop.size == 0:
-        return np.empty((0, 0), dtype=np.uint8)
-    return cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY)
+        return np.empty((0, 0, 3), dtype=np.uint8)
+    # 保留原图，灰度变体在 _reverse_score 里生成
+    return crop
 
 
 def lobby_faces(image: np.ndarray) -> list[np.ndarray]:
@@ -55,16 +56,32 @@ def hand_faces(image: np.ndarray) -> list[np.ndarray]:
     return [_face(image, box, CARD_FACE_INSET, scale) for box in CARD_BOXES]
 
 
+def _gray_bgr(face: np.ndarray) -> np.ndarray:
+    gray = cv2.cvtColor(face, cv2.COLOR_RGB2GRAY)
+    return cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
+
+
 def _reverse_score(card_face: np.ndarray, avatar_face: np.ndarray) -> float:
-    """手牌脸部做模板，在大厅头像里搜；取多尺度最高分。"""
+    """手牌做模板，在大厅头像里搜；灰度/原图/混合图都试一遍。"""
+    if card_face.size == 0 or avatar_face.size == 0:
+        return 0.0
+    gray_card = cv2.cvtColor(card_face, cv2.COLOR_RGB2GRAY)
+    gray_avatar = cv2.cvtColor(avatar_face, cv2.COLOR_RGB2GRAY)
+    variants = (
+        (gray_card, gray_avatar),
+        (card_face, avatar_face),
+        (cv2.cvtColor(gray_card, cv2.COLOR_GRAY2RGB), avatar_face),
+        (card_face, cv2.cvtColor(gray_avatar, cv2.COLOR_GRAY2RGB)),
+    )
     best = 0.0
-    for scale in _SCALES:
-        template = cv2.resize(card_face, None, fx=float(scale), fy=float(scale))
-        if template.shape[0] > avatar_face.shape[0] or \
-                template.shape[1] > avatar_face.shape[1]:
-            continue
-        response = cv2.matchTemplate(avatar_face, template, cv2.TM_CCOEFF_NORMED)
-        best = max(best, float(response.max()))
+    for source, target in variants:
+        for scale in _SCALES:
+            template = cv2.resize(source, None, fx=float(scale), fy=float(scale))
+            if template.shape[0] > target.shape[0] or \
+                    template.shape[1] > target.shape[1]:
+                continue
+            response = cv2.matchTemplate(target, template, cv2.TM_CCOEFF_NORMED)
+            best = max(best, float(response.max()))
     return best
 
 

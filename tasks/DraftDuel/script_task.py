@@ -557,7 +557,6 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     def _begin_new_battle_field(self):
         """每场战斗的上阵界面都是空的，单场状态在这里归零。"""
         self._field_round = 0
-        self._field_hand_map = None
         self._field_seen_open = False
         self._field_confirms = []
         self._battle_locked = []
@@ -631,10 +630,8 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             if label != 'open':
                 return label == 'locked'
 
-            mapping = getattr(self, '_field_hand_map', None)
-            if not mapping:
-                mapping = self._match_hand_cards()
-                self._field_hand_map = mapping
+            # 每轮上卡前重新绑定：头像顺序固定，手牌顺序会变
+            mapping = self._match_hand_cards()
             inverse = {name: slot for slot, (name, _score) in mapping.items()}
             slot = inverse.get(target)
             if slot is None:
