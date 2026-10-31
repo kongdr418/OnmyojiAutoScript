@@ -307,6 +307,24 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 or self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL)
                 or self.appear(self.I_START))
 
+    def _wait_selection_after_match(self, timeout: float = 180) -> bool:
+        """点战后等选人页；匹配超时回大厅时重新点战。"""
+        timer = Timer(timeout).start()
+        while not timer.reached():
+            self.screenshot()
+            if self.appear(self.I_SELECTION_PAGE):
+                return True
+            if self.appear(self.I_WAIT_FOR_MATCH):
+                self.device.sleep(1.0)
+                continue
+            if self.appear(self.I_NEW_MATCH) and self.appear(self.I_START):
+                logger.info('DraftDuel: match timeout, click start again')
+                self.appear_then_click(self.I_START, interval=1)
+                self.device.sleep(1.0)
+                continue
+            self.device.sleep(0.5)
+        return False
+
     def _start_round(self) -> bool:
         """点「战」：新局先进选式神，已选好阵容则不再选。"""
         # 一局结束的奖励/番胜/共用结算面板可能盖住「新局」，先按图片逐页点掉
@@ -332,7 +350,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             if not self.appear_then_click(self.I_START, interval=1):
                 logger.warning('DraftDuel: click start failed')
                 return False
-            if not self.wait_until_appear(self.I_SELECTION_PAGE, wait_time=15):
+            if not self._wait_selection_after_match():
                 logger.warning('DraftDuel: selection page not found')
                 return False
             if not self._draft_phase():

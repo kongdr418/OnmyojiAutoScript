@@ -187,5 +187,14 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "已锁定"
+  },
+  {
+    "itemName": "wait_for_match",
+    "imageName": "draft_duel_wait_for_match.png",
+    "roiFront": "75,12,152,78",
+    "roiBack": "38,0,230,124",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "等待匹配中"
   }
 ]
