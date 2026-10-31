@@ -75,7 +75,7 @@ class DraftDuelAssets:
 	# 第三轮上第二张 
 	S_FIELD_DRAG_2_3 = RuleSwipe(roi_front=(405,584,70,70), roi_back=(393,289,80,60), mode="default", name="field_drag_2_3")
 	# 第一轮上第三张 
-	S_FIELD_DRAG_3_1 = RuleSwipe(roi_front=(520,584,70,70), roi_back=(506,255,80,60), mode="default", name="field_drag_3_1")
+	S_FIELD_DRAG_3_1 = RuleSwipe(roi_front=(520,584,70,70), roi_back=(509,303,80,60), mode="default", name="field_drag_3_1")
 	# 第二轮上第三张 
 	S_FIELD_DRAG_3_2 = RuleSwipe(roi_front=(520,584,70,70), roi_back=(505,254,80,60), mode="default", name="field_drag_3_2")
 	# 第三轮上第三张 
