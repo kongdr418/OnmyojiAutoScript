@@ -12,7 +12,7 @@
     "itemName": "mark",
     "imageName": "draft_duel_mark.png",
     "roiFront": "300,510,34,30",
-    "roiBack": "260,483,592,77",
+    "roiBack": "179,464,729,143",
     "method": "Template matching",
     "threshold": 0.6,
     "description": "当前上卡式神标记"

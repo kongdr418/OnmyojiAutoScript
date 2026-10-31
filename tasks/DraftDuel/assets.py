@@ -125,7 +125,7 @@ class DraftDuelAssets:
 	# 队友推荐式神 
 	I_RECOMMEND_ROLE = RuleImage(roi_front=(590,492,116,39), roi_back=(131,483,1048,54), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_recommend_role.png")
 	# 当前上卡式神标记 
-	I_MARK = RuleImage(roi_front=(300,510,34,30), roi_back=(260,483,592,77), threshold=0.6, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_mark.png")
+	I_MARK = RuleImage(roi_front=(300,510,34,30), roi_back=(179,464,729,143), threshold=0.6, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_mark.png")
 
 
 	# Image Rule Assets
@@ -168,7 +168,7 @@ class DraftDuelAssets:
 	# 判断战斗页面 
 	I_BATTLE_PAGE = RuleImage(roi_front=(35,366,45,46), roi_back=(35,366,45,46), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_battle_page.png")
 	# 确认按钮 
-	I_CONFIRM = RuleImage(roi_front=(1091,546,143,76), roi_back=(1091,546,143,76), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_confirm.png")
+	I_CONFIRM = RuleImage(roi_front=(1111,546,109,76), roi_back=(1111,546,109,76), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_confirm.png")
 	# 已锁定 
 	I_LOCKED = RuleImage(roi_front=(1091,546,152,78), roi_back=(1091,546,152,78), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_locked.png")
 	# 等待匹配中 

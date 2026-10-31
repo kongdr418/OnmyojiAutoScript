@@ -464,17 +464,16 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         return result
 
     def _card_marked(self, slot: int) -> bool:
-        """只看目标卡位有没有上阵标记，避免被前面已上阵的卡误导。"""
-        box = CARD_BOXES[slot]
-        old_roi = self.I_MARK.roi_back
-        try:
-            matches = self.I_MARK.match_all(
-                self.device.image, threshold=self.I_MARK.threshold,
-                roi=list(box), frame_id=self.device.image_frame_id,
-            )
-        finally:
-            self.I_MARK.roi_back = old_roi
-        return bool(matches)
+        """按 dd.json 的 roiBack 搜标记，再按目标卡位的 x 过滤。"""
+        matches = self.I_MARK.match_all(
+            self.device.image, threshold=self.I_MARK.threshold,
+            frame_id=self.device.image_frame_id,
+        )
+        if not matches:
+            return False
+        x, _y, w, _h = CARD_BOXES[slot]
+        center_x = x + w / 2
+        return any(abs(match[1] - center_x) <= w / 2 + 15 for match in matches)
 
     def _screen_text(self) -> str:
         try:
