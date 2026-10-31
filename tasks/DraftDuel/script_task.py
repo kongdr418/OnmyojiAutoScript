@@ -566,6 +566,15 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             inverse = {name: slot for slot, (name, _score) in mapping.items()}
             slot = inverse.get(target)
             if slot is None:
+                # OCR 可能漏字：因幡辉夜姬 -> 辉夜姬；只在唯一包含关系时采用
+                near = [s for s, n in mapping.items()
+                        if n and (n in target or target in n)]
+                if len(near) == 1:
+                    slot = near[0]
+                    logger.info(
+                        f'DraftDuel: fuzzy target {target} -> {mapping[slot]}'
+                    )
+            if slot is None:
                 logger.warning(f'DraftDuel: target {target} not in hand {mapping}')
                 return False
             swipe = getattr(self, f'S_FIELD_DRAG_{slot + 1}_{self._field_round + 1}')
@@ -788,7 +797,10 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.click(self.C_CONTINUE, interval=1)
             return True
         if self.appear(self.I_SETTLEMENT_0_4):
-            # 0-4 结算页出现 = 已经二败出局
+            # 至少打过两场才可能是 0-4 二败出局；否则是别的大厅/上阵页误匹配
+            if getattr(self, '_battle_count', 0) < 2:
+                logger.warning('DraftDuel: 0-4 image matched before 2 battles, ignore')
+                return False
             if getattr(self, '_run_losses', 0) < 2:
                 self._run_losses = 2
             self._match_ended = True

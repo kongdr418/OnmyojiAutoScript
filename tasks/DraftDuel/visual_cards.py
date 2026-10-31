@@ -99,7 +99,19 @@ def match_hand(image: np.ndarray, faces: list[np.ndarray],
 
     left_slots = [i for i in range(len(faces)) if i not in used_slots]
     left_faces = [i for i in range(len(faces)) if i not in used_faces]
-    if len(left_slots) == 1 and len(left_faces) == 1:
-        slot, index = left_slots[0], left_faces[0]
-        result.append((slot, index, score_map.get((slot, index), 0.0)))
+    # 剩下的卡位/头像按一对一补全：分数可能低于阈值，但总比少识别一张好；
+    # 调用方会把这些低分映射打印出来，便于人工核对。
+    if left_slots and left_faces:
+        remaining = sorted(
+            ((score_map.get((slot, index), 0.0), slot, index)
+             for slot in left_slots for index in left_faces),
+            reverse=True,
+        )
+        used_slots, used_faces = set(), set()
+        for score, slot, index in remaining:
+            if slot in used_slots or index in used_faces:
+                continue
+            used_slots.add(slot)
+            used_faces.add(index)
+            result.append((slot, index, score))
     return sorted(result)
