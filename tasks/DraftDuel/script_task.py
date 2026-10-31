@@ -845,7 +845,8 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.device.sleep(1.0)
             return True
         if self.appear(self.I_ENABEL_AUTO_1):
-            self._click_rule(self.I_ENABEL_AUTO_1, 'dd_auto_form')
+            # 按钮内随机点，避免固定点落在文字/死区上
+            self.click(self.I_ENABEL_AUTO_1, interval=1)
             self.device.sleep(0.8)
             self._click_rule(self.C_FIELD_CONFIRM, 'dd_field_confirm')
             self.device.sleep(1.0)
