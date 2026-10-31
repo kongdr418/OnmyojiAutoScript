@@ -2,8 +2,8 @@
   {
     "itemName": "invitation",
     "imageName": "draft_duel_invitation.png",
-    "roiFront": "1050,152,165,109",
-    "roiBack": "955,18,300,261",
+    "roiFront": "978,328,72,61",
+    "roiBack": "978,328,72,61",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "邀请好友"
