@@ -155,5 +155,15 @@ class DraftDuelAssets:
 	I_LOSS_2 = RuleImage(roi_front=(401,59,135,114), roi_back=(351,0,226,232), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_loss_2.png")
 	# 输赢共用结算页面_01 
 	I_SGARED_ENDING_01 = RuleImage(roi_front=(612,280,157,78), roi_back=(537,188,300,261), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_sgared_ending.png")
+	# 战斗页面的自动上阵 
+	I_ENABEL_AUTO_1 = RuleImage(roi_front=(939,587,72,71), roi_back=(939,587,72,71), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_enabel_auto_1.png")
+	# 战斗页面的取消自动 
+	I_CANCEL_ANTO_1 = RuleImage(roi_front=(939,587,72,71), roi_back=(939,587,72,71), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_cancel_anto_1.png")
+	# 大厅页面的自动上阵 
+	I_ENABEL_ANTO_2 = RuleImage(roi_front=(995,617,72,71), roi_back=(995,617,72,71), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_enabel_anto_2.png")
+	# 大厅页面的取消自动 
+	I_CANCEL_AUTO_2 = RuleImage(roi_front=(995,617,72,71), roi_back=(995,617,72,71), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_cancel_auto_2.png")
+	# 判断战斗页面 
+	I_BATTLE_PAGE = RuleImage(roi_front=(35,366,45,46), roi_back=(35,366,45,46), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_battle_page.png")
 
 

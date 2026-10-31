@@ -451,15 +451,13 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     def _prep_button_state(self, full_fallback: bool = True):
         """上阵界面右下角：确定/已锁定 + 自动上阵状态。"""
         label = None
-        auto_on = False
+        auto_on = self.appear(self.I_CANCEL_ANTO_1) or self.appear(self.I_CANCEL_AUTO_2)
         try:
             results = self.O_BATTLE_CONFIRM.detect_and_ocr(self.device.image)
         except Exception:
             results = []
         for item in results:
             text = str(item.ocr_text or '').replace(' ', '')
-            if '自动' in text:
-                auto_on = True
             if '锁' in text:
                 label = 'locked'
             elif '确' in text:
@@ -479,12 +477,6 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                     label = 'locked'
                 elif '确' in text:
                     label = 'open'
-                if '自动' in text:
-                    auto_on = True
-            if label is None:
-                text = self._screen_text()
-                if '自动上阵' in text or '取消自动' in text:
-                    auto_on = True
         return label, auto_on
 
     def _start_fielding(self) -> bool:
@@ -611,6 +603,9 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 if self._field_round >= len(plan):
                     return True
                 self.screenshot()
+                if self.appear(self.I_BATTLE_PAGE):
+                    logger.info('DraftDuel: battle page detected, stop fielding')
+                    return True
                 label, _ = self._prep_button_state()
                 if label is None:
                     missing = getattr(self, '_prep_missing_frames', 0) + 1
@@ -723,31 +718,23 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         return True
 
     def _auto_form_field(self) -> bool:
-        """本局第一把之后交给游戏自动上阵：点自动上阵 + 确定。"""
-        try:
-            results = self.O_SCREEN.detect_and_ocr(self.device.image)
-        except Exception:
-            results = []
-        height, width = self.device.image.shape[:2]
-        already = False
-        point = None
-        for item in results:
-            text = str(item.ocr_text or '').replace(' ', '')
-            x, y = item.box.mean(axis=0)
-            if x < width * 0.60 or y < height * 0.62:
-                continue
-            if '取消自动' in text:
-                already = True
-            elif '自动' in text or '上阵' in text:
-                point = (int(x), int(y))
-        if not already:
-            if point is None:
-                return False
-            self.device.click(point[0], point[1], control_name='dd_auto_form')
+        """上阵页：用图片判断自动上阵状态，不再整屏 OCR。
+
+        上阵页的按钮在 (939,587)，大厅页在 (995,617)；
+        这里只在上阵页调用，所以用 I_ENABEL_AUTO_1 / I_CANCEL_ANTO_1。
+        """
+        self.screenshot()
+        if self.appear(self.I_CANCEL_ANTO_1):
+            self.click(self.C_FIELD_CONFIRM, interval=1)
+            self.device.sleep(1.0)
+            return True
+        if self.appear(self.I_ENABEL_AUTO_1):
+            self.click(self.I_ENABEL_AUTO_1, interval=1)
             self.device.sleep(0.8)
-        self.click(self.C_FIELD_CONFIRM, interval=1)
-        self.device.sleep(1.0)
-        return True
+            self.click(self.C_FIELD_CONFIRM, interval=1)
+            self.device.sleep(1.0)
+            return True
+        return False
 
     def _run_finished(self) -> bool:
         return getattr(self, '_run_wins', 0) >= 6 or getattr(self, '_run_losses', 0) >= 2
@@ -825,6 +812,10 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             if self._run_finished() and (getattr(self, '_reward_seen', False)
                                          or getattr(self, '_match_ended', False)):
                 return True
+            if self.appear(self.I_BATTLE_PAGE):
+                self._battle_fielded = False
+                self.device.sleep(0.5)
+                continue
 
             if self._prep_visible(full_fallback=False):
                 self._result_counted = False

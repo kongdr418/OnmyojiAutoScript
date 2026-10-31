@@ -124,5 +124,50 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "输赢共用结算页面_01"
+  },
+  {
+    "itemName": "enabel_auto_1",
+    "imageName": "draft_duel_enabel_auto_1.png",
+    "roiFront": "939,587,72,71",
+    "roiBack": "939,587,72,71",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "战斗页面的自动上阵"
+  },
+  {
+    "itemName": "cancel_anto_1",
+    "imageName": "draft_duel_cancel_anto_1.png",
+    "roiFront": "939,587,72,71",
+    "roiBack": "939,587,72,71",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "战斗页面的取消自动"
+  },
+  {
+    "itemName": "enabel_anto_2",
+    "imageName": "draft_duel_enabel_anto_2.png",
+    "roiFront": "995,617,72,71",
+    "roiBack": "995,617,72,71",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "大厅页面的自动上阵"
+  },
+  {
+    "itemName": "cancel_auto_2",
+    "imageName": "draft_duel_cancel_auto_2.png",
+    "roiFront": "995,617,72,71",
+    "roiBack": "995,617,72,71",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "大厅页面的取消自动"
+  },
+  {
+    "itemName": "battle_page",
+    "imageName": "draft_duel_battle_page.png",
+    "roiFront": "35,366,45,46",
+    "roiBack": "35,366,45,46",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "判断战斗页面"
   }
 ]
