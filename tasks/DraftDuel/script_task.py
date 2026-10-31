@@ -551,8 +551,14 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     def _field_round_once(self, target, names) -> bool:
         """一轮：拖目标卡 -> 点确定 -> 等已锁定。"""
         for drag_attempt in (1, 2):
-            self.screenshot()
-            label, _ = self._prep_button_state(full_fallback=False)
+            # OCR 偶发读空：多给几帧，不要一次读空就判失败
+            label = None
+            for _ in range(3):
+                self.screenshot()
+                label, _ = self._prep_button_state(full_fallback=False)
+                if label is not None:
+                    break
+                self.device.sleep(0.5)
             if label != 'open':
                 return label == 'locked'
 
