@@ -73,16 +73,27 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         raise TaskEnd('DraftDuel')
 
     def _wait_member_selection(self, con: DraftDuelConfig) -> bool:
-        """队员：等「等待中」消失，再等选人页；多局时也走这里。"""
-        self.screenshot()
-        if self.appear(self.I_MEMBERS_AWAIT):
-            wait_seconds = (con.limit_time.hour * 3600 + con.limit_time.minute * 60
-                            + con.limit_time.second)
-            self.wait_until_disappear(self.I_MEMBERS_AWAIT, timeout=wait_seconds)
+        """队员：等「等待中」消失，再等选人页；等待期间每秒清 stuck，避免 60 秒无操作被判卡死。"""
+        wait_seconds = (con.limit_time.hour * 3600 + con.limit_time.minute * 60
+                        + con.limit_time.second)
+        timer = Timer(wait_seconds).start()
+        while not timer.reached():
+            self.device.stuck_record_clear()
             self.screenshot()
-            if self.appear(self.I_MEMBERS_AWAIT):
-                return False
-        return self.wait_until_appear(self.I_SELECTION_PAGE, wait_time=120)
+            if not self.appear(self.I_MEMBERS_AWAIT):
+                break
+            self.device.sleep(1.0)
+        if self.appear(self.I_MEMBERS_AWAIT):
+            return False
+
+        timer = Timer(120).start()
+        while not timer.reached():
+            self.device.stuck_record_clear()
+            self.screenshot()
+            if self.appear(self.I_SELECTION_PAGE):
+                return True
+            self.device.sleep(1.0)
+        return False
 
     def _run_leader(self, con: DraftDuelConfig):
         self.goto_page(page_draft_duel)
@@ -515,17 +526,17 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         timer = Timer(timeout).start()
         while not timer.reached():
             self.screenshot()
-            label, _ = self._prep_button_state()
+            label, _ = self._prep_button_state(full_fallback=False)
             if label == 'locked':
                 return 'locked'
             if label is None:
                 missing = getattr(self, '_lock_missing_frames', 0) + 1
                 self._lock_missing_frames = missing
-                if missing >= 2 and not self._prep_visible():
+                if missing >= 2 and not self._prep_visible(full_fallback=False):
                     return 'battle'
             else:
                 self._lock_missing_frames = 0
-            self.device.sleep(0.3)
+            self.device.sleep(1.0)
         return 'open'
 
     def _note_round_closed(self, target, why):
@@ -541,7 +552,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         """一轮：拖目标卡 -> 点确定 -> 等已锁定。"""
         for drag_attempt in (1, 2):
             self.screenshot()
-            label, _ = self._prep_button_state()
+            label, _ = self._prep_button_state(full_fallback=False)
             if label != 'open':
                 return label == 'locked'
 
@@ -606,7 +617,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 if self.appear(self.I_BATTLE_PAGE):
                     logger.info('DraftDuel: battle page detected, stop fielding')
                     return True
-                label, _ = self._prep_button_state()
+                label, _ = self._prep_button_state(full_fallback=False)
                 if label is None:
                     missing = getattr(self, '_prep_missing_frames', 0) + 1
                     self._prep_missing_frames = missing
@@ -616,13 +627,13 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                             f'{self._field_round}/3'
                         )
                         return True
-                    self.device.sleep(0.35)
+                    self.device.sleep(1.0)
                     continue
                 self._prep_missing_frames = 0
                 if label == 'locked':
                     if self._field_seen_open:
                         self._note_round_closed(None, 'system locked')
-                    self.device.sleep(0.35)
+                    self.device.sleep(1.0)
                     continue
                 self._field_seen_open = True
                 target = plan[self._field_round]
@@ -829,7 +840,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                     elif not self._field_battle_lineup(names):
                         logger.warning('DraftDuel: fielding failed')
                         return False
-                self.device.sleep(0.3)
+                self.device.sleep(1.0)
                 continue
             self._battle_fielded = False
 
