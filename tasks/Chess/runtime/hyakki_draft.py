@@ -157,6 +157,9 @@ class ChessHyakkiDraftMixin:
             self._hyakki_player_found = False
             return None
         self._hyakki_player_found = True
+        self.chess_state.player_name = player[0]
+        if self.chess_state.first_hyakki_round is None:
+            self.chess_state.first_hyakki_round = self._current_round_no
         identity = player[0]
         if getattr(self, '_hyakki_player_row', None) != identity:
             self._hyakki_player_row = identity

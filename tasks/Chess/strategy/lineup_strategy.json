@@ -230,7 +230,7 @@
       "arakawa_goldfish_position": null
     },
     {
-      "key": "haiguo",
+      "key": "huangchuan",
       "display_name": "荒川",
       "slots": [
         {
@@ -244,7 +244,7 @@
           ]
         },
         {
-          "shikigami": "shouzu",
+          "shikigami": "kaoru",
           "weight": 1,
           "equipment": []
         },
@@ -254,7 +254,7 @@
           "equipment": []
         },
         {
-          "shikigami": "hotarugusa",
+          "shikigami": "shouzu",
           "weight": 1,
           "equipment": []
         },
@@ -276,12 +276,7 @@
         {
           "shikigami": "kujira",
           "weight": 1,
-          "equipment": [
-            {
-              "kind": "soul",
-              "key": "beichuifang"
-            }
-          ]
+          "equipment": []
         },
         {
           "shikigami": "kappa",
@@ -323,7 +318,7 @@
         }
       ],
       "primary_bond": "",
-      "secondary_bond": "护佑",
+      "secondary_bond": "回响",
       "hakuzosu_protect_position": null,
       "arakawa_goldfish_position": 7
     }

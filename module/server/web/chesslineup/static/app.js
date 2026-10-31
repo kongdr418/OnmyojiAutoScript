@@ -1,7 +1,9 @@
 'use strict';
 (() => {
   const API = '/tool/chesslineup/api';
-  const PROTECT_IMAGE = '/tool/chesslineup/static/cards/special_hakuzosu_protect.webp';
+  const ASSET_VERSION = Date.now().toString(36);
+  const freshImage = url => `${url}${url.includes('?')?'&':'?'}v=${ASSET_VERSION}`;
+  const PROTECT_IMAGE = freshImage('/tool/chesslineup/static/cards/special_hakuzosu_protect.webp');
   const $ = id => document.getElementById(id);
   const clone = value => JSON.parse(JSON.stringify(value));
   const emptySlot = () => ({shikigami:null,weight:1,equipment:[]});
@@ -272,7 +274,7 @@
   }
   async function init() {
     try {
-      state.catalog=await request('/catalog');for(const kind of ['shikigami','soul','emblem'])state.index[kind]=Object.fromEntries(state.catalog[kind].map(e=>[e.key,e]));
+      state.catalog=await request('/catalog');for(const kind of ['shikigami','soul','emblem'])state.index[kind]=Object.fromEntries(state.catalog[kind].map(e=>[e.key,{...e,image:freshImage(e.image)}]));
       $('primary-bond').append(option('','自动'));for(const bond of state.catalog.bonds)$('primary-bond').append(option(bond,bond));
       for(const config of state.catalog.configs)$('config').append(option(config,config));
       try {const draft=JSON.parse(localStorage.getItem('chesslineup-draft-v1'));if(draft)state.draft=validDraft(draft,true);state.origin=JSON.parse(localStorage.getItem('chesslineup-origin-v1'));if(state.origin?.key!==state.draft.key)state.origin=null;}catch(_){state.origin=null;}

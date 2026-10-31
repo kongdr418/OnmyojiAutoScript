@@ -57,8 +57,8 @@ def normalize_operations(operations, count, allow_missing_image=False):
         elif kind == 'ocr':
             spec = {'type': 'ocr', 'mode': str(spec.get('mode', 'Single')),
                     'method': str(spec.get('method', 'Default')), 'keyword': str(spec.get('keyword', ''))}
-            if spec['mode'] != 'Single':
-                raise ValueError('Frame OCR only supports Single mode')
+            if spec['mode'] not in ('Single', 'Digit'):
+                raise ValueError('Frame OCR only supports Single or Digit mode')
         else:
             raise ValueError(f'Unsupported range operation: {kind}')
         result.append(spec)
@@ -264,7 +264,14 @@ class RuleFrame(RuleImage):
                 if value is None:
                     expected.append(None)
                     continue
-                if isinstance(value, str):
+                if spec['mode'] == 'Digit':
+                    if type(value) is int:
+                        candidates = (value,)
+                    elif isinstance(value, list) and value and all(type(item) is int for item in value):
+                        candidates = tuple(value)
+                    else:
+                        raise ValueError(f'{self.name} range {index + 1}: Digit requires an integer or a non-empty list of integers')
+                elif isinstance(value, str):
                     candidates = (value,)
                 elif isinstance(value, list) and value and all(isinstance(item, str) for item in value):
                     candidates = tuple(value)
@@ -308,7 +315,8 @@ class RuleFrame(RuleImage):
                     checks.append(None)
             elif spec['type'] == 'ocr':
                 # Internal read-only preview can defer OCR until image identity is ambiguous.
-                text = '' if getattr(self, 'defer_ocr', False) and requirement is None else target.ocr(image)
+                text = ('' if getattr(self, 'defer_ocr', False) and requirement is None
+                        and spec['mode'] == 'Single' else target.ocr(image))
                 data.append(text)
                 checks.append(text in requirement if requirement is not None else None)
             else:

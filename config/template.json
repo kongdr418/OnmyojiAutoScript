@@ -1704,7 +1704,9 @@
       "float_time": "00:00:00"
     },
     "chess_config": {
-      "lineup_bond": "荒川",
+      "sixrealms_selection_enabled": true,
+      "hyakki_draft_enabled": true,
+      "lineup_bond": "七角山",
       "rank_protection": false,
       "run_count": 1,
       "limit_time": "00:30:00",

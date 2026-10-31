@@ -71,8 +71,8 @@ async def remove(source: Literal['builtin', 'custom'], key: str):
         selected = chess.get('chess_config', {})
         bond = selected.get('lineup_bond', '七角山' if chess.get('scheduler', {}).get('enable') else None)
         active_key = selected.get('custom_lineup', '')
-        if bond in ('海国', 'haiguo') or active_key == 'builtin:haiguo':
-            reference = 'custom:haiguo'
+        if bond in ('海国', 'haiguo', 'arakawa', '荒川', 'huangchuan') or active_key in ('builtin:haiguo', 'custom:haiguo'):
+            reference = 'builtin:huangchuan'
         elif bond == '自定义阵容':
             reference = active_key if active_key.startswith(('builtin:', 'custom:')) else 'custom:' + active_key
         else:

@@ -13,16 +13,6 @@ class ChessAssets:
 
 
 	# Click Rule Assets
-	# 商店式神5
-	C_SHIKIGAMI_5 = RuleClick(roi_front=(350,61,167,140), roi_back=(350,61,167,140), name="shikigami_5")
-	# 商店式神4
-	C_SHIKIGAMI_4 = RuleClick(roi_front=(537,61,167,140), roi_back=(537,61,167,140), name="shikigami_4")
-	# 商店式神3
-	C_SHIKIGAMI_3 = RuleClick(roi_front=(724,61,167,140), roi_back=(724,61,167,140), name="shikigami_3")
-	# 商店式神2
-	C_SHIKIGAMI_2 = RuleClick(roi_front=(911,61,167,140), roi_back=(911,61,167,140), name="shikigami_2")
-	# 商店式神1
-	C_SHIKIGAMI_1 = RuleClick(roi_front=(1098,61,167,140), roi_back=(1098,61,167,140), name="shikigami_1")
 	# 左侧符咒选项卡面
 	C_GRIGRI_OPTION_1 = RuleClick(roi_front=(320,205,90,130), roi_back=(320,205,90,130), name="grigri_option_1")
 	# 中间符咒选项卡面
@@ -47,56 +37,67 @@ class ChessAssets:
 	C_HYAKKI_SOUL_SHIKI = RuleClick(roi_front=(0,138,1024,462), roi_back=(0,138,1024,462), name="hyakki_soul_shiki")
 
 
+	# Frame Rule Assets
+	F_HAND_CARD = RuleFrame(name='hand_card', roi_badge=(264, 552, 20, 19), roi_range=[(279, 665, 66, 24), (279, 639, 66, 24), (279, 613, 66, 24), (294, 552, 50, 47), (262, 547, 86, 146)], roi_back=(170, 480, 964, 217), threshold=0.8, method='Template matching', profile='High', badgefile=['./tasks/Chess/c/card/card_hand_badge_jade_3.png', './tasks/Chess/c/card/card_hand_badge_jade_2.png', './tasks/Chess/c/card/card_hand_badge_jade_1.png'], range=[Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Image(method='Template matching', threshold=0.8), Click()])
+	F_STORE_CARD = RuleFrame(name='store_card', roi_badge=(1042, 267, 21, 23), roi_range=[(908, 261, 134, 32), (931, 224, 134, 32), (931, 194, 134, 32), (931, 162, 134, 32), (944, 81, 97, 71), (905, 57, 175, 237)], roi_back=(341, 54, 929, 242), threshold=0.8, method='Template matching', profile='High', badgefile=['./tasks/Chess/c/store/store_card_badge_gold.png'], range=[Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Image(method='Template matching', threshold=0.8), Click()])
+	F_FETTER_BADGE = RuleFrame(name='fetter_badge', roi_badge=(574, 548, 65, 20), roi_range=[(564, 665, 79, 23), (562, 551, 86, 137), (578, 589, 53, 48)], roi_back=(166, 439, 970, 281), threshold=0.8, method='Template matching', profile='High', badgefile=['./tasks/Chess/c/fetter/fetter_badge_badge_1.png'], badge_grayscale=True, range=[Ocr(mode='Single', method='Default', keyword=''), Click(), Image(method='Template matching', threshold=0.8)])
+	F_BOARD_OCCUPANCY = RuleFrame(name='board_occupancy', roi_badge=(154, 498, 32, 32), roi_range=[(311, 309, 33, 32), (414, 308, 33, 32), (516, 309, 33, 32), (619, 308, 33, 32), (723, 308, 33, 32), (826, 308, 33, 32), (281, 414, 33, 32), (396, 413, 33, 32), (510, 413, 33, 32), (624, 414, 33, 32), (737, 413, 33, 32), (851, 413, 33, 32), (365, 386, 24, 24), (461, 386, 24, 24), (563, 386, 24, 24), (664, 386, 24, 24), (766, 386, 24, 24), (865, 386, 24, 24), (337, 493, 24, 24), (449, 493, 24, 24), (557, 493, 24, 24), (666, 493, 24, 24), (783, 493, 24, 24), (890, 493, 24, 24)], roi_back=(145, 290, 950, 340), threshold=0.85, method='Template matching', profile='High', badgefile=['./tasks/Chess/c/board/board_badge_emoji.png'], range=[Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click()])
+	F_BOSS_BOARD_OCCUPANCY = RuleFrame(name='boss_board_occupancy', roi_badge=(154, 498, 32, 32), roi_range=[(275, 290, 33, 32), (398, 290, 33, 32), (519, 290, 33, 32), (640, 290, 33, 32), (761, 290, 33, 32), (882, 290, 33, 32), (219, 399, 33, 32), (364, 399, 33, 32), (508, 399, 33, 32), (652, 399, 33, 32), (795, 399, 33, 32), (939, 399, 33, 32), (335, 380, 24, 24), (451, 381, 24, 24), (566, 382, 24, 24), (681, 381, 24, 24), (797, 379, 24, 24), (910, 383, 24, 24), (284, 495, 24, 24), (420, 494, 24, 24), (557, 493, 24, 24), (685, 493, 24, 24), (825, 492, 24, 24), (958, 495, 24, 24)], roi_back=(145, 280, 950, 350), threshold=0.85, method='Template matching', profile='High', badgefile=['./tasks/Chess/c/board/board_badge_emoji.png'], range=[Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click()])
+	F_CHESS_DETAIL_MONSTER = RuleFrame(name='chess_detail_monster', roi_badge=(267, 15, 41, 38), roi_range=[(497, 2, 30, 26), (706, 3, 28, 26), (736, 2, 34, 29)], roi_back=(194, 0, 616, 75), threshold=0.8, method='Template matching', profile='High', badgefile=['./tasks/Chess/c/item_6_badge_1.png'], range=[Ocr(mode='Digit', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Digit', method='Default', keyword='')])
+	F_CHESS_DETAIL_NORMAL = RuleFrame(name='chess_detail_normal', roi_badge=(267, 15, 41, 38), roi_range=[(460, 4, 32, 23), (740, 3, 26, 25), (767, 2, 33, 27)], roi_back=(193, 0, 623, 71), threshold=0.8, method='Template matching', profile='High', badgefile=['./tasks/Chess/c/item_7_badge_1.png'], range=[Ocr(mode='Digit', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Digit', method='Default', keyword='')])
+	F_CHESS_DETAIL_HYAKKI = RuleFrame(name='chess_detail_hyakki', roi_badge=(606, 2, 31, 29), roi_range=[(460, 4, 32, 23), (740, 3, 26, 25), (767, 2, 33, 27)], roi_back=(193, 0, 623, 71), threshold=0.9, method='Template matching', profile='High', badgefile=['./tasks/Chess/c/c_stage_hyakki.png'], range=[Ocr(mode='Digit', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Digit', method='Default', keyword='')])
+
+
 	# Image Rule Assets
 	# 选符咒环节 
 	I_SELECT_GRIGRI = RuleImage(roi_front=(533,74,218,43), roi_back=(533,74,218,43), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_select_grigri.png")
-	#  
+	# 开始棋局
 	I_CHESS_START = RuleImage(roi_front=(1159,595,65,66), roi_back=(1150,585,85,86), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_chess_start.png")
-	#  
+	# 使用
 	I_USE_SOUL = RuleImage(roi_front=(1005,144,172,47), roi_back=(1000,139,182,57), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_use_soul.png")
-	#  
+	# 选择御魂一
 	I_SELECT_SOUL_1 = RuleImage(roi_front=(390,326,70,35), roi_back=(385,321,80,45), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_select_soul_1.png")
-	#  
+	# 选择御魂二
 	I_SELECT_SOUL_2 = RuleImage(roi_front=(605,326,70,35), roi_back=(600,321,80,45), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_select_soul_2.png")
-	#  
+	# 选择御魂三
 	I_SELECT_SOUL_3 = RuleImage(roi_front=(821,327,70,35), roi_back=(816,322,80,45), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_select_soul_3.png")
 	# 商店 
 	I_MARKET = RuleImage(roi_front=(1159,614,89,26), roi_back=(1154,609,99,36), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_market.png")
 	# 购买经验 
 	I_EXPERIENCE = RuleImage(roi_front=(37,641,102,26), roi_back=(32,636,112,36), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_experience.png")
 	# 打开阵容预设 
-	I_OPEN_LINEUP = RuleImage(roi_front=(271,17,33,34), roi_back=(259,7,57,53), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_open_lineup.png")
+	I_OPEN_LINEUP = RuleImage(roi_front=(271,17,33,34), roi_back=(194,0,122,67), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_open_lineup.png")
 	# 商店刷新 
 	I_REFRESH = RuleImage(roi_front=(1169,419,65,64), roi_back=(1164,414,75,74), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_refresh.png")
-	#  
+	# 缺少金币的刷新
 	I_REFRESH_NOT_GOLD = RuleImage(roi_front=(1169,419,65,64), roi_back=(1164,414,75,74), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_refresh_not_gold.png")
-	#  
+	# 跳过
 	I_SKIP = RuleImage(roi_front=(1148,39,77,22), roi_back=(1143,34,87,32), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_skip.png")
-	#  
-	I_SHIKIGAMI_SPECIFICS = RuleImage(roi_front=(939,223,310,32), roi_back=(939,223,310,32), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_shikigami_specifics.png")
-	#  
+	# 式神详情
+	I_SHIKIGAMI_SPECIFICS = RuleImage(roi_front=(939,251,131,31), roi_back=(929,204,331,109), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_shikigami_specifics.png")
+	# 商店已打开标志
 	I_CHECK_MARKET = RuleImage(roi_front=(1206,319,35,31), roi_back=(1201,314,45,41), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_check_market.png")
-	#  
+	# 取消等待
 	I_CANCEL_WAITING = RuleImage(roi_front=(584,597,111,45), roi_back=(579,592,121,55), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_cancel_waiting.png")
-	#  
+	# 对局结束标志一
 	I_GAME_OVER_1 = RuleImage(roi_front=(549,401,198,31), roi_back=(544,396,208,41), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_game_over_1.png")
-	#  
+	# 对局结束标志二
 	I_GAME_OVER_2 = RuleImage(roi_front=(549,401,198,31), roi_back=(544,396,208,41), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_game_over_2.png")
-	#  
+	# 金符咒
 	I_GRIGRI_GOLD = RuleImage(roi_front=(584,142,122,40), roi_back=(579,137,132,50), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_grigri_gold.png")
-	#  
+	# 银符咒
 	I_GRIGRI_SILVER = RuleImage(roi_front=(584,142,122,40), roi_back=(579,137,132,50), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_grigri_silver.png")
-	#  
+	# 铜符咒
 	I_GRIGRI_COPPER = RuleImage(roi_front=(584,142,122,40), roi_back=(579,137,132,50), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_grigri_copper.png")
-	#  
-	I_CHECK_GOLDFISH = RuleImage(roi_front=(924,291,192,49), roi_back=(919,286,202,59), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_check_goldfish.png")
-	#  
+	# 荒川金鱼标志
+	I_CHECK_GOLDFISH = RuleImage(roi_front=(924,291,192,49), roi_back=(918,266,352,125), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_check_goldfish.png")
+	# 红叉
 	I_BACK_RED = RuleImage(roi_front=(977,67,41,46), roi_back=(972,62,51,56), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_back_red.png")
-	#  
+	# 问题查看
 	I_QUESTION_CHECK = RuleImage(roi_front=(209,16,33,34), roi_back=(199,5,57,53), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_question_check.png")
-	#  
+	# 再来一局
 	I_RESTART_AGAIN = RuleImage(roi_front=(1065,644,178,48), roi_back=(1049,636,202,59), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_restart_again.png")
-	#  
+	# 分享按钮
 	I_SHARE = RuleImage(roi_front=(1159,579,65,66), roi_back=(1147,568,85,86), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_share.png")
 	# 选择六道场地 
 	I_SELECT_SIXREALMS = RuleImage(roi_front=(550,2,181,34), roi_back=(542,0,200,45), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_select_sixrealms.png")
@@ -105,50 +106,29 @@ class ChessAssets:
 	# 百鬼阶段 
 	I_STAGE_HYAKKI = RuleImage(roi_front=(606,2,31,29), roi_back=(499,0,268,31), threshold=0.9, method="Template matching", profile="High", file="./tasks/Chess/c/c_stage_hyakki.png")
 	# 大蛇阶段 
-	I_STAGE_ORCHI = RuleImage(roi_front=(708,0,31,29), roi_back=(499,0,268,31), threshold=0.9, method="Template matching", profile="High", file="./tasks/Chess/c/c_stage_orchi.png")
+	I_STAGE_ORCHI = RuleImage(roi_front=(708,0,31,29), roi_back=(700,0,48,33), threshold=0.9, method="Template matching", profile="High", file="./tasks/Chess/c/c_stage_orchi.png")
 	# 逢魔阶段 
-	I_STAGE_DEMON = RuleImage(roi_front=(708,0,31,29), roi_back=(499,0,268,31), threshold=0.9, method="Template matching", profile="High", file="./tasks/Chess/c/c_stage_demon.png")
+	I_STAGE_DEMON = RuleImage(roi_front=(708,0,31,29), roi_back=(702,0,44,34), threshold=0.9, method="Template matching", profile="High", file="./tasks/Chess/c/c_stage_demon.png")
+	# 小怪阶段
+	I_STAGE_MONSTER = RuleImage(roi_front=(624,1,31,29), roi_back=(499,0,268,31), threshold=0.8, method="Template matching", profile="High", file="./tasks/Chess/c/c_stage_monster.png")
 
 
 	# Ocr Rule Assets
 	# 当前等级 
 	O_LEVEL = RuleOcr(roi=(131,680,47,30), area=(131,680,47,30), mode="Single", method="Default", keyword="", name="level")
-	# 当前回目 
-	O_ROUND = RuleOcr(roi=(469,0,67,30), area=(469,0,67,30), mode="Single", method="Default", keyword="", name="round")
 	# 当前金币 
 	O_GOLD = RuleOcr(roi=(1198,640,43,32), area=(1198,640,43,32), mode="Digit", method="Default", keyword="", name="gold")
-	# 当前环节 
-	O_CHESS_MODE = RuleOcr(roi=(741,0,32,28), area=(741,0,32,28), mode="Single", method="Default", keyword="", name="chess_mode")
-	#  
-	O_ROUND_2 = RuleOcr(roi=(507,0,62,30), area=(507,0,62,30), mode="Single", method="Default", keyword="", name="round_2")
-	#  
-	O_CHESS_MODE_2 = RuleOcr(roi=(706,2,32,28), area=(706,2,32,28), mode="Single", method="Default", keyword="", name="chess_mode_2")
-	#  
+	# 鼬乐币
 	O_COIN = RuleOcr(roi=(395,660,87,25), area=(395,660,87,25), mode="DigitCounter", method="Default", keyword="", name="coin")
-	#  
-	O_NOW_TIME = RuleOcr(roi=(768,0,32,28), area=(768,0,32,28), mode="Single", method="Default", keyword="", name="now_time")
-	#  
+	# 排名
 	O_RANK = RuleOcr(roi=(443,193,417,204), area=(443,193,417,204), mode="Single", method="Default", keyword="", name="rank")
-	#  
+	# 符咒选项一
 	O_GRIGRI_OPTION_NAME_1 = RuleOcr(roi=(269,370,191,45), area=(269,370,191,45), mode="Single", method="Default", keyword="", name="grigri_option_name_1")
-	#  
+	# 符咒选项二
 	O_GRIGRI_OPTION_NAME_2 = RuleOcr(roi=(548,370,191,45), area=(548,370,191,45), mode="Single", method="Default", keyword="", name="grigri_option_name_2")
-	#  
+	# 符咒选项三
 	O_GRIGRI_OPTION_NAME_3 = RuleOcr(roi=(825,370,191,45), area=(825,370,191,45), mode="Single", method="Default", keyword="", name="grigri_option_name_3")
 	# 名字出现位置 
 	O_NAME_RANGE = RuleOcr(roi=(1060,41,166,623), area=(1060,41,166,623), mode="Full", method="Default", keyword="", name="name_range")
-
-
-	# Image Rule Assets
-	F_HAND_CARD = RuleFrame(name='hand_card', roi_badge=(264, 552, 20, 19), roi_range=[(279, 665, 66, 24), (279, 639, 66, 24), (279, 613, 66, 24), (294, 552, 50, 47), (262, 547, 86, 146)], roi_back=(170, 480, 964, 217), threshold=0.8, method='Template matching', profile='High', badgefile=['./tasks/Chess/resource/card/card_hand_badge_jade_3.png', './tasks/Chess/resource/card/card_hand_badge_jade_2.png', './tasks/Chess/resource/card/card_hand_badge_jade_1.png'], range=[Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Image(method='Template matching', threshold=0.8), Click()])
-	I_HAND_CARD = F_HAND_CARD  # compatibility
-	F_STORE_CARD = RuleFrame(name='store_card', roi_badge=(1042, 267, 21, 23), roi_range=[(908, 261, 134, 32), (931, 224, 134, 32), (931, 194, 134, 32), (931, 162, 134, 32), (944, 81, 97, 71), (905, 57, 175, 237)], roi_back=(341, 54, 929, 242), threshold=0.8, method='Template matching', profile='High', badgefile=['./tasks/Chess/resource/store/store_card_badge_gold.png'], range=[Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Ocr(mode='Single', method='Default', keyword=''), Image(method='Template matching', threshold=0.8), Click()])
-	I_STORE_CARD = F_STORE_CARD  # compatibility
-	F_FETTER_BADGE = RuleFrame(name='fetter_badge', roi_badge=(574, 548, 65, 20), roi_range=[(564, 665, 79, 23), (562, 551, 86, 137), (578, 589, 53, 48)], roi_back=(166, 439, 970, 281), threshold=0.8, method='Template matching', profile='High', badgefile=['./tasks/Chess/resource/fetter/fetter_badge_badge_1.png'], badge_grayscale=True, range=[Ocr(mode='Single', method='Default', keyword=''), Click(), Image(method='Template matching', threshold=0.8)])
-	I_FETTER_BADGE = F_FETTER_BADGE  # compatibility
-	F_BOARD_OCCUPANCY = RuleFrame(name='board_occupancy', roi_badge=(154, 498, 32, 32), roi_range=[(311, 309, 33, 32), (414, 308, 33, 32), (516, 309, 33, 32), (619, 308, 33, 32), (723, 308, 33, 32), (826, 308, 33, 32), (281, 414, 33, 32), (396, 413, 33, 32), (510, 413, 33, 32), (624, 414, 33, 32), (737, 413, 33, 32), (851, 413, 33, 32), (365, 386, 24, 24), (461, 386, 24, 24), (563, 386, 24, 24), (664, 386, 24, 24), (766, 386, 24, 24), (865, 386, 24, 24), (337, 493, 24, 24), (449, 493, 24, 24), (557, 493, 24, 24), (666, 493, 24, 24), (783, 493, 24, 24), (890, 493, 24, 24)], roi_back=(145, 290, 950, 340), threshold=0.85, method='Template matching', profile='High', badgefile=['./tasks/Chess/resource/board/board_badge_emoji.png'], range=[Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click()])
-	I_BOARD_OCCUPANCY = F_BOARD_OCCUPANCY  # compatibility
-	F_BOSS_BOARD_OCCUPANCY = RuleFrame(name='boss_board_occupancy', roi_badge=(154, 498, 32, 32), roi_range=[(275, 290, 33, 32), (398, 290, 33, 32), (519, 290, 33, 32), (640, 290, 33, 32), (761, 290, 33, 32), (882, 290, 33, 32), (219, 399, 33, 32), (364, 399, 33, 32), (508, 399, 33, 32), (652, 399, 33, 32), (795, 399, 33, 32), (939, 399, 33, 32), (335, 380, 24, 24), (451, 381, 24, 24), (566, 382, 24, 24), (681, 381, 24, 24), (797, 379, 24, 24), (910, 383, 24, 24), (284, 495, 24, 24), (420, 494, 24, 24), (557, 493, 24, 24), (685, 493, 24, 24), (825, 492, 24, 24), (958, 495, 24, 24)], roi_back=(145, 280, 950, 350), threshold=0.85, method='Template matching', profile='High', badgefile=['./tasks/Chess/resource/board/board_badge_emoji.png'], range=[Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Image(method='Template matching', threshold=0.68), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click(), Click()])
-	I_BOSS_BOARD_OCCUPANCY = F_BOSS_BOARD_OCCUPANCY  # compatibility
 
 

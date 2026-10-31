@@ -32,7 +32,8 @@ class ChessRuntimeSettings:
     HAND_CLEANUP_CLEAN_CONFIRM_FRAMES = 3
     # 系统自动上阵优先占用棋盘右侧 6、12、5、11 号位。百鬼结束后
     # 只需要依次回收这些候选格；若 5 号位由脚本亲自部署，则保留该格。
-    BOARD_RECALL_POSITIONS = (6, 12, 5, 11)
+    BOARD_RECALL_POSITIONS = (12, 6, 11, 5)
+    GOLDFISH_INSPECT_TIMEOUT = 1.0
     # c_card_1/2/3.png 专用于检测棋盘式神头顶的三种勾玉颜色。
     BOARD_OCCUPANCY_TEMPLATE_THRESHOLD = 0.68
     ROUND_CONFIRM_FRAMES = 2

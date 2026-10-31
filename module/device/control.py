@@ -11,6 +11,7 @@ from module.device.method.minitouch import Minitouch
 from module.device.method.adb import Adb
 from module.device.method.scrcpy import Scrcpy
 from module.device.method.windows import Window
+from module.device.press_and_drag import press_and_drag as _press_and_drag
 from module.logger import logger
 
 
@@ -198,6 +199,19 @@ class Control(Minitouch, Adb, Scrcpy, Window):
             blacklist_area=blacklist_area
         )
         self.swipe(p1, p2, duration=duration, control_name=name, distance_check=distance_check)
+
+    def press_and_drag(self, p1, p2, hold_duration=None, point_random=(-2, -2, 2, 2),
+                       swipe_duration=None, name='Press_and_Drag', retry=False) -> None:
+        """先按住再连续拖动；保留快速/重试时序，业务结果由任务确认。
+
+        hold_duration 和 swipe_duration 的单位为秒；retry 使用较慢的默认时序，
+        不会自动重放手势。minitouch、uiautomator2、scrcpy 支持完整触摸事件，
+        其他通道沿用 ADB swipe 兜底。
+        """
+        return _press_and_drag(
+            self, p1, p2, hold_duration=hold_duration, point_random=point_random,
+            swipe_duration=swipe_duration, name=name, retry=retry,
+        )
 
     def drag(self, p1, p2, segments=1, shake=(0, 15), point_random=(-10, -10, 10, 10), shake_random=(-5, -5, 5, 5),
              swipe_duration=0.25, shake_duration=0.1, name='DRAG'):

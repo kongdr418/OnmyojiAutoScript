@@ -12,14 +12,21 @@ class ChessConfig(ConfigBase):
 
     @model_validator(mode='before')
     @classmethod
-    def migrate_haiguo_to_custom(cls, value):
+    def migrate_haiguo_to_huangchuan(cls, value):
+        # 旧内置“海国”在公开版中已并入荒川；不要迁到 custom:haiguo，
+        # 那是被 .gitignore 忽略的用户本地文件，公开用户没有，会直接报错。
         if isinstance(value, dict):
             selected = getattr(value.get('lineup_bond'), 'value', value.get('lineup_bond'))
-            if selected in ('海国', 'haiguo') or value.get('custom_lineup') == 'builtin:haiguo':
+            if (selected in ('海国', 'haiguo', 'arakawa')
+                    or value.get('custom_lineup') in ('builtin:haiguo', 'custom:haiguo')):
                 value = dict(value)
                 value['lineup_bond'] = '自定义阵容'
-                value['custom_lineup'] = 'custom:haiguo'
+                value['custom_lineup'] = 'builtin:huangchuan'
         return value
+
+    sixrealms_selection_enabled: bool = Field(
+        title='选择六道', default=True,
+    )
 
     hyakki_draft_enabled: bool = Field(
         title='百鬼优先所需御魂', default=True,
@@ -37,8 +44,9 @@ class ChessConfig(ConfigBase):
     @classmethod
     def migrate_removed_lineup(cls, value):
         raw = getattr(value, 'value', value)
-        if raw in {'流火', '冥府', '大江山', '狐妖', '荒川',
-                   'liuhuo', 'mingfu', 'dajiangshan', 'huyao', 'arakawa'}:
+        # “荒川”现在是内置 huangchuan 的显示名，不能再回退成七角山。
+        if raw in {'流火', '冥府', '大江山', '狐妖',
+                   'liuhuo', 'mingfu', 'dajiangshan', 'huyao'}:
             return LineupBond.QIJIAOSHAN
         return value
 

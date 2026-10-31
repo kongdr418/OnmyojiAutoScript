@@ -1,5 +1,9 @@
 # 百鬼棋局开发说明
 
+> 2026-10-31 已同步 self 版实现：资源统一到 `resource/`，`c_frame.json` 使用
+> Frame 一次读取回目/阶段/时间，拖动改用 `Device.press_and_drag`。本文中
+> 旧 `shikigami/`、`soul/`、`runtime/press_and_drag.py` 的目录说明仅作历史参考。
+
 本文档以当前 `tasks/Chess` 实现为准，说明任务结构、各组件职责、运行流程以及新增阵容的方法。
 
 ## 1. 设计原则

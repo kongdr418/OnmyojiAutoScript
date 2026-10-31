@@ -20,6 +20,8 @@ class ChessObservation:
     shop_refresh_visible: bool | None = None
     game_rank: int | None = None
     grigri_visible: bool | None = None
+    player_name: str | None = None
+    current_health: int | None = None
 
 
 @dataclass
@@ -32,8 +34,8 @@ class ChessRoundProgress:
     unknown_since: float | None = None
     battle_economy_done: bool = False
     battle_hand_cleanup_done: bool = False
+    battle_hand_cleanup_status: str | None = None
     hyakki_round_seen: bool = False
-    hyakki_lineup_checked: bool = False
 
 
 @dataclass
@@ -43,6 +45,13 @@ class ChessGameState:
     game_number: int = 0
     observation: ChessObservation | None = None
     round: ChessRoundProgress | None = None
+    goldfish_non_positions: set[int] = field(default_factory=set)
+    preparation_lineup_checked_rounds: set[int] = field(default_factory=set)
+    economy_refresh_counts: dict[int, int] = field(default_factory=dict)
+    drag_pending: set[str] = field(default_factory=set)
+    sale_failure_round: int | None = None
+    sale_failures: dict[tuple, int] = field(default_factory=dict)
+    hand_cleanup_status: str = 'complete'
     economy_pending: bool = False
     economy_step_state: str = 'idle'
     economy_sequence_level: int | None = None
@@ -56,6 +65,10 @@ class ChessGameState:
     board_special_units: dict[str, Any] = field(default_factory=dict)
     arakawa_goldfish_current_position: int | None = None
     last_game_rank: int | None = None
+    player_name: str | None = None
+    first_hyakki_round: int | None = None
+    health_read_round: int | None = None
+    current_health: int | None = None
 
     def begin_game(self) -> None:
         next_number = self.game_number + 1

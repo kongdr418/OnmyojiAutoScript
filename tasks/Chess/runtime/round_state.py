@@ -370,59 +370,35 @@ class ChessRoundStateMixin:
         similarity = 1.0 - previous[-1] / max(len(expected), len(current))
         return similarity >= threshold, similarity, threshold
 
-    def _parse_round_number(self, ocr_rule) -> tuple[int | None, str]:
-        raw = self._normalize_ocr_text(ocr_rule.ocr(self.device.image))
-        matched = re.search(r'(\d+)(?=回)', raw)
-        if matched is None:
-            matched = re.search(r'\d+', raw)
-        if matched is None:
-            return None, raw
-        value = int(matched.group(0))
-        return (value if value > 0 else None), raw
-
-    def _read_primary_round_layout(self) -> tuple[str, bool]:
-        """以主 chess_mode 是否读到数字判断是否启用前三回合布局。"""
-        frame_id = getattr(self.device, 'image_frame_id', None)
-        cache = getattr(self, '_primary_round_layout_cache', None)
-        if frame_id is not None and cache is not None and cache[0] == frame_id:
+    def _read_detail_frame(self):
+        """同一截图只匹配、读取一次；未命中 badge 时不读取范围。"""
+        image = self.device.image
+        cache = getattr(self, '_detail_frame_cache', None)
+        if cache is not None and cache[0] is image:
             return cache[1]
-
-        raw = self._normalize_ocr_text(
-            self.O_CHESS_MODE.ocr(self.device.image)
-        )
-        if raw:
-            use_alternate_layout = bool(re.search(r'\d', raw))
-            self._last_alternate_round_layout = use_alternate_layout
+        captured_at = time.monotonic()
+        marker = getattr(self, 'I_STAGE_MONSTERNORMAL', self.I_STAGE_MONSTER)
+        monster = self.appear(marker)
+        if not monster and self._stage_marker_visible(self.I_STAGE_HYAKKI):
+            frame = self.F_CHESS_DETAIL_HYAKKI
         else:
-            # 动画帧偶发空识别时沿用上一帧，避免在两套区域间抖动。
-            use_alternate_layout = getattr(
-                self,
-                '_last_alternate_round_layout',
-                False,
-            )
-        result = raw, use_alternate_layout
-        if frame_id is not None:
-            self._primary_round_layout_cache = frame_id, result
+            frame = self.F_CHESS_DETAIL_MONSTER if monster else self.F_CHESS_DETAIL_NORMAL
+        values = frame.execute(self)
+        result = (monster, values)
+        self._detail_frame_cache = image, result, captured_at
         return result
 
     def _is_early_round_layout(self) -> bool:
-        """第二套 round/mode 布局即前三回合，此阶段禁止任何卖卡。"""
-        _, use_alternate_layout = self._read_primary_round_layout()
-        return use_alternate_layout
+        monster, values = self._read_detail_frame()
+        return monster and values is not None
 
     def _read_round_number(self) -> int | None:
-        """主 chess_mode 读到数字时使用前三回合专用 round_2。"""
-        mode_raw, use_alternate_layout = self._read_primary_round_layout()
-        ocr_rule = self.O_ROUND_2 if use_alternate_layout else self.O_ROUND
-        value, round_raw = self._parse_round_number(ocr_rule)
-        if use_alternate_layout:
-            logger.debug(
-                f'Chess mode primary is numeric [{mode_raw}]; '
-                f'use round_2 [{round_raw}] -> {value}'
-            )
-        return value
+        _, values = self._read_detail_frame()
+        raw = self._normalize_ocr_text(values[0]) if values else ''
+        matched = re.fullmatch(r'\d+', raw)
+        return int(raw) if matched and int(raw) > 0 else None
 
-    # 特殊回合标志优先于文字 OCR；后续回合标志在此登记阶段。
+    # 阶段文字未知时，使用金色激活图标兜底。
     SPECIAL_STAGE_RULES = (('I_STAGE_HYAKKI', '鬼'),)
     BOSS_STAGE_RULES = ('I_STAGE_ORCHI', 'I_STAGE_DEMON')
 
@@ -451,22 +427,17 @@ class ChessRoundStateMixin:
         return None
 
     def _read_chess_mode(self) -> str | None:
-        """优先识别特殊回合标志，其余阶段读取文字。"""
+        """先读 Frame 阶段文字；未知时用金色百鬼图标兜底。"""
+        _, values = self._read_detail_frame()
+        if values is None:
+            return self._special_chess_mode()
+        raw = self._normalize_ocr_text(values[1])
+        if raw in ('备', '战', '鬼', '待'):
+            return raw
         special_mode = self._special_chess_mode()
         if special_mode is not None:
             return special_mode
-        primary_raw, use_alternate_layout = self._read_primary_round_layout()
-        raw = (
-            self._normalize_ocr_text(
-                self.O_CHESS_MODE_2.ocr(self.device.image)
-            )
-            if use_alternate_layout
-            else primary_raw
-        )
-        if raw in ('备', '战'):
-            return raw
-        # “待”等过渡文字虽然不触发阶段动作，但必须保留为有文本状态，
-        # 不能和真正的 OCR 空结果混为一谈，否则会误累计结算空帧。
+        # 保留非空未知文字的等待语义，避免误累计结算空帧。
         return '待' if raw else None
 
     def _is_boss_challenge_round(self, round_no=None) -> bool:
@@ -479,18 +450,18 @@ class ChessRoundStateMixin:
             return True
         return getattr(self, '_boss_challenge_round_key', None) == key
 
-    def _board_set_has_shikigami(self, set_index: int) -> bool:
+    def _board_set_has_shikigami(self, set_index: int) -> bool | None:
         """按当前普通或首领棋盘的 Frame 判断占位。"""
         return self._board_set_has_shikigami_visual(set_index)
 
-    def _board_set_has_shikigami_visual(self, set_index: int) -> bool:
+    def _board_set_has_shikigami_visual(self, set_index: int) -> bool | None:
         """按表情开关定位的 Frame 判断指定站位是否有人。"""
 
         index = int(set_index)
         if not 1 <= index <= 12:
             raise ValueError(f'Chess board set position is not configured: {set_index}')
         slots = self._board_frame_scan()
-        return bool(slots and slots[index - 1]['occupied'])
+        return bool(slots[index - 1]['occupied']) if slots else None
 
     def _board_set_is_empty(self, set_index: int) -> bool:
         """普通或首领 Frame 确认原站位为空，锚点缺失不算下阵成功。"""
@@ -500,11 +471,8 @@ class ChessRoundStateMixin:
         slots = self._board_frame_scan()
         return bool(slots and not slots[index - 1]['occupied'])
 
-    def _reconcile_lineup_after_hyakki_round(
-        self,
-        next_round_no: int | None = None,
-    ) -> list[str]:
-        """百鬼夜行结束后移除已不在原站位上的式神上阵记录。"""
+    def _reconcile_preparation_lineup(self, slots) -> list[str]:
+        """复用关店后已确认有人的棋盘结果，清理离场式神记录。"""
         deployed_names = set(
             getattr(self, '_board_lineup_names', set())
         )
@@ -522,14 +490,14 @@ class ChessRoundStateMixin:
             )
             if set_index is None:
                 continue
-            if self._board_set_has_shikigami_visual(int(set_index)):
+            if slots[int(set_index) - 1]['occupied']:
                 continue
             deployed_names.discard(name)
             actual_positions.pop(name, None)
             player_positions.discard(int(set_index))
             removed.append(name)
             logger.warning(
-                'Chess shikigami missing after Hyakki round; '
+                'Chess preparation shikigami missing; '
                 f'mark as undeployed: name={name}, set={set_index}'
             )
 
@@ -537,17 +505,20 @@ class ChessRoundStateMixin:
         self._board_actual_positions = actual_positions
         self._player_deployed_positions = player_positions
         logger.info(
-            'Chess post-Hyakki lineup check: '
+            'Chess preparation lineup check: '
             f'removed={removed}, deployed={sorted(deployed_names)}'
         )
         return removed
 
-    def _read_board_position_count(self) -> dict:
+    def _read_board_position_count(self) -> dict | None:
         """统计 12 个站位勾玉区域中检测到图标的位置数量。"""
+        slots = self._board_frame_scan()
+        if not slots:
+            return None
         occupied_positions = [
             set_index
-            for set_index in range(1, 13)
-            if self._board_set_has_shikigami(set_index)
+            for set_index, slot in enumerate(slots, 1)
+            if slot['occupied']
         ]
         count = len(occupied_positions)
         raw = ','.join(str(index) for index in occupied_positions)
@@ -639,27 +610,10 @@ class ChessRoundStateMixin:
         return None
 
     def _read_remaining_time(self) -> int | None:
-        """读取剩余时间；第二套布局复用第一套阶段框中的数字。"""
-        primary_raw, use_alternate_layout = (
-            self._read_primary_round_layout()
-        )
-        raw = (
-            primary_raw
-            if use_alternate_layout
-            else self._normalize_ocr_text(
-                self.O_NOW_TIME.ocr(self.device.image)
-            )
-        )
-        matched = re.search(r'\d+', raw)
-        if matched is None:
-            logger.warning(f'Chess remaining time OCR invalid: [{raw}]')
-            return None
-        remaining = int(matched.group(0))
-        logger.debug(
-            f'Chess remaining time: [{raw}] -> {remaining}, '
-            f'alternate_layout={use_alternate_layout}'
-        )
-        return remaining
+        """读取当前 Frame 的第三个范围，复用当前截图。"""
+        _, values = self._read_detail_frame()
+        raw = self._normalize_ocr_text(values[2]) if values else ''
+        return int(raw) if re.fullmatch(r'\d+', raw) else None
 
     def _read_game_rank(self) -> tuple[int | None, str]:
         """读取结算页“第几名”，兼容阿拉伯数字和中文数字。"""
