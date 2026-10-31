@@ -196,5 +196,14 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "等待匹配中"
+  },
+  {
+    "itemName": "all",
+    "imageName": "draft_duel_all.png",
+    "roiFront": "33,642,70,45",
+    "roiBack": "33,642,70,45",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
   }
 ]

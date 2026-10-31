@@ -563,11 +563,9 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         self._lock_missing_frames = 0
 
     def _prep_visible(self, full_fallback: bool = True) -> bool:
-        label, _ = self._prep_button_state(full_fallback)
-        if label is None:
-            return False
-        # 结算页也有“确定”，必须同时看到自动上阵/取消自动按钮才算上阵页
-        return (self.appear(self.I_ENABEL_AUTO_1)
+        # 用「全部」/自动上阵图片直接判断上阵页
+        return (self.appear(self.I_ALL)
+                or self.appear(self.I_ENABEL_AUTO_1)
                 or self.appear(self.I_CANCEL_ANTO_1))
 
     def _wait_field_locked(self, timeout: float = 2.5) -> str:
@@ -842,11 +840,10 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.device.sleep(1.0)
             return True
         if self.appear(self.I_ENABEL_AUTO_1):
-            # 按钮内随机点，避免固定点落在文字/死区上
+            # 识别到自动上阵按钮就点它，坐标由图片规则自己取
             self.click(self.I_ENABEL_AUTO_1, interval=1)
-            self.device.sleep(0.8)
-            self._click_rule(self.C_FIELD_CONFIRM, 'dd_field_confirm')
             self.device.sleep(1.0)
+            self._click_rule(self.C_FIELD_CONFIRM, 'dd_field_confirm')
             return True
         return False
 

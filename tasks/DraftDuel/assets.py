@@ -173,5 +173,7 @@ class DraftDuelAssets:
 	I_LOCKED = RuleImage(roi_front=(1091,546,152,78), roi_back=(1091,546,152,78), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_locked.png")
 	# 等待匹配中 
 	I_WAIT_FOR_MATCH = RuleImage(roi_front=(75,12,152,78), roi_back=(38,0,230,124), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_wait_for_match.png")
+	#  
+	I_ALL = RuleImage(roi_front=(33,642,70,45), roi_back=(33,642,70,45), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_all.png")
 
 
