@@ -529,7 +529,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     def _start_fielding(self) -> bool:
         """选后大厅点「战」进上阵界面，然后上 3 张。"""
         self.screenshot()
-        if self.appear(self.I_START):
+        if self._configured_role() == 'captain' and self.appear(self.I_START):
             self.appear_then_click(self.I_START, interval=1)
         else:
             logger.info('DraftDuel: no start button, wait for leader/prep')
@@ -556,7 +556,11 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
 
     def _prep_visible(self, full_fallback: bool = True) -> bool:
         label, _ = self._prep_button_state(full_fallback)
-        return label is not None
+        if label is None:
+            return False
+        # 结算页也有“确定”，必须同时看到自动上阵/取消自动按钮才算上阵页
+        return (self.appear(self.I_ENABEL_AUTO_1)
+                or self.appear(self.I_CANCEL_ANTO_1))
 
     def _wait_field_locked(self, timeout: float = 2.5) -> str:
         timer = Timer(timeout).start()
@@ -813,6 +817,9 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         else:
             self._run_losses = getattr(self, '_run_losses', 0) + 1
         logger.info(f'DraftDuel: result {self._run_wins}W{self._run_losses}L')
+        if self._run_finished():
+            # 6 胜或 2 负：先标记本局结束，避免再去点“战”开下一场
+            self._match_ended = True
 
     def _handle_settlement_pages(self) -> bool:
         """胜利/失败/共用结算/奖励页逐页点 continue。
@@ -881,6 +888,12 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 self.device.sleep(0.5)
                 continue
 
+            if self._handle_settlement_pages():
+                if self._run_finished() and (getattr(self, '_reward_seen', False)
+                                             or getattr(self, '_match_ended', False)):
+                    return True
+                continue
+
             if self._prep_visible(full_fallback=False):
                 self._result_counted = False
                 if not getattr(self, '_battle_fielded', False):
@@ -897,12 +910,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 continue
             self._battle_fielded = False
 
-            if self._handle_settlement_pages():
-                if self._run_finished() and (getattr(self, '_reward_seen', False)
-                                             or getattr(self, '_match_ended', False)):
-                    return True
-                continue
-            if self.appear(self.I_START):
+            if self._configured_role() == 'captain' and self.appear(self.I_START):
                 self._result_counted = False
                 self._battle_fielded = False
                 self.appear_then_click(self.I_START, interval=1)
