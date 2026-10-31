@@ -172,6 +172,10 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         completed = 0
         while time.monotonic() < deadline:
             self._reset_match_state()
+            # 上一局结束的大厅面板，队员也点一次继续
+            for _ in range(3):
+                if not self._clear_final_panel():
+                    break
             if completed > 0:
                 if not self._wait_accept_invite(con, timeout=120):
                     logger.info('DraftDuel: leader stopped, member exits')
@@ -839,6 +843,16 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         if self.appear(self.I_REWARD):
             self._reward_seen = True
             self._click_rule(self.C_CONTINUE, 'dd_continue')
+            return True
+        return False
+
+    def _clear_final_panel(self) -> bool:
+        """大厅 1 番胜/两个 X 面板：点一次继续。"""
+        self.screenshot()
+        if self.appear(self.I_SETTLEMENT_0_4):
+            logger.info('DraftDuel: final lobby panel, click continue')
+            self._click_rule(self.C_CONTINUE, 'dd_continue')
+            self.device.sleep(1.0)
             return True
         return False
 
