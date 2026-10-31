@@ -622,7 +622,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             drag_to_field(self.device, (x1, y1), (x2, y2),
                           name=f'dd_field_r{self._field_round + 1}_{drag_attempt}')
             self.device.sleep(4)
-            self._click_rule(self.C_FIELD_CONFIRM, 'dd_field_confirm')
+            self.click(self.C_FIELD_CONFIRM, interval=1)
             outcome = self._wait_field_locked()
             if outcome in ('locked', 'battle'):
                 self._note_round_closed(target, f'confirm{drag_attempt}')
