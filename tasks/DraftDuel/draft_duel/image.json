@@ -50,7 +50,7 @@
     "roiFront": "598,361,106,43",
     "roiBack": "598,361,106,43",
     "method": "Template matching",
-    "threshold": 0.8,
+    "threshold": 0.95,
     "description": "0至4番胜的结算页面"
   },
   {

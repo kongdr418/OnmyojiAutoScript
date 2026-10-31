@@ -833,10 +833,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.click(self.C_CONTINUE, interval=1)
             return True
         if self.appear(self.I_SETTLEMENT_0_4):
-            # 至少打过两场才可能是 0-4 二败出局；否则是别的大厅/上阵页误匹配
-            if getattr(self, '_battle_count', 0) < 2:
-                logger.warning('DraftDuel: 0-4 image matched before 2 battles, ignore')
-                return False
+            # 两个红 X 的结算页：已经二败出局；阈值 0.95 避免大厅 0-4 番胜误匹配
             if getattr(self, '_run_losses', 0) < 2:
                 self._run_losses = 2
             self._match_ended = True

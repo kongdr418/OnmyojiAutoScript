@@ -138,7 +138,7 @@ class DraftDuelAssets:
 	# 成员等待 
 	I_MEMBERS_AWAIT = RuleImage(roi_front=(1145,603,106,43), roi_back=(1145,603,106,43), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_members_await.png")
 	# 0至4番胜的结算页面 
-	I_SETTLEMENT_0_4 = RuleImage(roi_front=(598,361,106,43), roi_back=(598,361,106,43), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_0-4_settlement_page.png")
+	I_SETTLEMENT_0_4 = RuleImage(roi_front=(598,361,106,43), roi_back=(598,361,106,43), threshold=0.95, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_0-4_settlement_page.png")
 	# 选择式神页面 
 	I_SELECTION_PAGE = RuleImage(roi_front=(378,13,49,86), roi_back=(378,13,49,86), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_selection_page.png")
 	# 选完式神的协同大厅页 
