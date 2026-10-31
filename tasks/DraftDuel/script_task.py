@@ -308,16 +308,12 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         # 一局结束的奖励/番胜/共用结算面板可能盖住「新局」，先按图片逐页点掉
         for _ in range(8):
             self.screenshot()
-            if self.appear(self.I_NEW_MATCH):
-                break
+            # 先按图片清结算/奖励弹窗，否则会盖住「新局」和加号
             if self._handle_settlement_pages():
                 self.device.sleep(1.0)
                 continue
-            text = self._screen_text()
-            if '番胜' in text or '点击屏幕继续' in text:
-                self._dismiss_settlement()
-                self.device.sleep(1.0)
-                continue
+            if self.appear(self.I_NEW_MATCH):
+                break
             break
 
         if self.appear(self.I_INVITATION):
