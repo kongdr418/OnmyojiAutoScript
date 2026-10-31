@@ -63,35 +63,35 @@ class DraftDuelAssets:
 
 	# Swipe Rule Assets
 	# 第一轮上第一张卡 
-	S_FIELD_DRAG_1_1 = RuleSwipe(roi_front=(296,523,47,38), roi_back=(289,282,80,60), mode="default", name="field_drag_1_1")
+	S_FIELD_DRAG_1_1 = RuleSwipe(roi_front=(296,523,47,38), roi_back=(284,241,80,60), mode="default", name="field_drag_1_1")
 	# 第二轮上第一张卡 
-	S_FIELD_DRAG_1_2 = RuleSwipe(roi_front=(296,523,47,38), roi_back=(289,282,80,60), mode="default", name="field_drag_1_2")
+	S_FIELD_DRAG_1_2 = RuleSwipe(roi_front=(296,523,47,38), roi_back=(284,241,80,60), mode="default", name="field_drag_1_2")
 	# 第三轮上第一张卡 
-	S_FIELD_DRAG_1_3 = RuleSwipe(roi_front=(296,523,47,38), roi_back=(289,282,80,60), mode="default", name="field_drag_1_3")
+	S_FIELD_DRAG_1_3 = RuleSwipe(roi_front=(296,523,47,38), roi_back=(284,241,80,60), mode="default", name="field_drag_1_3")
 	# 第一轮上第二张 
-	S_FIELD_DRAG_2_1 = RuleSwipe(roi_front=(414,528,43,39), roi_back=(401,287,80,60), mode="default", name="field_drag_2_1")
+	S_FIELD_DRAG_2_1 = RuleSwipe(roi_front=(414,528,43,39), roi_back=(401,241,80,60), mode="default", name="field_drag_2_1")
 	# 第二轮上第二张 
-	S_FIELD_DRAG_2_2 = RuleSwipe(roi_front=(414,528,43,39), roi_back=(401,287,80,60), mode="default", name="field_drag_2_2")
+	S_FIELD_DRAG_2_2 = RuleSwipe(roi_front=(414,528,43,39), roi_back=(401,241,80,60), mode="default", name="field_drag_2_2")
 	# 第三轮上第二张 
-	S_FIELD_DRAG_2_3 = RuleSwipe(roi_front=(414,528,43,39), roi_back=(401,287,80,60), mode="default", name="field_drag_2_3")
+	S_FIELD_DRAG_2_3 = RuleSwipe(roi_front=(414,528,43,39), roi_back=(401,241,80,60), mode="default", name="field_drag_2_3")
 	# 第一轮上第三张 
-	S_FIELD_DRAG_3_1 = RuleSwipe(roi_front=(525,531,43,39), roi_back=(506,280,80,60), mode="default", name="field_drag_3_1")
+	S_FIELD_DRAG_3_1 = RuleSwipe(roi_front=(525,531,43,39), roi_back=(506,241,80,60), mode="default", name="field_drag_3_1")
 	# 第二轮上第三张 
-	S_FIELD_DRAG_3_2 = RuleSwipe(roi_front=(525,531,43,39), roi_back=(506,280,80,60), mode="default", name="field_drag_3_2")
+	S_FIELD_DRAG_3_2 = RuleSwipe(roi_front=(525,531,43,39), roi_back=(506,241,80,60), mode="default", name="field_drag_3_2")
 	# 第三轮上第三张 
-	S_FIELD_DRAG_3_3 = RuleSwipe(roi_front=(525,531,43,39), roi_back=(506,280,80,60), mode="default", name="field_drag_3_3")
+	S_FIELD_DRAG_3_3 = RuleSwipe(roi_front=(525,531,43,39), roi_back=(506,241,80,60), mode="default", name="field_drag_3_3")
 	# 第一轮上第四张 
-	S_FIELD_DRAG_4_1 = RuleSwipe(roi_front=(641,530,43,39), roi_back=(625,286,80,60), mode="default", name="field_drag_4_1")
+	S_FIELD_DRAG_4_1 = RuleSwipe(roi_front=(641,530,43,39), roi_back=(625,241,80,60), mode="default", name="field_drag_4_1")
 	# 第二轮上第四张 
-	S_FIELD_DRAG_4_2 = RuleSwipe(roi_front=(641,530,43,39), roi_back=(625,286,80,60), mode="default", name="field_drag_4_2")
+	S_FIELD_DRAG_4_2 = RuleSwipe(roi_front=(641,530,43,39), roi_back=(625,241,80,60), mode="default", name="field_drag_4_2")
 	# 第三轮上第四张 
-	S_FIELD_DRAG_4_3 = RuleSwipe(roi_front=(641,530,43,39), roi_back=(625,286,80,60), mode="default", name="field_drag_4_3")
+	S_FIELD_DRAG_4_3 = RuleSwipe(roi_front=(641,530,43,39), roi_back=(625,241,80,60), mode="default", name="field_drag_4_3")
 	# 第一轮上第五张 
-	S_FIELD_DRAG_5_1 = RuleSwipe(roi_front=(753,535,43,39), roi_back=(734,285,80,60), mode="default", name="field_drag_5_1")
+	S_FIELD_DRAG_5_1 = RuleSwipe(roi_front=(753,535,43,39), roi_back=(734,241,80,60), mode="default", name="field_drag_5_1")
 	# 第二轮上第五张 
-	S_FIELD_DRAG_5_2 = RuleSwipe(roi_front=(753,535,43,39), roi_back=(734,285,80,60), mode="default", name="field_drag_5_2")
+	S_FIELD_DRAG_5_2 = RuleSwipe(roi_front=(753,535,43,39), roi_back=(734,241,80,60), mode="default", name="field_drag_5_2")
 	# 第三轮上第五张 
-	S_FIELD_DRAG_5_3 = RuleSwipe(roi_front=(753,535,43,39), roi_back=(734,285,80,60), mode="default", name="field_drag_5_3")
+	S_FIELD_DRAG_5_3 = RuleSwipe(roi_front=(753,535,43,39), roi_back=(734,241,80,60), mode="default", name="field_drag_5_3")
 
 
 	# Click Rule Assets
@@ -124,6 +124,8 @@ class DraftDuelAssets:
 	# Image Rule Assets
 	# 队友推荐式神 
 	I_RECOMMEND_ROLE = RuleImage(roi_front=(590,492,116,39), roi_back=(131,483,1048,54), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_recommend_role.png")
+	# 当前上卡式神标记 
+	I_MARK = RuleImage(roi_front=(300,510,34,30), roi_back=(260,483,592,77), threshold=0.6, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_mark.png")
 
 
 	# Image Rule Assets
@@ -165,5 +167,9 @@ class DraftDuelAssets:
 	I_CANCEL_AUTO_2 = RuleImage(roi_front=(995,617,72,71), roi_back=(995,617,72,71), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_cancel_auto_2.png")
 	# 判断战斗页面 
 	I_BATTLE_PAGE = RuleImage(roi_front=(35,366,45,46), roi_back=(35,366,45,46), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_battle_page.png")
+	# 确认按钮 
+	I_CONFIRM = RuleImage(roi_front=(1091,546,143,76), roi_back=(1091,546,143,76), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_confirm.png")
+	# 已锁定 
+	I_LOCKED = RuleImage(roi_front=(1091,546,152,78), roi_back=(1091,546,152,78), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_locked.png")
 
 

@@ -169,5 +169,23 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "判断战斗页面"
+  },
+  {
+    "itemName": "confirm",
+    "imageName": "draft_duel_confirm.png",
+    "roiFront": "1091,546,143,76",
+    "roiBack": "1091,546,143,76",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "确认按钮"
+  },
+  {
+    "itemName": "locked",
+    "imageName": "draft_duel_locked.png",
+    "roiFront": "1091,546,152,78",
+    "roiBack": "1091,546,152,78",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "已锁定"
   }
 ]

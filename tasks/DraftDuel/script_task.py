@@ -492,35 +492,13 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             self.click(self.C_DETAIL_CLOSE, interval=0.2)
 
     def _prep_button_state(self, full_fallback: bool = True):
-        """上阵界面右下角：确定/已锁定 + 自动上阵状态。"""
-        label = None
+        """上阵界面右下角：确定/已锁定 + 自动上阵状态，全部用图片判断。"""
         auto_on = self.appear(self.I_CANCEL_ANTO_1) or self.appear(self.I_CANCEL_AUTO_2)
-        try:
-            results = self.O_BATTLE_CONFIRM.detect_and_ocr(self.device.image)
-        except Exception:
-            results = []
-        for item in results:
-            text = str(item.ocr_text or '').replace(' ', '')
-            if '锁' in text:
-                label = 'locked'
-            elif '确' in text:
-                label = 'open'
-        if label is None and full_fallback:
-            height, width = self.device.image.shape[:2]
-            try:
-                results = self.O_SCREEN.detect_and_ocr(self.device.image)
-            except Exception:
-                results = []
-            for item in results:
-                text = str(item.ocr_text or '').replace(' ', '')
-                x, y = item.box.mean(axis=0)
-                if x < width * 0.80 or y < height * 0.62:
-                    continue
-                if '锁' in text:
-                    label = 'locked'
-                elif '确' in text:
-                    label = 'open'
-        return label, auto_on
+        if self.appear(self.I_LOCKED):
+            return 'locked', auto_on
+        if self.appear(self.I_CONFIRM):
+            return 'open', auto_on
+        return None, auto_on
 
     def _start_fielding(self) -> bool:
         """选后大厅点「战」进上阵界面，然后上 3 张。"""
@@ -586,7 +564,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
 
     def _field_round_once(self, target, names) -> bool:
         """一轮：拖目标卡 -> 点确定 -> 等已锁定。"""
-        for drag_attempt in (1, 2):
+        for drag_attempt in (1, 2, 3):
             # OCR 偶发读空：多给几帧，不要一次读空就判失败
             label = None
             for _ in range(3):
@@ -622,6 +600,12 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             drag_to_field(self.device, (x1, y1), (x2, y2),
                           name=f'dd_field_r{self._field_round + 1}_{drag_attempt}')
             self.device.sleep(4)
+            self.screenshot()
+            if not self.appear(self.I_MARK):
+                logger.warning(
+                    f'DraftDuel: {target} card not marked after drag, retry'
+                )
+                continue
             self.click(self.C_FIELD_CONFIRM, interval=1)
             outcome = self._wait_field_locked()
             if outcome in ('locked', 'battle'):

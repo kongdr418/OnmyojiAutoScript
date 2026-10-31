@@ -7,5 +7,14 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "队友推荐式神"
+  },
+  {
+    "itemName": "mark",
+    "imageName": "draft_duel_mark.png",
+    "roiFront": "300,510,34,30",
+    "roiBack": "260,483,592,77",
+    "method": "Template matching",
+    "threshold": 0.6,
+    "description": "当前上卡式神标记"
   }
 ]

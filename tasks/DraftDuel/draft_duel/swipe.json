@@ -2,105 +2,105 @@
   {
     "itemName": "field_drag_1_1",
     "roiFront": "296,523,47,38",
-    "roiBack": "289,282,80,60",
+    "roiBack": "284,241,80,60",
     "mode": "default",
     "description": "第一轮上第一张卡"
   },
   {
     "itemName": "field_drag_1_2",
     "roiFront": "296,523,47,38",
-    "roiBack": "289,282,80,60",
+    "roiBack": "284,241,80,60",
     "mode": "default",
     "description": "第二轮上第一张卡"
   },
   {
     "itemName": "field_drag_1_3",
     "roiFront": "296,523,47,38",
-    "roiBack": "289,282,80,60",
+    "roiBack": "284,241,80,60",
     "mode": "default",
     "description": "第三轮上第一张卡"
   },
   {
     "itemName": "field_drag_2_1",
     "roiFront": "414,528,43,39",
-    "roiBack": "401,287,80,60",
+    "roiBack": "401,241,80,60",
     "mode": "default",
     "description": "第一轮上第二张"
   },
   {
     "itemName": "field_drag_2_2",
     "roiFront": "414,528,43,39",
-    "roiBack": "401,287,80,60",
+    "roiBack": "401,241,80,60",
     "mode": "default",
     "description": "第二轮上第二张"
   },
   {
     "itemName": "field_drag_2_3",
     "roiFront": "414,528,43,39",
-    "roiBack": "401,287,80,60",
+    "roiBack": "401,241,80,60",
     "mode": "default",
     "description": "第三轮上第二张"
   },
   {
     "itemName": "field_drag_3_1",
     "roiFront": "525,531,43,39",
-    "roiBack": "506,280,80,60",
+    "roiBack": "506,241,80,60",
     "mode": "default",
     "description": "第一轮上第三张"
   },
   {
     "itemName": "field_drag_3_2",
     "roiFront": "525,531,43,39",
-    "roiBack": "506,280,80,60",
+    "roiBack": "506,241,80,60",
     "mode": "default",
     "description": "第二轮上第三张"
   },
   {
     "itemName": "field_drag_3_3",
     "roiFront": "525,531,43,39",
-    "roiBack": "506,280,80,60",
+    "roiBack": "506,241,80,60",
     "mode": "default",
     "description": "第三轮上第三张"
   },
   {
     "itemName": "field_drag_4_1",
     "roiFront": "641,530,43,39",
-    "roiBack": "625,286,80,60",
+    "roiBack": "625,241,80,60",
     "mode": "default",
     "description": "第一轮上第四张"
   },
   {
     "itemName": "field_drag_4_2",
     "roiFront": "641,530,43,39",
-    "roiBack": "625,286,80,60",
+    "roiBack": "625,241,80,60",
     "mode": "default",
     "description": "第二轮上第四张"
   },
   {
     "itemName": "field_drag_4_3",
     "roiFront": "641,530,43,39",
-    "roiBack": "625,286,80,60",
+    "roiBack": "625,241,80,60",
     "mode": "default",
     "description": "第三轮上第四张"
   },
   {
     "itemName": "field_drag_5_1",
     "roiFront": "753,535,43,39",
-    "roiBack": "734,285,80,60",
+    "roiBack": "734,241,80,60",
     "mode": "default",
     "description": "第一轮上第五张"
   },
   {
     "itemName": "field_drag_5_2",
     "roiFront": "753,535,43,39",
-    "roiBack": "734,285,80,60",
+    "roiBack": "734,241,80,60",
     "mode": "default",
     "description": "第二轮上第五张"
   },
   {
     "itemName": "field_drag_5_3",
     "roiFront": "753,535,43,39",
-    "roiBack": "734,285,80,60",
+    "roiBack": "734,241,80,60",
     "mode": "default",
     "description": "第三轮上第五张"
   }
