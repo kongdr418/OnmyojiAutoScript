@@ -31,9 +31,9 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     TOTAL_PICKS = 5
     FIELD_ROUNDS = 3
     AUTO_FORM_AFTER_FIRST = True
-    # 队友推荐在倒计时 30s~15s 之间检查
+    # 队友推荐在倒计时 30s~8s 之间检查；到 8s 还没推荐就走策略
     RECOMMEND_HIGH = 30
-    RECOMMEND_LOW = 15
+    RECOMMEND_LOW = 8
     # 懒加载的 v6-small 识别模型；False 表示加载失败，回退共享 OCR
     _v6_ocr_model = None
 
@@ -621,7 +621,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             )
             drag_to_field(self.device, (x1, y1), (x2, y2),
                           name=f'dd_field_r{self._field_round + 1}_{drag_attempt}')
-            self.device.sleep(1.6)
+            self.device.sleep(4)
             self._click_rule(self.C_FIELD_CONFIRM, 'dd_field_confirm')
             outcome = self._wait_field_locked()
             if outcome in ('locked', 'battle'):
