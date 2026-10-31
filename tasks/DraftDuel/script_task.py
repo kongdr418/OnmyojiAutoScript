@@ -138,6 +138,10 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                     break
             self._reset_match_state()
             self._duel_share_reset()
+            if not self._ensure_draft_lobby():
+                logger.warning('DraftDuel: back to draft lobby failed')
+                self.set_next_run(task='DraftDuel', success=False, finish=True)
+                raise TaskEnd('DraftDuel')
             if not self._start_round():
                 logger.warning('DraftDuel: start round failed')
                 self.set_next_run(task='DraftDuel', success=False, finish=True)
@@ -168,6 +172,10 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         completed = 0
         while time.monotonic() < deadline:
             self._reset_match_state()
+            if completed > 0:
+                if not self._wait_accept_invite(con, timeout=120):
+                    logger.info('DraftDuel: leader stopped, member exits')
+                    break
             if not self._wait_member_selection(con):
                 if completed > 0:
                     logger.info('DraftDuel: leader stopped, member exits')
@@ -277,19 +285,47 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         logger.info('DraftDuel: teammate joined')
         return True
 
+    def _ensure_draft_lobby(self) -> bool:
+        """一局结束后可能已经回主界面：先导航回协同大厅。"""
+        self.screenshot()
+        if (self.appear(self.I_NEW_MATCH)
+                or self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL)
+                or self.appear(self.I_START)):
+            return True
+        logger.info('DraftDuel: not in draft lobby, goto draft duel page')
+        try:
+            self.goto_page(page_draft_duel)
+        except Exception as e:
+            logger.warning(f'DraftDuel: goto draft lobby failed: {e}')
+            return False
+        self.screenshot()
+        return (self.appear(self.I_NEW_MATCH)
+                or self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL)
+                or self.appear(self.I_START))
+
     def _start_round(self) -> bool:
         """点「战」：新局先进选式神，已选好阵容则不再选。"""
-        # 最终番胜面板可能不在主大厅：先把「点击屏幕继续/确定」点掉再找新局
-        for _ in range(5):
+        # 一局结束的奖励/番胜/共用结算面板可能盖住「新局」，先按图片逐页点掉
+        for _ in range(8):
             self.screenshot()
             if self.appear(self.I_NEW_MATCH):
                 break
+            if self._handle_settlement_pages():
+                self.device.sleep(1.0)
+                continue
             text = self._screen_text()
             if '番胜' in text or '点击屏幕继续' in text:
                 self._dismiss_settlement()
                 self.device.sleep(1.0)
                 continue
             break
+
+        if self.appear(self.I_INVITATION):
+            logger.info('DraftDuel: re-invite teammate for next match')
+            if not self._invite_teammate():
+                logger.warning('DraftDuel: re-invite teammate failed')
+                return False
+            self.wait_until_appear(self.I_NEW_MATCH, wait_time=10)
 
         if self.appear(self.I_NEW_MATCH):
             logger.info('DraftDuel: new match, enter selection')
@@ -959,9 +995,11 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             return 0
         return min(30, int(digits[:2]))
 
-    def _wait_accept_invite(self, con: DraftDuelConfig) -> bool:
-        # 队员等邀请的时间用 limit_time，避免队长还没准备好就退出
-        wait_seconds = con.limit_time.hour * 3600 + con.limit_time.minute * 60 + con.limit_time.second
+    def _wait_accept_invite(self, con: DraftDuelConfig, timeout: float | None = None) -> bool:
+        # 队员等邀请默认用 limit_time；第二局起只等 120 秒，队长不打就退出
+        wait_seconds = (timeout if timeout is not None
+                        else con.limit_time.hour * 3600 + con.limit_time.minute * 60
+                        + con.limit_time.second)
         timer = Timer(wait_seconds).start()
         while True:
             self.screenshot()
