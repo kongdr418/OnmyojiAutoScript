@@ -626,7 +626,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             drag_to_field(self.device, (x1, y1), (x2, y2),
                           name=f'dd_field_r{self._field_round + 1}_{drag_attempt}')
             self.device.sleep(1.6)
-            self.click(self.C_FIELD_CONFIRM, interval=1)
+            self._click_rule(self.C_FIELD_CONFIRM, 'dd_field_confirm')
             outcome = self._wait_field_locked()
             if outcome in ('locked', 'battle'):
                 self._note_round_closed(target, f'confirm{drag_attempt}')
@@ -793,13 +793,13 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         """
         self.screenshot()
         if self.appear(self.I_CANCEL_ANTO_1):
-            self.click(self.C_FIELD_CONFIRM, interval=1)
+            self._click_rule(self.C_FIELD_CONFIRM, 'dd_field_confirm')
             self.device.sleep(1.0)
             return True
         if self.appear(self.I_ENABEL_AUTO_1):
-            self.click(self.I_ENABEL_AUTO_1, interval=1)
+            self._click_rule(self.I_ENABEL_AUTO_1, 'dd_auto_form')
             self.device.sleep(0.8)
-            self.click(self.C_FIELD_CONFIRM, interval=1)
+            self._click_rule(self.C_FIELD_CONFIRM, 'dd_field_confirm')
             self.device.sleep(1.0)
             return True
         return False
@@ -821,6 +821,12 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             # 6 胜或 2 负：先标记本局结束，避免再去点“战”开下一场
             self._match_ended = True
 
+    def _click_rule(self, rule, prefix: str) -> bool:
+        """按规则中心点击，但每次用唯一 control_name，避免连点保护。"""
+        x, y, w, h = rule.roi_front
+        name = f'{prefix}_{int(time.monotonic() * 1000) % 1000000}'
+        return self.device.click(x + w // 2, y + h // 2, control_name=name)
+
     def _handle_settlement_pages(self) -> bool:
         """胜利/失败/共用结算/奖励页逐页点 continue。
 
@@ -829,15 +835,15 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         """
         if self.appear(self.I_WIN_1):
             self._count_result('win')
-            self.click(self.C_CONTINUE, interval=1)
+            self._click_rule(self.C_CONTINUE, 'dd_continue')
             return True
         if self.appear(self.I_WIN_2):
             self._count_result('win')
-            self.click(self.C_CONTINUE, interval=1)
+            self._click_rule(self.C_CONTINUE, 'dd_continue')
             return True
         if self.appear(self.I_LOSS_2):
             self._count_result('loss')
-            self.click(self.C_CONTINUE, interval=1)
+            self._click_rule(self.C_CONTINUE, 'dd_continue')
             return True
         if self.appear(self.I_SETTLEMENT_0_4):
             # 两个红 X 的结算页：已经二败出局；阈值 0.95 避免大厅 0-4 番胜误匹配
@@ -845,14 +851,14 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 self._run_losses = 2
             self._match_ended = True
             logger.info(f'DraftDuel: 0-4 settlement -> 2 losses, {self._run_wins}W2L')
-            self.click(self.C_CONTINUE, interval=1)
+            self._click_rule(self.C_CONTINUE, 'dd_continue')
             return True
         if self.appear(self.I_SGARED_ENDING_01):
-            self.click(self.C_CONTINUE, interval=1)
+            self._click_rule(self.C_CONTINUE, 'dd_continue')
             return True
         if self.appear(self.I_REWARD):
             self._reward_seen = True
-            self.click(self.C_CONTINUE, interval=1)
+            self._click_rule(self.C_CONTINUE, 'dd_continue')
             return True
         return False
 
@@ -868,9 +874,10 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             text = str(item.ocr_text or '').strip()
             if text in ('确定', '確定', '点击屏幕继续', '點擊屏幕繼續'):
                 x, y = item.box.mean(axis=0)
-                self.device.click(int(x), int(y), control_name='dd_settle_ok')
+                self.device.click(int(x), int(y),
+                                  control_name=f'dd_settle_ok_{int(time.monotonic()*1000)%100000}')
                 return True
-        self.click(self.C_SETTLEMENT_FALLBACK, interval=1)
+        self._click_rule(self.C_SETTLEMENT_FALLBACK, 'dd_settle_fallback')
         return False
 
     def _wait_battle_return(self, timeout: float = 3600) -> bool:
