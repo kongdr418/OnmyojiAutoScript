@@ -2,8 +2,8 @@
   {
     "itemName": "invitation",
     "imageName": "draft_duel_invitation.png",
-    "roiFront": "978,328,72,61",
-    "roiBack": "978,328,72,61",
+    "roiFront": "1050,152,165,109",
+    "roiBack": "955,18,300,261",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "邀请好友"
@@ -88,5 +88,41 @@
     "method": "Template matching",
     "threshold": 0.95,
     "description": "当前1败场"
+  },
+  {
+    "itemName": "win_1",
+    "imageName": "draft_duel_win_1.png",
+    "roiFront": "1050,152,165,109",
+    "roiBack": "955,18,300,261",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "胜方结算页面1（可能不出现）"
+  },
+  {
+    "itemName": "win_2",
+    "imageName": "draft_duel_win_2.png",
+    "roiFront": "411,68,139,110",
+    "roiBack": "411,68,139,110",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "胜方结算页面2"
+  },
+  {
+    "itemName": "loss_2",
+    "imageName": "draft_duel_loss_2.png",
+    "roiFront": "401,59,135,114",
+    "roiBack": "351,0,226,232",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
+  },
+  {
+    "itemName": "sgared_ending_01",
+    "imageName": "draft_duel_sgared_ending.png",
+    "roiFront": "612,280,157,78",
+    "roiBack": "537,188,300,261",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "输赢共用结算页面_01"
   }
 ]

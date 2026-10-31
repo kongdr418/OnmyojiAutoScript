@@ -1,11 +1,5 @@
 [
   {
-    "itemName": "click_to_claim_reward",
-    "roiFront": "133,299,278,376",
-    "roiBack": "133,299,278,376",
-    "description": "奖励弹出后的点击屏幕继续"
-  },
-  {
     "itemName": "choose_1",
     "roiFront": "372,635,59,53",
     "roiBack": "372,635,59,53",
@@ -72,9 +66,9 @@
     "description": "顶部第5个卡面（打开阵容详情）"
   },
   {
-    "itemName": "settlement_fallback",
+    "itemName": "continue",
     "roiFront": "600,640,80,50",
     "roiBack": "600,640,80,50",
-    "description": "结算页兜底点击"
+    "description": "结算页点击屏幕继续"
   }
 ]

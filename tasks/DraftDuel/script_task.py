@@ -448,7 +448,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         finally:
             self.click(self.C_DETAIL_CLOSE, interval=0.2)
 
-    def _prep_button_state(self):
+    def _prep_button_state(self, full_fallback: bool = True):
         """上阵界面右下角：确定/已锁定 + 自动上阵状态。"""
         label = None
         auto_on = False
@@ -464,7 +464,7 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 label = 'locked'
             elif '确' in text:
                 label = 'open'
-        if label is None:
+        if label is None and full_fallback:
             height, width = self.device.image.shape[:2]
             try:
                 results = self.O_SCREEN.detect_and_ocr(self.device.image)
@@ -515,8 +515,8 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         self._battle_locked = []
         self._lock_missing_frames = 0
 
-    def _prep_visible(self) -> bool:
-        label, _ = self._prep_button_state()
+    def _prep_visible(self, full_fallback: bool = True) -> bool:
+        label, _ = self._prep_button_state(full_fallback)
         return label is not None
 
     def _wait_field_locked(self, timeout: float = 2.5) -> str:
@@ -647,6 +647,8 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         self._battle_fielded = False
         self._battle_count = 0
         self._battle_mate_names = None
+        self._reward_seen = False
+        self._match_ended = False
 
     def _configured_role(self) -> str:
         con = self.config.draft_duel.draft_duel_config
@@ -750,8 +752,56 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     def _run_finished(self) -> bool:
         return getattr(self, '_run_wins', 0) >= 6 or getattr(self, '_run_losses', 0) >= 2
 
+    def _count_result(self, result: str):
+        if getattr(self, '_result_counted', False):
+            return
+        self._result_counted = True
+        self._battle_count = getattr(self, '_battle_count', 0) + 1
+        if result == 'win':
+            self._run_wins = getattr(self, '_run_wins', 0) + 1
+        else:
+            self._run_losses = getattr(self, '_run_losses', 0) + 1
+        logger.info(f'DraftDuel: result {self._run_wins}W{self._run_losses}L')
+
+    def _handle_settlement_pages(self) -> bool:
+        """胜利/失败/共用结算/奖励页逐页点 continue。
+
+        胜利页 1 可能不出现；出现则后面一定跟胜利页 2。
+        失败只有失败页 2。最后是共用结算页和奖励页。
+        """
+        if self.appear(self.I_WIN_1):
+            self._count_result('win')
+            self.click(self.C_CONTINUE, interval=1)
+            return True
+        if self.appear(self.I_WIN_2):
+            self._count_result('win')
+            self.click(self.C_CONTINUE, interval=1)
+            return True
+        if self.appear(self.I_LOSS_2):
+            self._count_result('loss')
+            self.click(self.C_CONTINUE, interval=1)
+            return True
+        if self.appear(self.I_SETTLEMENT_0_4):
+            # 0-4 结算页出现 = 已经二败出局
+            if getattr(self, '_run_losses', 0) < 2:
+                self._run_losses = 2
+            self._match_ended = True
+            logger.info(f'DraftDuel: 0-4 settlement -> 2 losses, {self._run_wins}W2L')
+            self.click(self.C_CONTINUE, interval=1)
+            return True
+        if self.appear(self.I_SGARED_ENDING_01):
+            self.click(self.C_CONTINUE, interval=1)
+            return True
+        if self.appear(self.I_REWARD):
+            self._reward_seen = True
+            self.click(self.C_CONTINUE, interval=1)
+            return True
+        return False
+
     def _dismiss_settlement(self) -> bool:
-        """结算页：优先点 OCR 到的确定/点击屏幕继续，失败再点 JSON 兜底区域。"""
+        """结算页：优先按胜利/失败/共用结算/奖励图片点 continue，最后 OCR 兜底。"""
+        if self._handle_settlement_pages():
+            return True
         try:
             results = self.O_SCREEN.detect_and_ocr(self.device.image)
         except Exception:
@@ -772,12 +822,12 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
         while not timer.reached():
             self.device.stuck_record_clear()
             self.screenshot()
-            if self._run_finished():
-                self._dismiss_settlement()
+            if self._run_finished() and (getattr(self, '_reward_seen', False)
+                                         or getattr(self, '_match_ended', False)):
                 return True
-            text = self._screen_text()
 
-            if self._prep_visible():
+            if self._prep_visible(full_fallback=False):
+                self._result_counted = False
                 if not getattr(self, '_battle_fielded', False):
                     self._battle_fielded = True
                     if self.AUTO_FORM_AFTER_FIRST and getattr(self, '_battle_count', 0) >= 1:
@@ -792,24 +842,10 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 continue
             self._battle_fielded = False
 
-            if '点击屏幕继续' in text:
-                self._dismiss_settlement()
-                continue
-            if '失败' in text or '胜利' in text:
-                if not getattr(self, '_result_counted', False):
-                    self._result_counted = True
-                    if '失败' in text:
-                        self._run_losses = getattr(self, '_run_losses', 0) + 1
-                    else:
-                        self._run_wins = getattr(self, '_run_wins', 0) + 1
-                    self._battle_count = getattr(self, '_battle_count', 0) + 1
-                    logger.info(
-                        f'DraftDuel: result {self._run_wins}W{self._run_losses}L'
-                    )
-                    if self._run_finished():
-                        self._dismiss_settlement()
-                        return True
-                self._dismiss_settlement()
+            if self._handle_settlement_pages():
+                if self._run_finished() and (getattr(self, '_reward_seen', False)
+                                             or getattr(self, '_match_ended', False)):
+                    return True
                 continue
             if self.appear(self.I_START):
                 self._result_counted = False

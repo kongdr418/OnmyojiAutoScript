@@ -95,8 +95,6 @@ class DraftDuelAssets:
 
 
 	# Click Rule Assets
-	# 奖励弹出后的点击屏幕继续 
-	C_CLICK_TO_CLAIM_REWARD = RuleClick(roi_front=(133,299,278,376), roi_back=(133,299,278,376), name="click_to_claim_reward")
 	# 选择1号式神 
 	C_CHOOSE_1 = RuleClick(roi_front=(372,635,59,53), roi_back=(372,635,59,53), name="choose_1")
 	# 选择2号式神 
@@ -119,8 +117,8 @@ class DraftDuelAssets:
 	C_DETAIL_CARD_4 = RuleClick(roi_front=(739,30,40,32), roi_back=(739,30,40,32), name="detail_card_4")
 	# 顶部第5个卡面（打开阵容详情） 
 	C_DETAIL_CARD_5 = RuleClick(roi_front=(824,30,40,32), roi_back=(824,30,40,32), name="detail_card_5")
-	# 结算页兜底点击 
-	C_SETTLEMENT_FALLBACK = RuleClick(roi_front=(600,640,80,50), roi_back=(600,640,80,50), name="settlement_fallback")
+	# 结算页点击屏幕继续 
+	C_CONTINUE = RuleClick(roi_front=(600,640,80,50), roi_back=(600,640,80,50), name="continue")
 
 
 	# Image Rule Assets
@@ -130,7 +128,7 @@ class DraftDuelAssets:
 
 	# Image Rule Assets
 	# 邀请好友 
-	I_INVITATION = RuleImage(roi_front=(978,328,72,61), roi_back=(978,328,72,61), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_invitation.png")
+	I_INVITATION = RuleImage(roi_front=(1050,152,165,109), roi_back=(955,18,300,261), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_invitation.png")
 	# 开始 
 	I_START = RuleImage(roi_front=(1161,587,78,73), roi_back=(1161,587,78,73), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_start.png")
 	# 协同完成的奖励 
@@ -149,5 +147,13 @@ class DraftDuelAssets:
 	I_LOSS_0 = RuleImage(roi_front=(148,175,110,25), roi_back=(148,175,110,25), threshold=0.95, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_loss_0.png")
 	# 当前1败场 
 	I_LOSS_1 = RuleImage(roi_front=(148,175,59,26), roi_back=(148,175,59,26), threshold=0.95, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_loss_1.png")
+	# 胜方结算页面1（可能不出现） 
+	I_WIN_1 = RuleImage(roi_front=(1050,152,165,109), roi_back=(955,18,300,261), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_win_1.png")
+	# 胜方结算页面2 
+	I_WIN_2 = RuleImage(roi_front=(411,68,139,110), roi_back=(411,68,139,110), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_win_2.png")
+	#  
+	I_LOSS_2 = RuleImage(roi_front=(401,59,135,114), roi_back=(351,0,226,232), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_loss_2.png")
+	# 输赢共用结算页面_01 
+	I_SGARED_ENDING_01 = RuleImage(roi_front=(612,280,157,78), roi_back=(537,188,300,261), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_sgared_ending.png")
 
 
