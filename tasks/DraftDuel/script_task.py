@@ -31,9 +31,9 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
     TOTAL_PICKS = 5
     FIELD_ROUNDS = 3
     AUTO_FORM_AFTER_FIRST = True
-    # 队友推荐在倒计时 30s~8s 之间检查；到 8s 还没推荐就走策略
+    # 队友推荐最多等到倒计时 22s（30-8）；22s 还没推荐就走策略
     RECOMMEND_HIGH = 30
-    RECOMMEND_LOW = 8
+    RECOMMEND_LOW = 22
     # 懒加载的 v6-small 识别模型；False 表示加载失败，回退共享 OCR
     _v6_ocr_model = None
 

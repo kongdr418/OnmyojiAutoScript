@@ -15,9 +15,7 @@ def drag_to_field(device, p1, p2, name='draft_battle_field'):
     points = insert_swipe(p0=p1, p3=p2, speed=8, min_distance=2)
     if tuple(points[-1]) != tuple(p2):
         points.append(list(p2))
-    # 长按再拖: 0.75/0.95 会被游戏当成「点选卡牌/滑动列表」, 卡根本不上阵。
-    # 实测 0.9/1.2/0.3 稳定(2026-10-29 16:13 大号两次成功, 16:28 调快后两个号全失败)
-    hold, movement, release = 0.9, 1.2, 0.3
+    hold, movement, release = 0.3, 0.5, 0.0
     step = movement / max(len(points) - 1, 1)
     method = device.config.script.device.control_method
     device._invalidate_image_batch_cache()
