@@ -23,7 +23,7 @@
   {
     "itemName": "field_drag_2_1",
     "roiFront": "405,590,70,70",
-    "roiBack": "176,257,80,60",
+    "roiBack": "170,283,80,60",
     "mode": "default",
     "description": "第一轮上第二张"
   },
@@ -44,7 +44,7 @@
   {
     "itemName": "field_drag_3_1",
     "roiFront": "512,566,70,70",
-    "roiBack": "173,268,80,60",
+    "roiBack": "170,283,80,60",
     "mode": "default",
     "description": "第一轮上第三张"
   },
@@ -65,7 +65,7 @@
   {
     "itemName": "field_drag_4_1",
     "roiFront": "626,563,70,70",
-    "roiBack": "177,263,80,60",
+    "roiBack": "170,283,80,60",
     "mode": "default",
     "description": "第一轮上第四张"
   },
@@ -86,7 +86,7 @@
   {
     "itemName": "field_drag_5_1",
     "roiFront": "744,571,70,70",
-    "roiBack": "177,259,80,60",
+    "roiBack": "170,283,80,60",
     "mode": "default",
     "description": "第一轮上第五张"
   },
