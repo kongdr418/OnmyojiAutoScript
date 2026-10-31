@@ -611,6 +611,8 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 logger.warning(f'DraftDuel: field plan failed: {e}')
                 return False
             logger.info(f'DraftDuel: field plan {plan}')
+            for _i, _name in enumerate(plan, 1):
+                logger.info(f'DraftDuel: round {_i} will field {_name}')
             self._begin_new_battle_field()
             timer = Timer(150).start()
             while self._field_round < self.FIELD_ROUNDS:
