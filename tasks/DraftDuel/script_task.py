@@ -14,7 +14,7 @@ from tasks.DraftDuel.config import DraftDuelConfig, UserStatus
 from tasks.DraftDuel.field_drag import drag_to_field
 from tasks.DraftDuel.strategy import (CATALOG, DATA_DIR, choose_pick, normalize_name,
                                       plan_duel_lineup, plan_lineup)
-from tasks.DraftDuel.visual_cards import lobby_faces, match_hand
+from tasks.DraftDuel.visual_cards import CARD_BOXES, lobby_faces, match_hand
 from tasks.GameUi.game_ui import GameUi
 from tasks.GameUi.page import page_draft_duel
 
@@ -463,6 +463,19 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
             logger.info(f'DraftDuel: hand card {slot + 1} -> {name}, score={score:.3f}{tag}')
         return result
 
+    def _card_marked(self, slot: int) -> bool:
+        """只看目标卡位有没有上阵标记，避免被前面已上阵的卡误导。"""
+        box = CARD_BOXES[slot]
+        old_roi = self.I_MARK.roi_back
+        try:
+            matches = self.I_MARK.match_all(
+                self.device.image, threshold=self.I_MARK.threshold,
+                roi=list(box), frame_id=self.device.image_frame_id,
+            )
+        finally:
+            self.I_MARK.roi_back = old_roi
+        return bool(matches)
+
     def _screen_text(self) -> str:
         try:
             results = self.O_SCREEN.detect_and_ocr(self.device.image)
@@ -623,9 +636,9 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                           name=f'dd_field_r{self._field_round + 1}_{drag_attempt}')
             self.device.sleep(4)
             self.screenshot()
-            if not self.appear(self.I_MARK):
+            if not self._card_marked(slot):
                 logger.warning(
-                    f'DraftDuel: {target} card not marked after drag, retry'
+                    f'DraftDuel: {target} card{slot + 1} not marked after drag, retry'
                 )
                 continue
             self.click(self.C_FIELD_CONFIRM, interval=1)
@@ -634,6 +647,22 @@ class ScriptTask(GameUi, GeneralInvite, DraftDuelAssets):
                 self._note_round_closed(target, f'confirm{drag_attempt}')
                 return True
             logger.warning(f'DraftDuel: round {self._field_round + 1} not locked, retry')
+
+        # 3 次都没标记/没锁上：直接点一次确定，上错一张也继续
+        self.screenshot()
+        label, _ = self._prep_button_state(full_fallback=False)
+        if label == 'locked':
+            self._note_round_closed(target, 'system locked')
+            return True
+        if label == 'open':
+            logger.warning(
+                f'DraftDuel: {target} unmarked after 3 tries, confirm anyway'
+            )
+            self.click(self.C_FIELD_CONFIRM, interval=1)
+            outcome = self._wait_field_locked()
+            if outcome in ('locked', 'battle'):
+                self._note_round_closed(target, 'confirm-anyway')
+                return True
         return False
 
     def _field_battle_lineup(self, names) -> bool:
