@@ -93,7 +93,8 @@ class _CTCDecode:
     def __init__(self, dict_path: Path):
         with open(dict_path, encoding="utf-8") as f:
             chars = tuple(line.rstrip("\n\r") for line in f)
-        self._chars = ("blank", *chars)
+        # Paddle 识别模型输出为 blank + 字典 + 空格；缺空格类时命中 18713 会越界。
+        self._chars = ("blank", *chars, " ")
 
     def __call__(self, output: np.ndarray):
         output = np.asarray(output)
