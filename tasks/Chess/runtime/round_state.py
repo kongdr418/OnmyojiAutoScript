@@ -111,7 +111,7 @@ class ChessRoundStateMixin:
             zip(option_rules, ocr_rules),
             start=1,
         ):
-            raw = self._normalize_ocr_text(ocr_rule.ocr(self.device.image))
+            raw = self._normalize_ocr_text(self._ocr_rule(ocr_rule))
             ocr_name, text_score = resolve_grigri_name(raw, quality)
             icon_name, icon_score = self._match_grigri_icon(
                 option_rule,
@@ -583,7 +583,7 @@ class ChessRoundStateMixin:
 
     def _read_level(self) -> int | None:
         """读取“一阶”至“九阶”，同时兼容阿拉伯数字显示。"""
-        raw = self._normalize_ocr_text(self.O_LEVEL.ocr(self.device.image))
+        raw = self._normalize_ocr_text(self._ocr_rule(self.O_LEVEL))
         digit = re.search(r'([1-9])', raw)
         if digit is not None:
             level = int(digit.group(1))
@@ -617,7 +617,7 @@ class ChessRoundStateMixin:
 
     def _read_game_rank(self) -> tuple[int | None, str]:
         """读取结算页“第几名”，兼容阿拉伯数字和中文数字。"""
-        raw = self._normalize_ocr_text(self.O_RANK.ocr(self.device.image))
+        raw = self._normalize_ocr_text(self._ocr_rule(self.O_RANK))
         matched = re.search(r'第?([1-8])名?', raw)
         if matched is not None:
             return int(matched.group(1)), raw

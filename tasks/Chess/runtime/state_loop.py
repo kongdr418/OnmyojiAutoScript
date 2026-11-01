@@ -58,7 +58,7 @@ class ChessStateLoopMixin:
                 roi = (left, top, width, height)
                 rule = RuleOcr(name='chess_current_health', roi=roi, area=roi,
                                mode='Digit', method='Default', keyword='')
-                raw = self._normalize_ocr_text(rule.ocr(image))
+                raw = self._normalize_ocr_text(self._ocr_rule(rule))
                 if re.fullmatch(r'\d{1,3}', raw) and 0 <= int(raw) <= 100:
                     state.current_health = int(raw)
         self._record_observation(player_name=state.player_name,

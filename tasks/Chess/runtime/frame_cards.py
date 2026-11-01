@@ -222,10 +222,10 @@ class ChessFrameCardsMixin:
         # Hand: range1-3 bonds. Neither path reads the image or click ranges as text.
         bond_indexes = range(1, 4) if kind == 'store' else range(3)
         for index in bond_indexes:
-            text[index] = targets[index].ocr(image)
+            text[index] = self._ocr_rule(targets[index])
         name, score = self._frame_card_identity(kind, portrait, text, candidates)
         if name is None and kind == 'store':
-            text[0] = targets[0].ocr(image)
+            text[0] = self._ocr_rule(targets[0])
             name, score = self._frame_card_identity(kind, portrait, text, candidates)
         return name, score, tuple(text)
 
@@ -298,7 +298,7 @@ class ChessFrameCardsMixin:
                 discovery = None
                 if key is None and not golden_copy:
                     _, targets = local.range_targets(image.shape, allow_missing_image=True)
-                    raw_text = targets[0].ocr(image)
+                    raw_text = self._ocr_rule(targets[0])
                     text = ''.join(str(raw_text).split()).strip('()（）[]【】')
                     discovery = text if text in ('发现纹章', '发现御魂') else None
                     golden_copy = text == '黄金复制术'

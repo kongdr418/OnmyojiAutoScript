@@ -84,7 +84,7 @@ class ChessEconomyMixin:
 
     def _read_shop_gold(self) -> int | None:
         """读取当前金币；OCR 异常时返回 None，避免误停购买流程。"""
-        value = self.O_GOLD.ocr(self.device.image)
+        value = self._ocr_rule(self.O_GOLD)
         if not isinstance(value, int) or value < 0:
             logger.warning(f'Chess gold OCR invalid: [{value}]')
             return None
@@ -130,7 +130,7 @@ class ChessEconomyMixin:
 
     def _read_coin(self) -> dict | None:
         """读取棋局大厅鼬乐币，优先消费 DigitCounter 三元组。"""
-        result = self.O_COIN.ocr(self.device.image)
+        result = self._ocr_rule(self.O_COIN)
         coin = None
         if isinstance(result, (tuple, list)) and len(result) == 3:
             current, remaining, total = result

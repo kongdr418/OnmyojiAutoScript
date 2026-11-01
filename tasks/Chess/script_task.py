@@ -11,6 +11,7 @@ from tasks.Chess.runtime.cache import economy_scope
 from tasks.Chess.runtime.economy import ChessEconomyMixin
 from tasks.Chess.runtime.hand_operations import ChessHandOperationsMixin
 from tasks.Chess.runtime.hyakki_draft import ChessHyakkiDraftMixin
+from tasks.Chess.runtime.ocr_v6 import ChessV6OcrMixin
 from tasks.Chess.runtime.recognition import ChessRecognitionMixin
 from tasks.Chess.runtime.round_state import ChessRoundStateMixin
 from tasks.Chess.runtime.settings import ChessRuntimeSettings
@@ -22,6 +23,7 @@ from tasks.GameUi.page import page_chess
 
 
 class ChessLegacyScriptTask(
+    ChessV6OcrMixin,
     ChessHyakkiDraftMixin,
     ChessRecognitionMixin,
     ChessHandOperationsMixin,

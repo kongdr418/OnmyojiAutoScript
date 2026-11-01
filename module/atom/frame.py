@@ -221,12 +221,13 @@ class RuleFrame(RuleImage):
                 results.append(None)
         return results, specs, targets
 
-    def execute(self, task, interval=None, threshold=None):
+    def execute(self, task, interval=None, threshold=None, ocr_read=None):
         """Gate on badge with appear, read ranges, then perform configured clicks. None means no badge."""
         if not task.appear(self, interval=interval, threshold=threshold):
             return None
         results, specs, targets = self.evaluate_ranges(
-            task.device.image, image_match=lambda target: task.appear(target))
+            task.device.image, image_match=lambda target: task.appear(target),
+            ocr_read=ocr_read or getattr(task, 'ocr_read', None))
         # Read-only results must all come from the pre-click frame.
         for index, (spec, target) in enumerate(zip(specs, targets)):
             if spec['type'] == 'click':
@@ -291,6 +292,7 @@ class RuleFrame(RuleImage):
         image = task.device.image
         specs, targets = self.range_targets(image.shape, operations=specs, allow_missing_image=True)
         data, checks, clicks = [], [], []
+        ocr_read = getattr(task, 'ocr_read', None)
         for index, (spec, target, requirement) in enumerate(zip(specs, targets, expected)):
             area = tuple(int(round(v)) for v in self.matched_ranges[index])
             x, y, w, h = area
@@ -316,7 +318,8 @@ class RuleFrame(RuleImage):
             elif spec['type'] == 'ocr':
                 # Internal read-only preview can defer OCR until image identity is ambiguous.
                 text = ('' if getattr(self, 'defer_ocr', False) and requirement is None
-                        and spec['mode'] == 'Single' else target.ocr(image))
+                        and spec['mode'] == 'Single'
+                        else (ocr_read(target) if ocr_read else target.ocr(image)))
                 data.append(text)
                 checks.append(text in requirement if requirement is not None else None)
             else:
