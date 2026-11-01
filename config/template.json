@@ -1826,6 +1826,7 @@
     },
     "draft_duel_config": {
       "user_status": "leader",
+      "use_teammate_recommendation": false,
       "limit_time": "00:30:00",
       "completion_count": 1,
       "stop_when_full": true

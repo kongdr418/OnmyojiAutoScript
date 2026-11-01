@@ -19,6 +19,11 @@ class DraftDuelConfig(ConfigBase):
         default=UserStatus.LEADER,
         description='draft_duel_user_status_help',
     )
+    use_teammate_recommendation: bool = Field(
+        title='选择队友推荐式神',
+        default=False,
+        description='draft_duel_use_teammate_recommendation_help',
+    )
     # 单次任务的时间上限，到点后不再开始新的一轮
     limit_time: Time = Field(
         default=Time(minute=30),
