@@ -1,0 +1,166 @@
+[
+  {
+    "itemName": "shikigami_head",
+    "imageName": "shikigami_head_badge_1.png",
+    "roiBack": "410,5,512,103",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "大厅五张式神内部头像",
+    "roiBadge": "422,14,32,84",
+    "badgeSerial": 1,
+    "badgeGrayscale": false,
+    "roiRange": [
+      "478,45,35,31",
+      "563,46,35,31",
+      "646,44,35,31",
+      "733,46,35,31",
+      "820,44,35,31"
+    ],
+    "badges": [
+      {
+        "imageName": "shikigami_head_badge_1.png"
+      }
+    ],
+    "rangeOperations": [
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      },
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      },
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      },
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      },
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "itemName": "fight_shikigami",
+    "imageName": "fight_shikigami_badge_1.png",
+    "roiBack": "73,14,536,94",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "上阵页顶部六个头像",
+    "roiBadge": "559,32,33,60",
+    "badgeSerial": 1,
+    "badgeGrayscale": false,
+    "roiRange": [
+      "86,34,67,66",
+      "158,34,67,66",
+      "229,34,67,66",
+      "302,34,67,66",
+      "374,35,67,66",
+      "445,34,67,66"
+    ],
+    "badges": [
+      {
+        "imageName": "fight_shikigami_badge_1.png"
+      }
+    ],
+    "rangeOperations": [
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      },
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      },
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      },
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      },
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      },
+      {
+        "type": "image",
+        "imageName": "",
+        "method": "Template matching",
+        "threshold": 0.8
+      }
+    ]
+  },
+  {
+    "itemName": "fight_shikigami_set",
+    "imageName": "fight_shikigami_set_badge_1.png",
+    "roiBack": "0,220,1147,276",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "六个拖卡目标位置",
+    "roiBadge": "28,369,54,44",
+    "badgeSerial": 1,
+    "badgeGrayscale": false,
+    "roiRange": [
+      "183,330,67,66",
+      "340,333,67,66",
+      "514,360,67,66",
+      "690,369,67,66",
+      "858,344,67,66",
+      "1022,319,67,66"
+    ],
+    "badges": [
+      {
+        "imageName": "fight_shikigami_set_badge_1.png"
+      }
+    ],
+    "rangeOperations": [
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      },
+      {
+        "type": "click"
+      }
+    ]
+  }
+]

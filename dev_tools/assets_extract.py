@@ -14,6 +14,7 @@ ASSETS_FILE = 'assets.py'
 ASSETS_CLASS = '\nclass Assets: \n'
 IMPORT_EXP = """
 from module.atom.image import RuleImage
+from module.atom.frame import RuleFrame, Image, Ocr, Click
 from module.atom.click import RuleClick
 from module.atom.long_click import RuleLongClick
 from module.atom.swipe import RuleSwipe
@@ -73,6 +74,43 @@ class ImageExtractor:
                     f'method="{item["method"]}", ' \
                     f'file="./{self.image_path}/{item["imageName"]}")\n'
         return description + name
+
+
+class FrameExtractor(ImageExtractor):
+    def __init__(self, file: str, data: list) -> None:
+        super().__init__(file, data)
+        self._result = self._result.replace('Image Rule Assets', 'Frame Rule Assets', 1)
+
+    def extract_item(self, item) -> str:
+        from module.atom.frame import normalize_operations
+
+        badges = item.get('badges') or [{'imageName': item['imageName']}]
+        ranges = item['roiRange'] if isinstance(item['roiRange'], list) else [item['roiRange']]
+        operations = normalize_operations(item.get('rangeOperations'), len(ranges), allow_missing_image=True)
+        handlers = []
+        for spec in operations:
+            if spec['type'] == 'image':
+                # Saved range crops are previews; runframe supplies optional templates.
+                spec.pop('imageName', None)
+                spec.pop('file', None)
+            kind = spec.pop('type')
+            cls = {'image': 'Image', 'ocr': 'Ocr', 'click': 'Click'}[kind]
+            handlers.append(cls + '(' + ', '.join(f'{k}={v!r}' for k, v in spec.items()) + ')')
+
+        def parse(text):
+            return tuple(float(v) if '.' in v else int(v) for v in text.split(','))
+
+        arguments = dict(
+            name=item['itemName'], roi_badge=parse(item['roiBadge']),
+            roi_range=[parse(r) for r in ranges], roi_back=parse(item['roiBack']),
+            threshold=item['threshold'], method=item['method'], profile=item.get('profile', 'High'),
+            badgefile=[f"./{self.image_path}/{b['imageName']}" for b in badges],
+        )
+        if item.get('badgeGrayscale', False):
+            arguments['badge_grayscale'] = True
+        name = name_transform(item['itemName'])
+        return (f'\tF_{name} = RuleFrame(' + ', '.join(f'{k}={v!r}' for k, v in arguments.items())
+                + ', range=[' + ', '.join(handlers) + '])\n')
 
 
 class ClickExtractor:
@@ -368,7 +406,7 @@ class AssetsExtractor:
         :return:
         """
         with open(self.assets_file, 'w', encoding='utf-8', newline='\n') as f:
-            f.write(self._result)
+            f.write('\n'.join(line.rstrip() for line in self._result.splitlines()).rstrip() + '\n')
 
     def extract(self) -> str:
         """
@@ -384,7 +422,9 @@ class AssetsExtractor:
             if self.is_list_file(data):
                 result += ListExtractor(file, data).result
                 continue
-            if self.is_image_file(data):
+            if 'roiBadge' in data[0] and 'roiRange' in data[0]:
+                result += FrameExtractor(file, data).result
+            elif self.is_image_file(data):
                 result += ImageExtractor(file, data).result
             elif self.is_click_file(data):
                 result += ClickExtractor(file, data).result
