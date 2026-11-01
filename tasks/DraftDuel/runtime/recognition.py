@@ -2,20 +2,23 @@
 
 from module.logger import logger
 from tasks.DraftDuel.strategy import normalize_name
-from tasks.DraftDuel.visual_cards import CARD_BOXES, lobby_faces, match_hand, portrait_score
+from tasks.DraftDuel.visual_cards import CARD_BOXES, match_hand
+from tasks.DraftDuel.runtime.portrait_match import FIGHT_PORTRAIT_SCALE, portrait_score
 
 
 class DraftDuelRecognitionMixin:
     def _bind_lobby_faces(self):
         """选完后把大厅顶部头像按顺序和 picked_roles 绑定。"""
-        faces = lobby_faces(self.device.image)
-        if len(faces) != len(self.picked_roles):
+        faces = self.runframe(self.F_SHIKIGAMI_HEAD)
+        if (not faces or len(faces) != 5 or len(faces) != len(self.picked_roles)
+                or any(face.size == 0 for face in faces)):
             logger.warning(
-                f'DraftDuel: lobby faces {len(faces)} != picks {len(self.picked_roles)}'
+                f'DraftDuel: lobby faces unavailable or incomplete; picks={len(self.picked_roles)}'
             )
-            return
-        self._lobby_faces = list(zip(self.picked_roles, faces))
+            return False
+        self._lobby_faces = [(name, face.copy()) for name, face in zip(self.picked_roles, faces)]
         logger.info(f'DraftDuel: lobby faces bound to {self.picked_roles}')
+        return True
 
     def _match_hand_cards(self):
         """上阵界面手牌卡位 -> 式神名；只截图，不点卡。"""
@@ -45,21 +48,21 @@ class DraftDuelRecognitionMixin:
 
     def _field_slot_actual(self, index: int):
         """读己方第 index 个上阵位现在显示是谁。"""
-        boxes = (self.CAPTAIN_FIELD_SLOTS
-                 if self._configured_role() == 'captain'
-                 else self.MEMBER_FIELD_SLOTS)
-        x, y, w, h = boxes[index]
-        region = self.device.image[y:y+h, x:x+w]
+        portraits = self.runframe(self.F_FIGHT_SHIKIGAMI)
+        if not portraits or len(portraits) != 6:
+            return None, 0.0
+        offset = 0 if self._configured_role() == 'captain' else 3
+        region = portraits[offset + index]
         ranked = []
         for name, face in getattr(self, '_lobby_faces', None) or []:
-            score = max(portrait_score(region, face), portrait_score(face, region))
+            score = portrait_score(face, region, scale=FIGHT_PORTRAIT_SCALE)
             ranked.append((score, name))
         ranked.sort(reverse=True)
         if not ranked:
             return None, 0.0
         best_score, best_name = ranked[0]
-        # 最低分 0.5，且第一名至少领先第二名 0.05。
-        if best_score < 0.5 or (len(ranked) > 1 and best_score - ranked[1][0] < 0.05):
+        # 与 self 项目一致：最低分 0.8，且领先第二名至少 0.05。
+        if best_score < 0.8 or (len(ranked) > 1 and best_score - ranked[1][0] < 0.05):
             return None, best_score
         return best_name, best_score
 

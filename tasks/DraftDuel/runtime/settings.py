@@ -1,6 +1,6 @@
 """协同对弈界面坐标、识别规则与运行常量。"""
 
-from module.atom.frame import Click, RuleFrame
+from module.atom.frame import Click, Image, RuleFrame
 
 
 class DraftDuelSettingsMixin:
@@ -9,19 +9,30 @@ class DraftDuelSettingsMixin:
     # 选卡阶段每个账号选 5 位；上阵阶段再各上 3 位（合计 6）
     TOTAL_PICKS = 5
     FIELD_ROUNDS = 3
-    # 己方 3 个上阵位（1280x720，上阵页顶部一排），队长/队员位置不同
-    CAPTAIN_FIELD_SLOTS = (
-        (102, 33, 34, 70),
-        (173, 33, 34, 70),
-        (245, 33, 34, 70),
+    # 沿用 self 项目的手牌搜索区域、内部头像裁剪和锚点模板（1280x720）。
+    HAND_AREA = (8, 486, 1021, 223)
+    F_SHIKIGAMI_HEAD = RuleFrame(
+        name='shikigami_head',
+        roi_badge=(422, 14, 32, 84),
+        roi_range=[(478, 45, 35, 31), (563, 46, 35, 31), (646, 44, 35, 31), (733, 46, 35, 31), (820, 44, 35, 31)],
+        roi_back=(410, 5, 512, 103),
+        threshold=0.8,
+        method='Template matching',
+        profile='High',
+        badgefile=['./tasks/DraftDuel/draft_duel/shikigami_head_badge_1.png'],
+        range=[Image() for _ in range(5)],
     )
-    MEMBER_FIELD_SLOTS = (
-        (316, 33, 34, 70),
-        (391, 34, 34, 70),
-        (466, 34, 34, 70),
+    F_FIGHT_SHIKIGAMI = RuleFrame(
+        name='fight_shikigami',
+        roi_badge=(559, 32, 33, 60),
+        roi_range=[(86, 34, 67, 66), (158, 34, 67, 66), (229, 34, 67, 66), (302, 34, 67, 66), (374, 35, 67, 66), (445, 34, 67, 66)],
+        roi_back=(73, 14, 536, 94),
+        threshold=0.8,
+        method='Template matching',
+        profile='High',
+        badgefile=['./tasks/DraftDuel/draft_duel/fight_shikigami_badge_1.png'],
+        range=[Image() for _ in range(6)],
     )
-    # 1280x720 的五张手牌区域；排除左侧语音/聊天和右侧自动上阵按钮。
-    HAND_AREA = (129, 486, 789, 207)
     F_FIGHT_SHIKIGAMI_SET = RuleFrame(
         name='fight_shikigami_set',
         roi_badge=(28, 369, 54, 44),

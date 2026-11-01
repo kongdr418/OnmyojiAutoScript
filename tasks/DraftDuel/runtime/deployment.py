@@ -6,7 +6,9 @@ from module.base.timer import Timer
 from module.logger import logger
 from tasks.DraftDuel.field_drag import drag_to_field
 from tasks.DraftDuel.strategy import plan_duel_lineup, plan_lineup
-from tasks.DraftDuel.visual_cards import locate_face
+from tasks.DraftDuel.runtime.portrait_match import (
+    HAND_PORTRAIT_SCALE, HAND_PORTRAIT_THRESHOLDS, locate_portrait,
+)
 
 
 class DraftDuelDeploymentMixin:
@@ -197,16 +199,22 @@ class DraftDuelDeploymentMixin:
             if face is None:
                 logger.warning(f'DraftDuel: target {target} has no lobby face')
                 return False
-            located, best_score = locate_face(
-                self.device.image, face, self.HAND_AREA, threshold=0.5
-            )
+            located = None
+            for threshold in HAND_PORTRAIT_THRESHOLDS:
+                located = locate_portrait(
+                    face, self.device.image, self.HAND_AREA,
+                    scale=HAND_PORTRAIT_SCALE, threshold=threshold,
+                )
+                if located is not None:
+                    break
             if located is None:
                 logger.warning(
                     f'DraftDuel: {target} not found in hand area, '
-                    f'best={best_score:.3f} < 0.500'
+                    f'score below {HAND_PORTRAIT_THRESHOLDS[-1]:.3f}'
                 )
                 continue
-            (sx, sy), score = located
+            (x, y, w, h), score = located
+            sx, sy = x + w // 2, y + h // 2
             destinations = self.runframe(self.F_FIGHT_SHIKIGAMI_SET)
             if not destinations or len(destinations) != 6:
                 logger.warning('DraftDuel: fight_shikigami_set not detected')

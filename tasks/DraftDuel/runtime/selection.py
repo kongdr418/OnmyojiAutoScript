@@ -23,7 +23,9 @@ class DraftDuelSelectionMixin:
             if self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL):
                 logger.info('DraftDuel: selection finished')
                 logger.info(f'DraftDuel: lineup {self.picked_roles}')
-                self._bind_lobby_faces()
+                if not self._bind_lobby_faces():
+                    self.device.sleep(0.3)
+                    continue
                 return True
             if not self.appear(self.I_SELECTION_PAGE):
                 self.device.sleep(0.5)
