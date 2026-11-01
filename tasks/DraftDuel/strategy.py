@@ -1,4 +1,4 @@
-﻿"""从《协同分析.xlsx》生成的资料中选择式神和推荐搭配。
+"""从《协同分析.xlsx》生成的资料中选择式神和推荐搭配。
 
 本模块不依赖游戏画面。调用方传入当前可选式神及已选队伍，
 仅在 OCR 能可靠识别名称后才调用 choose_pick。
@@ -20,9 +20,10 @@ try:
 except Exception:  # 离线单文件测试时允许缺统计模块
     duel_stats = None
 
-CATALOG_PATH = Path(__file__).with_name('catalog.json')
-ENCYCLOPEDIA_PATH = Path(__file__).with_name('encyclopedia.json')
-STRENGTH_PATH = Path(__file__).with_name('strength_scores.json')
+DATA_DIR = Path(__file__).resolve().parents[2] / 'assets' / 'DraftDuel'
+CATALOG_PATH = DATA_DIR / 'catalog.json'
+ENCYCLOPEDIA_PATH = DATA_DIR / 'encyclopedia.json'
+STRENGTH_PATH = DATA_DIR / 'strength_scores.json'
 TIER_POINTS = {'特等': 40, '上等': 30, '中等': 20, '下等': 10}
 ENCYCLOPEDIA_POINTS = {'SS': 12, 'S': 8, 'A': 4, 'B': 0,
                        'C': -4, 'D': -8, 'E': -12}
@@ -83,6 +84,7 @@ OCR_NAME_ALIASES = {
     '炼狱茨术量子': '炼狱茨木童子',
     '神心会外镜': '禅心云外镜',
     '蛋草': '莹草',
+    '萤草': '莹草',
     '酒谷量子': '酒吞童子',
     '饭司': '饭笥',
     '饭筒': '饭笥',

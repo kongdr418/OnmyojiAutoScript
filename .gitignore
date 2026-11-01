@@ -311,3 +311,6 @@ oas.bat
 
 # DraftDuel OCR model (downloaded on first use)
 tasks/DraftDuel/model/*.onnx
+
+# DraftDuel runtime roster and automatic deployment coordination
+/assets/DraftDuel/duel_share/

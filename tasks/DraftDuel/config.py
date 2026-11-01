@@ -5,7 +5,7 @@ from pydantic import Field
 
 from tasks.Component.config_base import ConfigBase, Time
 from tasks.Component.config_scheduler import Scheduler
-from tasks.Component.GeneralInvite.config_invite import InviteConfig
+from tasks.Component.GeneralInvite.config_invite import InviteBaseConfig
 
 
 class UserStatus(str, Enum):
@@ -24,14 +24,21 @@ class DraftDuelConfig(ConfigBase):
         default=Time(minute=30),
         description='limit_time_help',
     )
-    # 选式神流程还没接，默认关闭，避免点「战」之后卡在对局里
-    start_enable: bool = Field(
-        default=False,
-        description='draft_duel_start_enable_help',
+    completion_count: int = Field(
+        title='完成局数',
+        default=1,
+        ge=-1,
+        le=20,
+        description='队长决定，-1 表示无限制，队员忽略此项',
+    )
+    stop_when_full: bool = Field(
+        title='刷满即停',
+        default=True,
+        description='刷满十把30万，队员忽略此项',
     )
 
 
 class DraftDuel(ConfigBase):
     scheduler: Scheduler = Field(default_factory=Scheduler)
     draft_duel_config: DraftDuelConfig = Field(default_factory=DraftDuelConfig)
-    invite_config: InviteConfig = Field(default_factory=InviteConfig)
+    invite_config: InviteBaseConfig = Field(default_factory=InviteBaseConfig)

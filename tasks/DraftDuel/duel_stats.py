@@ -15,7 +15,8 @@ import json
 import time
 from pathlib import Path
 
-STATS_PATH = Path(__file__).with_name('duel_stats.json')
+STATS_PATH = (Path(__file__).resolve().parents[2]
+              / 'assets' / 'DraftDuel' / 'duel_stats.json')
 MIN_SAMPLES = 3
 MAX_BONUS = 8.0
 
@@ -41,6 +42,7 @@ def record(result, ours=(), fielded=(), mate=(), opponent=()) -> dict:
     battles.append(entry)
     data['battles'] = battles[-500:]
     try:
+        STATS_PATH.parent.mkdir(parents=True, exist_ok=True)
         STATS_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=1),
                               encoding='utf-8')
     except Exception:
