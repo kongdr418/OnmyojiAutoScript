@@ -223,6 +223,10 @@ class DraftDuelDeploymentMixin:
             area = destinations[own_slots[self._field_round]]
             dx = int(area[0] + area[2] // 2)
             dy = int(area[1] + area[3] // 2)
+            # 重拖逐次上移：起点每次 10 像素，终点每次 50 像素。
+            retry_offset = drag_attempt - 1
+            sy = max(0, sy - 10 * retry_offset)
+            dy = max(0, dy - 50 * retry_offset)
             logger.info(
                 f'DraftDuel: round {self._field_round + 1} drag {target} '
                 f'({sx},{sy})->({dx},{dy}) score={score:.3f} (try {drag_attempt})'
