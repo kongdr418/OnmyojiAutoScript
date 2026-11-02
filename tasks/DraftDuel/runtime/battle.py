@@ -106,7 +106,6 @@ class DraftDuelBattleMixin:
         while not timer.reached():
             self.device.stuck_record_clear()
             self.screenshot()
-            auto_ready = self._ensure_lobby_auto_form()
             if self._run_finished():
                 if final_settlement_timer is None:
                     final_settlement_timer = Timer(120).start()
@@ -123,15 +122,24 @@ class DraftDuelBattleMixin:
                 self.device.sleep(0.3)
                 continue
 
-            if self._run_finished():
-                in_lobby = self.appear(self.I_WAIT_FIGHT_LOBBY) or self.appear(self.I_NEW_MATCH)
+            if (self._run_finished() or getattr(self, '_first_lineup_done', False)
+                    or getattr(self, '_battle_count', 0) > 0):
+                in_lobby = self._is_new_round_lobby()
                 final_lobby_frames = final_lobby_frames + 1 if in_lobby else 0
                 if final_lobby_frames >= 2:
+                    if not self._run_finished():
+                        logger.warning('DraftDuel: 胜负计数不完整，但已确认新大轮大厅，结束上一盘')
                     logger.info('DraftDuel: 结算已清理，确认返回大厅')
                     return True
+                if in_lobby:
+                    self.device.sleep(0.5)
+                    continue
+
+            if self._run_finished():
                 self.device.sleep(0.5)
                 continue
 
+            auto_ready = self._ensure_lobby_auto_form()
             if self._prep_visible(full_fallback=False):
                 self._result_counted = False
                 if not getattr(self, '_battle_fielded', False):
@@ -164,7 +172,8 @@ class DraftDuelBattleMixin:
                         self.device.sleep(3)
                         self._first_battle_waited = True
                         self.screenshot()
-                        if not self.appear(self.I_START) or not self._ensure_lobby_auto_form():
+                        if (not self.appear(self.I_START) or self._is_new_round_lobby()
+                                or not self._ensure_lobby_auto_form()):
                             continue
                     self._result_counted = False
                     self._battle_fielded = False

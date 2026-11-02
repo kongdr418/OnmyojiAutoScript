@@ -152,6 +152,7 @@ class DraftDuelInvitationMixin:
                         + con.limit_time.second)
         timer = Timer(wait_seconds).start()
         while True:
+            self.device.stuck_record_clear()
             self.screenshot()
             if self.appear_accept():
                 logger.info('DraftDuel: invite popup found')

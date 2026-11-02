@@ -89,10 +89,18 @@ class DraftDuelCooperationMixin:
             getattr(self, '_first_lineup_done', False) or getattr(self, '_battle_count', 0) >= 1
         )
 
+    def _is_new_round_lobby(self) -> bool:
+        """固定大厅标题加未开启标志，区别于保留五张头像的小局待匹配页。"""
+        return self.appear(self.I_LOBBY_TITLE) and (
+            self.appear(self.I_NEW_MATCH) or self.appear(self.I_WAIT_FIGHT_LOBBY)
+        )
+
     def _ensure_lobby_auto_form(self) -> bool:
         """后续小局只确认本端 auto_right，不依赖队友 OAS 就绪文件。"""
         if not self._use_auto_form():
             return True
+        if self._is_new_round_lobby():
+            return False
         if not any(self.appear(rule) for rule in (
                 self.I_START, self.I_DRAFT_DUEL_COMPLETED_HALL, self.I_MEMBERS_AWAIT)):
             return False
