@@ -1,4 +1,4 @@
-"""同机双方名单交换及自动上阵就绪同步。"""
+"""同机双方名单交换及本端自动上阵检查。"""
 
 import json
 import time
@@ -23,6 +23,7 @@ class DraftDuelCooperationMixin:
         self._match_ended = False
         self._auto_wait_timer = None
         self._auto_wait_reason = None
+        self._first_battle_waited = False
 
     def _configured_role(self) -> str:
         con = self.config.draft_duel.draft_duel_config
@@ -82,7 +83,7 @@ class DraftDuelCooperationMixin:
         return None
 
     def _ensure_lobby_auto_form(self) -> bool:
-        """与 self 一样：后续截图看到 auto_right，且双方就绪，才允许匹配。"""
+        """后续小局只确认本端 auto_right，不依赖队友 OAS 就绪文件。"""
         if getattr(self, '_battle_count', 0) < 1:
             return True
         if not any(self.appear(rule) for rule in (
@@ -92,33 +93,8 @@ class DraftDuelCooperationMixin:
         if not ready and self.appear(self.I_AUTO_DOWN):
             logger.info('DraftDuel: enable lobby automatic deployment; wait for auto_right')
             self.appear_then_click(self.I_AUTO_DOWN, interval=1)
-        # 沿用本分支的名单交换目录；用队长名单的时间戳隔离大轮，防止读到上轮就绪。
-        role = self._configured_role()
-        peer = 'member' if role == 'captain' else 'captain'
-        both_ready = False
-        try:
-            captain = json.loads((DUEL_SHARE_DIR / 'draft_share_captain.json')
-                                 .read_text(encoding='utf-8'))
-            match = captain['ts']
-            payload = {'match': match, 'completed': self._battle_count,
-                       'ready': ready, 'names': list(self.picked_roles),
-                       'mate': list(self._battle_mate_names or ()), 'ts': time.time()}
-            path = DUEL_SHARE_DIR / f'auto_ready_{role}.json'
-            temporary = path.with_suffix('.tmp')
-            temporary.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
-            temporary.replace(path)
-            remote = json.loads((DUEL_SHARE_DIR / f'auto_ready_{peer}.json')
-                                .read_text(encoding='utf-8'))
-            both_ready = (ready and remote.get('ready') is True
-                          and remote.get('match') == match
-                          and remote.get('completed') == self._battle_count
-                          and remote.get('names') == payload['mate']
-                          and remote.get('mate') == payload['names']
-                          and 0 <= time.time() - remote['ts'] <= 30)
-        except (OSError, ValueError, KeyError, TypeError):
-            pass
-        reason = None if both_ready else ('等待队友确认自动上阵' if ready else '等待本端出现 auto_right')
+        reason = None if ready else '等待本端出现 auto_right'
         if reason != self._auto_wait_reason:
-            logger.info(f'DraftDuel: {reason or "双方自动上阵已确认，允许匹配"}')
+            logger.info(f'DraftDuel: {reason or "本端自动上阵已确认，允许匹配"}')
             self._auto_wait_reason = reason
-        return both_ready
+        return ready

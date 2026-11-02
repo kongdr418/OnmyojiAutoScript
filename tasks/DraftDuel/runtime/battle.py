@@ -140,6 +140,13 @@ class DraftDuelBattleMixin:
                     continue
                 self._auto_wait_timer = None
                 if self._configured_role() == 'captain':
+                    if self._battle_count == 1 and not self._first_battle_waited:
+                        logger.info('DraftDuel: 首局结束，队长在大厅等待3秒')
+                        self.device.sleep(3)
+                        self._first_battle_waited = True
+                        self.screenshot()
+                        if not self.appear(self.I_START) or not self._ensure_lobby_auto_form():
+                            continue
                     self._result_counted = False
                     self._battle_fielded = False
                     self.appear_then_click(self.I_START, interval=1)
