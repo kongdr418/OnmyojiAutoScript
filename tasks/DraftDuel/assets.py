@@ -102,6 +102,22 @@ class DraftDuelAssets:
 	I_AUTO_DOWN = RuleImage(roi_front=(999,619,58,71), roi_back=(956,574,142,138), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_auto_down.png")
 	# 大厅取消自动
 	I_AUTO_RIGHT = RuleImage(roi_front=(1000,619,58,71), roi_back=(957,579,142,138), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_auto_right.png")
+	# 暂离
+	I_EXIT_MOMENT = RuleImage(roi_front=(581,516,99,37), roi_back=(558,499,146,80), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_exit_moment.png")
+	# 离队
+	I_EXIT = RuleImage(roi_front=(583,436,99,37), roi_back=(562,414,146,80), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_exit.png")
+	# 取消离队
+	I_EXIT_CANCEL = RuleImage(roi_front=(580,358,99,37), roi_back=(557,336,146,80), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_exit_cancel.png")
+	# 组队阶段
+	I_WAIT_FIGHT_LOBBY = RuleImage(roi_front=(140,104,147,64), roi_back=(121,87,190,96), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_wait_fight_lobby.png")
+	# 头筹分享
+	I_DRAFT_SHARE = RuleImage(roi_front=(1132,613,68,67), roi_back=(1098,565,130,141), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_draft_share.png")
+	# 战斗统计
+	I_FIGHT_STATISTIC = RuleImage(roi_front=(1073,566,36,38), roi_back=(1053,539,81,95), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_fight_statistic.png")
+	# 结果
+	I_FIGHT_RESULT = RuleImage(roi_front=(620,288,136,64), roi_back=(582,272,215,99), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_fight_result.png")
+	# 协同大厅固定标题，兼容队长和队员按钮状态
+	I_LOBBY_TITLE = RuleImage(roi_front=(146,8,123,40), roi_back=(48,0,339,76), threshold=0.8, method="Template matching", file="./tasks/DraftDuel/draft_duel/draft_duel_lobby_title.png")
 
 
 	# Ocr Rule Assets

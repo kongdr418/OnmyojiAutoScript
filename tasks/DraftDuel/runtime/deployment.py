@@ -66,7 +66,12 @@ class DraftDuelDeploymentMixin:
                 logger.info(f'DraftDuel: prep screen reached, state={label}')
                 names = getattr(self, '_battle_detail', None) or self.picked_roles
                 self._battle_fielded = True
-                return self._field_battle_lineup(names)
+                if self._use_auto_form():
+                    return self._auto_form_field()
+                if not self._field_battle_lineup(names):
+                    return False
+                self._first_lineup_done = True
+                return True
             self.device.sleep(0.5)
         logger.warning('DraftDuel: prep screen not found')
         return False
@@ -343,7 +348,7 @@ class DraftDuelDeploymentMixin:
             self._fielding_active = False
 
     def _auto_form_field(self) -> bool:
-        """后续小局已在待匹配页确认双方自动上阵；此处只等进入战斗。"""
+        """后续小局等待战斗；大厅未成功开启时，在上卡页补开自动上阵。"""
         timer = Timer(120).start()
         while not timer.reached():
             self.device.stuck_record_clear()
@@ -351,6 +356,9 @@ class DraftDuelDeploymentMixin:
             if self.appear(self.I_BATTLE_PAGE):
                 logger.info('DraftDuel: automatic deployment entered battle')
                 return True
+            if not self.appear(self.I_CANCEL_ANTO_1):
+                if self.appear_then_click(self.I_ENABEL_AUTO_1, interval=1):
+                    logger.info('DraftDuel: 上卡页补开自动上阵，等待出现取消自动或进入战斗')
             self.device.sleep(0.5)
         logger.warning('DraftDuel: automatic deployment did not enter battle within 120s')
         return False

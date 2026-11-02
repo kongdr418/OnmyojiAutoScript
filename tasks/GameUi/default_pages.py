@@ -6,6 +6,8 @@ from tasks.Component.SwitchAccount.assets import SwitchAccountAssets
 from tasks.Exploration.assets import ExplorationAssets
 from tasks.GameUi.action import conditional_action, sequence
 from tasks.GameUi.chess_battle import handle_chess_battle_page
+from tasks.GameUi.draft_duel import leave_draft_duel
+from tasks.DraftDuel.assets import DraftDuelAssets
 from tasks.Pets.assets import PetsAssets
 from typing import Union
 
@@ -226,8 +228,13 @@ page_hunt_kirin = Page(GameUiAssets.I_CHECK_HUNT_KIRIN, category="global")
 page_hunt_kirin.connect(page_town, GlobalGameAssets.I_UI_BACK_YELLOW, key="page_hunt_kirin->page_town")
 page_town.connect(page_hunt_kirin, GameUiAssets.I_TOWN_GOTO_HUNT, key="page_town->page_hunt_kirin")
 
-page_draft_duel = Page(GameUiAssets.I_CHECK_DRAFT_DUEL, category="global")
-page_draft_duel.connect(page_town, GlobalGameAssets.I_UI_BACK_YELLOW, key="page_draft_duel->page_town")
+page_draft_duel = Page(any_of(GameUiAssets.I_CHECK_DRAFT_DUEL, DraftDuelAssets.I_LOBBY_TITLE), category="global")
+page_draft_duel.connect(page_town, leave_draft_duel, key="page_draft_duel->page_town")
+page_draft_duel_exit = Page(
+    all_of(DraftDuelAssets.I_EXIT, DraftDuelAssets.I_EXIT_CANCEL, DraftDuelAssets.I_EXIT_MOMENT),
+    category="global", priority=95,
+)
+page_draft_duel_exit.connect(page_town, leave_draft_duel, key="page_draft_duel_exit->page_town")
 page_town.connect(page_draft_duel, GameUiAssets.I_TOWN_GOTO_DRAFT_DUEL, key="page_town->page_draft_duel")
 
 page_hyakkiyakou = Page(GameUiAssets.I_CHECK_KYAKKIYAKOU, category="global")

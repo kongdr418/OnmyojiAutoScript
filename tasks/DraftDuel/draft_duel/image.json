@@ -223,5 +223,84 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "大厅取消自动"
+  },
+  {
+    "itemName": "exit_moment",
+    "imageName": "draft_exit_moment.png",
+    "roiFront": "581,516,99,37",
+    "roiBack": "558,499,146,80",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "暂离"
+  },
+  {
+    "itemName": "exit",
+    "imageName": "draft_exit.png",
+    "roiFront": "583,436,99,37",
+    "roiBack": "562,414,146,80",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "离队"
+  },
+  {
+    "itemName": "exit_cancel",
+    "imageName": "draft_exit_cancel.png",
+    "roiFront": "580,358,99,37",
+    "roiBack": "557,336,146,80",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "取消离队"
+  },
+  {
+    "itemName": "wait_fight_lobby",
+    "imageName": "draft_wait_fight_lobby.png",
+    "roiFront": "140,104,147,64",
+    "roiBack": "121,87,190,96",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "组队阶段"
+  },
+  {
+    "itemName": "draft_share",
+    "imageName": "draft_draft_share.png",
+    "roiFront": "1132,613,68,67",
+    "roiBack": "1098,565,130,141",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "头筹分享"
+  },
+  {
+    "itemName": "fight_statistic",
+    "imageName": "draft_fight_statistic.png",
+    "roiFront": "1073,566,36,38",
+    "roiBack": "1053,539,81,95",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "战斗统计"
+  },
+  {
+    "itemName": "fight_result",
+    "imageName": "draft_fight_result.png",
+    "roiFront": "620,288,136,64",
+    "roiBack": "582,272,215,99",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "结果"
+  },
+  {
+    "itemName": "lobby_title",
+    "imageName": "draft_duel_lobby_title.png",
+    "roiFront": "146,8,123,40",
+    "roiBack": "48,0,339,76",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "协同大厅固定标题，兼容队长和队员按钮状态"
   }
 ]

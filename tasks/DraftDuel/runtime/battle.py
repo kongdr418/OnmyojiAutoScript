@@ -63,6 +63,10 @@ class DraftDuelBattleMixin:
             self._reward_seen = True
             self._click_rule(self.C_CONTINUE, 'dd_continue')
             return True
+        if any(self.appear(rule) for rule in (
+                self.I_DRAFT_SHARE, self.I_FIGHT_STATISTIC, self.I_FIGHT_RESULT)):
+            self._click_rule(self.C_CONTINUE, 'dd_continue')
+            return True
         return False
 
     def _clear_final_panel(self) -> bool:
@@ -97,34 +101,49 @@ class DraftDuelBattleMixin:
         """打完一局（6胜或2负）：处理上阵、结算、下一场战斗。"""
         names = getattr(self, '_battle_detail', None) or self.picked_roles
         timer = Timer(timeout).start()
+        final_lobby_frames = 0
+        final_settlement_timer = None
         while not timer.reached():
             self.device.stuck_record_clear()
             self.screenshot()
             auto_ready = self._ensure_lobby_auto_form()
-            if self._run_finished() and (getattr(self, '_reward_seen', False)
-                                         or getattr(self, '_match_ended', False)):
-                return True
+            if self._run_finished():
+                if final_settlement_timer is None:
+                    final_settlement_timer = Timer(120).start()
+                elif final_settlement_timer.reached():
+                    logger.warning('DraftDuel: 最终结算120秒内未返回大厅')
+                    return False
             if self.appear(self.I_BATTLE_PAGE):
                 self._battle_fielded = False
                 self.device.sleep(0.5)
                 continue
 
             if self._handle_settlement_pages():
-                if self._run_finished() and (getattr(self, '_reward_seen', False)
-                                             or getattr(self, '_match_ended', False)):
+                final_lobby_frames = 0
+                self.device.sleep(0.3)
+                continue
+
+            if self._run_finished():
+                in_lobby = self.appear(self.I_WAIT_FIGHT_LOBBY) or self.appear(self.I_NEW_MATCH)
+                final_lobby_frames = final_lobby_frames + 1 if in_lobby else 0
+                if final_lobby_frames >= 2:
+                    logger.info('DraftDuel: 结算已清理，确认返回大厅')
                     return True
+                self.device.sleep(0.5)
                 continue
 
             if self._prep_visible(full_fallback=False):
                 self._result_counted = False
                 if not getattr(self, '_battle_fielded', False):
                     self._battle_fielded = True
-                    if self.AUTO_FORM_AFTER_FIRST and getattr(self, '_battle_count', 0) >= 1:
+                    if self._use_auto_form():
                         if not self._auto_form_field():
                             return False
-                    elif not self._field_battle_lineup(names):
-                        logger.warning('DraftDuel: fielding failed')
-                        return False
+                    else:
+                        if not self._field_battle_lineup(names):
+                            logger.warning('DraftDuel: fielding failed')
+                            return False
+                        self._first_lineup_done = True
                 self.device.sleep(1.0)
                 continue
             self._battle_fielded = False
@@ -140,7 +159,7 @@ class DraftDuelBattleMixin:
                     continue
                 self._auto_wait_timer = None
                 if self._configured_role() == 'captain':
-                    if self._battle_count == 1 and not self._first_battle_waited:
+                    if self._use_auto_form() and not self._first_battle_waited:
                         logger.info('DraftDuel: 首局结束，队长在大厅等待3秒')
                         self.device.sleep(3)
                         self._first_battle_waited = True
@@ -154,4 +173,4 @@ class DraftDuelBattleMixin:
                 continue
             self.device.sleep(0.5)
         logger.warning('DraftDuel: battle timeout')
-        return self._run_finished()
+        return False

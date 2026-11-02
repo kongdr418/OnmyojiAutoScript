@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from module.exception import TaskEnd
 from module.logger import logger
 from tasks.DraftDuel.config import DraftDuelConfig
-from tasks.GameUi.page import page_draft_duel
+from tasks.GameUi.page import page_draft_duel, page_town
 
 
 class DraftDuelLifecycleMixin:
@@ -93,6 +93,7 @@ class DraftDuelLifecycleMixin:
             completed += 1
             logger.info(f'DraftDuel: match {completed}/{target_label} finished')
 
+        self.goto_page(page_town)
         self.set_next_run(task='DraftDuel', success=True, finish=True)
         raise TaskEnd('DraftDuel')
 
@@ -136,9 +137,12 @@ class DraftDuelLifecycleMixin:
             self._battle_mate_names = self._duel_share_read_mate()
             # 同上，暂时不打开阵容详情
             # self._read_lineup_detail()
-            self._start_fielding()
-            self._wait_battle_return()
+            if not self._start_fielding() or not self._wait_battle_return():
+                logger.warning('DraftDuel: member fielding or settlement failed')
+                self.set_next_run(task='DraftDuel', success=False, finish=True)
+                raise TaskEnd('DraftDuel')
             completed += 1
+        self.goto_page(page_town)
         self.set_next_run(task='DraftDuel', success=True, finish=True)
         raise TaskEnd('DraftDuel')
 

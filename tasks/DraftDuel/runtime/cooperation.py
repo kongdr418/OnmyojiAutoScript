@@ -18,6 +18,7 @@ class DraftDuelCooperationMixin:
         self._result_counted = False
         self._battle_fielded = False
         self._battle_count = 0
+        self._first_lineup_done = False
         self._battle_mate_names = None
         self._reward_seen = False
         self._match_ended = False
@@ -82,9 +83,15 @@ class DraftDuelCooperationMixin:
             time.sleep(0.5)
         return None
 
+    def _use_auto_form(self) -> bool:
+        """首局手动上阵完成后即可自动；不依赖胜负页面是否识别成功。"""
+        return self.AUTO_FORM_AFTER_FIRST and (
+            getattr(self, '_first_lineup_done', False) or getattr(self, '_battle_count', 0) >= 1
+        )
+
     def _ensure_lobby_auto_form(self) -> bool:
         """后续小局只确认本端 auto_right，不依赖队友 OAS 就绪文件。"""
-        if getattr(self, '_battle_count', 0) < 1:
+        if not self._use_auto_form():
             return True
         if not any(self.appear(rule) for rule in (
                 self.I_START, self.I_DRAFT_DUEL_COMPLETED_HALL, self.I_MEMBERS_AWAIT)):

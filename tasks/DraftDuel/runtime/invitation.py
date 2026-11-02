@@ -71,7 +71,8 @@ class DraftDuelInvitationMixin:
     def _ensure_draft_lobby(self) -> bool:
         """一局结束后可能已经回主界面：先导航回协同大厅。"""
         self.screenshot()
-        if (self.appear(self.I_NEW_MATCH)
+        if (self.appear(self.I_LOBBY_TITLE)
+                or self.appear(self.I_NEW_MATCH)
                 or self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL)
                 or self.appear(self.I_START)):
             return True
@@ -82,7 +83,8 @@ class DraftDuelInvitationMixin:
             logger.warning(f'DraftDuel: goto draft lobby failed: {e}')
             return False
         self.screenshot()
-        return (self.appear(self.I_NEW_MATCH)
+        return (self.appear(self.I_LOBBY_TITLE)
+                or self.appear(self.I_NEW_MATCH)
                 or self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL)
                 or self.appear(self.I_START))
 

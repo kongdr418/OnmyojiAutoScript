@@ -55,6 +55,7 @@ class Script:
         # Failure count of tasks
         # Key: str, task name, value: int, failure count
         self.failure_record = {}
+        self.idle_failure_count = 0
         self.last_task_runtime_outcome: dict[str, Any] | None = None
         self.task_hoarding_until: datetime | None = None
         self.task_hoarding_released = False
@@ -362,6 +363,7 @@ class Script:
                 self.state_queue.put({"schedule": self.config.get_schedule_data()})
             # 任务时间到了返回任务名称
             if task.next_run <= now:
+                self.idle_failure_count = 0
                 return task.command
             # 根据策略执行等待逻辑
             wait_until = task.next_run
@@ -369,11 +371,20 @@ class Script:
                 wait_until = min(wait_until, self.config.waiting_task[0].next_run)
             decision = self.runtime.handle_wait_during_idle(wait_until)
             if decision == ScriptRuntimeDecision.RESCHEDULE:
+                self.idle_failure_count = 0
                 logger.info('Idle wait requested scheduler refresh, reload config and reschedule')
                 del_cached_property(self, "config")
             elif decision == ScriptRuntimeDecision.FAILED:
+                self.idle_failure_count += 1
+                if self.idle_failure_count >= 3:
+                    message = '空闲页面恢复连续失败3次，停止脚本，请手动检查游戏页面'
+                    logger.critical(message)
+                    self.config.notifier.push(title='页面恢复失败', content=message)
+                    raise RequestHumanTakeover(message)
                 logger.warning('Idle wait preparation failed, reload config and retry scheduling')
                 del_cached_property(self, "config")
+            else:
+                self.idle_failure_count = 0
 
     def exception_handler(self, e: Exception, command: str) -> None:
         # 处理御魂溢出
