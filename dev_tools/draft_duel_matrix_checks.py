@@ -15,7 +15,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from tasks.DraftDuel import strategy as s
-from tasks.DraftDuel.matrix import ScoringMatrix, best_plan, legal_lineup, score_team
+from tasks.DraftDuel.matrix import ScoringMatrix, best_plan, joint_draft_choices, legal_lineup, score_team
 
 
 def catalog_for(roles):
@@ -206,6 +206,22 @@ class MatrixPickTests(unittest.TestCase):
 
 
 class RuntimeMatrixTests(unittest.TestCase):
+    def test_joint_draft_is_symmetric_and_selects_from_each_side(self):
+        offers = ['凤凰火', '百目鬼', '莹草']
+        peer_offers = ['思金神', '鬼童丸', '辉夜姬']
+        for own, mate in (([], []), (['因幡辉夜姬'], ['云间不见岳']),
+                          (['平将门', '薰', '茨木童子', '清姬'],
+                           ['思金神', '辉夜姬', '阎魔', '阿修罗'])):
+            # 候选不能与双方已选重复。
+            peer = [n for n in peer_offers if n not in own + mate]
+            if len(peer) < 3:
+                peer = ['食灵', '铃彦姬', '玉藻前']
+            result = joint_draft_choices(offers, own, peer, mate)
+            reverse = joint_draft_choices(peer, mate, offers, own)
+            self.assertEqual(result, reverse[::-1])
+            self.assertIn(result[0], offers)
+            self.assertIn(result[1], peer)
+
     def test_progress_exchange_rejects_previous_match_and_malformed_file(self):
         module = load_runtime('cooperation.py')
         captain = module.DraftDuelCooperationMixin()
@@ -217,6 +233,12 @@ class RuntimeMatrixTests(unittest.TestCase):
                 module, 'DUEL_SHARE_DIR', Path(directory)):
             captain._draft_share_write(['辉夜姬', '薰'])
             self.assertEqual(member._draft_share_read_mate(), ['辉夜姬', '薰'])
+            member._draft_started_at += 2
+            captain._draft_share_write(['辉夜姬'], ['凤凰火', '清姬', '食灵'], 2)
+            snapshot = member._draft_share_read_snapshot()
+            self.assertEqual(snapshot['offers'], ['凤凰火', '清姬', '食灵'])
+            self.assertEqual(snapshot['round'], 2)
+            self.assertEqual(snapshot['names'], ['辉夜姬'])
             path = Path(directory) / 'draft_progress_captain.json'
             self.assertFalse(path.with_suffix('.tmp').exists())
             self.assertFalse((Path(directory) / 'draft_share_captain.json').exists())
@@ -248,9 +270,30 @@ class RuntimeMatrixTests(unittest.TestCase):
         runtime.TOTAL_PICKS = 5
         offers = ['薰', '百目鬼', '茨木童子']
         runtime._role_name = lambda index: offers[index]
-        runtime._draft_share_read_mate = lambda: ['因幡辉夜姬', '灼华桃花妖']
-        expected = s.choose_pick(offers, ['平将门'], mate=runtime._draft_share_read_mate())
+        runtime._draft_share_read_snapshot = lambda: {'names': ['因幡辉夜姬', '灼华桃花妖']}
+        expected = s.choose_pick(offers, ['平将门'], mate=runtime._draft_share_read_snapshot()['names'])
         self.assertEqual(runtime._choose_by_strategy(), offers.index(expected.name))
+
+    def test_runtime_joint_draft_and_wrong_round_fallback(self):
+        module = load_runtime('selection.py')
+        runtime = module.DraftDuelSelectionMixin()
+        runtime._team = ['辉夜姬']
+        runtime._draft_round = 2
+        runtime.TOTAL_PICKS = 5
+        offers = ['凤凰火', '清姬', '莹草']
+        peer = ['思金神', '阿修罗', '鬼童丸']
+        snapshot = {'names': ['薰'], 'offers': peer, 'round': 2}
+        runtime._role_name = lambda index: offers[index]
+        runtime._draft_share_read_snapshot = lambda: snapshot
+        with patch.object(module, 'joint_draft_choices', wraps=joint_draft_choices) as joint:
+            expected, _ = joint_draft_choices(offers, runtime._team, peer, snapshot['names'])
+            self.assertEqual(runtime._choose_by_strategy(), offers.index(expected))
+            joint.assert_called_once()
+            joint.reset_mock()
+            snapshot['round'] = 1
+            expected = s.choose_pick(offers, runtime._team, mate=snapshot['names'])
+            self.assertEqual(runtime._choose_by_strategy(), offers.index(expected.name))
+            joint.assert_not_called()
 
 
 if __name__ == '__main__':

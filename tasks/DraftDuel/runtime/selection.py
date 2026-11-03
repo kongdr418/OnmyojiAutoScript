@@ -6,6 +6,7 @@ import time
 from module.base.timer import Timer
 from module.logger import logger
 from tasks.DraftDuel.strategy import CATALOG, rank_picks, normalize_name
+from tasks.DraftDuel.matrix import joint_draft_choices
 
 
 class DraftDuelSelectionMixin:
@@ -18,6 +19,7 @@ class DraftDuelSelectionMixin:
         self.picked_roles = []
         self._team = []
         self._draft_started_at = time.time()
+        self._draft_exchange_waited = set()
         self._draft_share_write([])
         last_hint = None
         timer = Timer(300).start()
@@ -48,6 +50,18 @@ class DraftDuelSelectionMixin:
             if not 1 <= index <= self.TOTAL_PICKS or index in picked:
                 self.device.sleep(0.5)
                 continue
+            self._draft_round = index
+            # 推荐等待期间也先公开候选，供另一端策略使用。
+            self._draft_offers = [normalize_name(self._role_name(slot)) for slot in range(3)]
+            self._draft_share_write(self._team, self._draft_offers, index)
+            if index not in self._draft_exchange_waited and (seconds <= 0 or seconds > 3):
+                self._draft_exchange_waited.add(index)
+                # 只给同机消息一个短暂交换窗口，不等待人工推荐或长期阻塞选卡。
+                for _ in range(5):
+                    snapshot = self._draft_share_read_snapshot()
+                    if snapshot.get('round') == index and snapshot.get('offers'):
+                        break
+                    self.device.sleep(0.2)
             # 直接策略模式不依赖倒计时 OCR，候选识别成功即可选择。
             if use_recommendation and not 0 < seconds <= self.RECOMMEND_HIGH:
                 self.device.sleep(0.5)
@@ -143,9 +157,21 @@ class DraftDuelSelectionMixin:
         try:
             # OCR 可能把未归一化的名字写进队伍，过滤掉图鉴里没有的，避免 KeyError
             team = [item for item in self._team if item in CATALOG]
-            mate = self._draft_share_read_mate()
+            snapshot = self._draft_share_read_snapshot()
+            mate = snapshot.get('names', [])
             ranked = rank_picks(offers, team, mate=mate, team_size=self.TOTAL_PICKS)
             decision = ranked[0]
+            peer_offers = snapshot.get('offers', [])
+            if (snapshot.get('round') == getattr(self, '_draft_round', None)
+                    and peer_offers and len(snapshot.get('names', [])) == len(team)
+                    and len(offers) == 3):
+                try:
+                    own, peer = joint_draft_choices(offers, team, peer_offers, mate)
+                    decision = next(row for row in ranked if row.name == own)
+                    logger.info(f'DraftDuel: joint draft own={own} mate_expected={peer} '
+                                f'mate_offers={peer_offers}; peer choice is not confirmed')
+                except ValueError as e:
+                    logger.warning(f'DraftDuel: joint draft fallback to known roster: {e}')
             logger.info(f'DraftDuel: matrix context own={team} mate={mate or "unknown"}')
             for candidate in ranked:
                 parts = ' '.join(f'{label}{value:+.1f}' for label, value in candidate.score_parts)

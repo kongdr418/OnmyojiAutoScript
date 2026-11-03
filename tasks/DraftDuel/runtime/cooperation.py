@@ -41,13 +41,15 @@ class DraftDuelCooperationMixin:
                 except Exception as e:
                     logger.warning(f'DraftDuel: share reset failed: {e}')
 
-    def _draft_share_write(self, names):
+    def _draft_share_write(self, names, offers=(), round_number=None):
         """选卡阶段单独交换进度，不把未选满的名单标为可上场。"""
         role = self._configured_role()
         try:
             DUEL_SHARE_DIR.mkdir(parents=True, exist_ok=True)
             path = DUEL_SHARE_DIR / f'draft_progress_{role}.json'
-            payload = {'names': list(names), 'ts': time.time()}
+            payload = {'names': list(names), 'offers': list(offers),
+                       'round': round_number, 'started': self._draft_started_at,
+                       'ts': time.time()}
             temporary = path.with_suffix('.tmp')
             temporary.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
             temporary.replace(path)
@@ -55,20 +57,30 @@ class DraftDuelCooperationMixin:
             logger.warning(f'DraftDuel: draft progress write failed: {e}')
 
     def _draft_share_read_mate(self):
+        return self._draft_share_read_snapshot().get('names', [])
+
+    def _draft_share_read_snapshot(self):
         """只读本次进入选卡后更新的队友进度；缺失或过期时按单方评分。"""
         role = 'member' if self._configured_role() == 'captain' else 'captain'
         try:
             path = DUEL_SHARE_DIR / f'draft_progress_{role}.json'
             payload = json.loads(path.read_text(encoding='utf-8'))
             timestamp = float(payload['ts'])
-            if not self._draft_started_at <= timestamp <= time.time():
-                return []
+            # 不以对方写入时间必须晚于本端入场为条件：双方入场存在时差。
+            started = float(payload.get('started', timestamp))
+            if abs(started - self._draft_started_at) > 15 or timestamp > time.time():
+                return {}
             if time.time() - timestamp > 180:
-                return []
+                return {}
+            if not isinstance(payload['names'], list) or not isinstance(payload.get('offers', []), list):
+                return {}
             names = [normalize_name(raw) for raw in payload['names']]
-            return list(dict.fromkeys(name for name in names if name))[:5]
+            offers = [normalize_name(raw) for raw in payload.get('offers', [])]
+            return {'names': list(dict.fromkeys(name for name in names if name))[:5],
+                    'offers': offers if len(offers) == 3 and all(offers) and len(set(offers)) == 3 else [],
+                    'round': payload.get('round')}
         except (OSError, ValueError, TypeError, KeyError, AttributeError):
-            return []
+            return {}
 
     def _duel_share_write(self, names):
         if not names:

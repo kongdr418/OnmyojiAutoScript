@@ -255,6 +255,49 @@ def best_plan(own, mate=(), *, own_size=3, mate_size=3, locked=(),
     return best
 
 
+def joint_draft_choices(offers, team, mate_offers, mate, *, catalog=None):
+    """同轮双方候选联合比较；只返回预期选择，不将其写成已选卡。"""
+    catalog = data.CATALOG if catalog is None else catalog
+    own_rank = {p.name: p for p in rank_picks(offers, team, mate=mate, catalog=catalog)}
+    peer_rank = {p.name: p for p in rank_picks(mate_offers, mate, mate=team, catalog=catalog)}
+    matrix = ScoringMatrix((*team, *mate, *own_rank, *peer_rank), catalog)
+    best = None
+    captain_order = (tuple(sorted(team)), tuple(sorted(own_rank))) <= (tuple(sorted(mate)), tuple(sorted(peer_rank)))
+    for own in sorted(own_rank):
+        for peer in sorted(peer_rank):
+            if own == peer or own in mate or peer in team:
+                continue
+            pools = ((*team, own), (*mate, peer))
+            limits = tuple(min(3, len(pool)) for pool in pools)
+            plans = []
+            for count in range(sum(limits), -1, -1):
+                for own_size in range(limits[0] + 1):
+                    peer_size = count - own_size
+                    if not 0 <= peer_size <= limits[1]:
+                        continue
+                    try:
+                        plans.append(best_plan(*pools, own_size=own_size, mate_size=peer_size,
+                                               catalog=catalog, matrix=matrix, expected_size=6))
+                    except ValueError:
+                        continue
+                if plans:
+                    break
+            if not plans:
+                continue
+            plan = max(plans, key=lambda p: p.score.total)
+            reserve = WEIGHTS['reserve'] * sum(max(0, data.strength_points(catalog[n]))
+                       for n in sorted(set(pools[0] + pools[1]) - set(plan.own + plan.mate)))
+            tendency = sum(value for row in (own_rank[own], peer_rank[peer])
+                           for label, value in row.score_parts if label == '选卡倾向')
+            canonical = (own, peer) if captain_order else (peer, own)
+            key = (len(plan.own) + len(plan.mate), plan.score.total + reserve + tendency, canonical)
+            if best is None or key > best[0]:
+                best = (key, own, peer)
+    if best is None:
+        raise ValueError('双方候选没有合法组合')
+    return best[1], best[2]
+
+
 def rank_picks(offers, team=(), *, mate=(), team_size=5, speeds=None,
                defenses=None, catalog=None) -> tuple[data.Pick, ...]:
     catalog = data.CATALOG if catalog is None else catalog
