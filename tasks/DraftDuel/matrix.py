@@ -27,6 +27,7 @@ WEIGHTS = {
     'no_fire_core': 9.0, 'missing_partner': 24.0,
     'reserve': 0.12, 'early_damage': 24.0,
     'draft_fire': 8.0, 'priority_fire': 5.0,
+    'flame_partner': 12.0,
 }
 
 ROLE_LABELS = {'fire': '供火', 'damage': '输出', 'sustain': '治疗',
@@ -182,6 +183,12 @@ class ScoringMatrix:
         synergy = sum(points for _, points in hits)
         details = [f'{"＋".join(sorted(combo))} {points:+.1f}' for combo, points in hits]
         conditions = 0.0
+        flame = data.flame_partners(members)
+        if flame:
+            # 核心只触发一次；两个核心同时在场不重复叠加。
+            conditions += WEIGHTS['flame_partner'] * min(len(flame), 4)
+            details.append('火系体系：核心=' + '＋'.join(sorted(members & data.FLAME_ENABLERS))
+                           + '；成员=' + '＋'.join(sorted(flame)))
         low_fire = len(data.NO_FIRE_CORE & members)
         if fire == 0 and low_fire >= 2:
             conditions += WEIGHTS['no_fire_core'] * min(low_fire, 4)

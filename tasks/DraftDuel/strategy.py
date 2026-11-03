@@ -128,6 +128,24 @@ SOUL_NAMES = (
 FORMULA_ROLES = {'fire': 2, 'damage': 2, 'protect': 1, 'flex': 1}
 # 用户口径(2026-10-30): 队伍里至少要 2 个打火, 一手输出一手火不够用。
 FIRE_TARGET = 2
+# 用户提供的火系名单；与下方供鬼火的 CORE_FIRE 独立。
+FLAME_SHIKIGAMI = frozenset({
+    '炼狱茨木童子', '烬天玉藻前', '鬼王酒吞童子', '浮世青行灯',
+    '缚骨清姬', '大夜摩天阎魔', '心狩鬼女红叶', '福悦座敷童子',
+    '云间不见岳', '阎魔', '茨木童子', '青行灯', '玉藻前', '不知火',
+    '阿修罗', '食灵', '铃彦姬', '闻人翊悬', '平将门', '思金神',
+    '鬼使白', '凤凰火', '清姬', '座敷童子', '狸猫', '武士之灵',
+    '古笼火', '天火命铃彦姬', '百羽凤凰火',
+})
+FLAME_ENABLERS = frozenset({'云间不见岳', '思金神'})
+
+
+def flame_partners(team: Iterable[str]) -> frozenset[str]:
+    """至少有一个核心和另一名火系成员，才构成火系搭配。"""
+    members = frozenset(team)
+    return (members & FLAME_SHIKIGAMI) - FLAME_ENABLERS if members & FLAME_ENABLERS else frozenset()
+
+
 # 真正能回火的打火机（用户口径 2026-10-30: 薰也是真火, 能自解控+帮队友驱散还打火）
 CORE_FIRE = frozenset({'座敷童子', '辉夜姬', '因幡辉夜姬', '追月神', '流光追月神',
                        '千姬', '鲸汐千姬', '天井下', '薰'})
@@ -438,7 +456,7 @@ def tier_points(entry: Entry, team: Iterable[str] = (), *, speed: int | None = N
     if '170上等' in label and speed is not None:
         return 30 if speed >= 170 else 20
     if '火山队特等' in label or '火系特等' in label:
-        return 40 if '火山队' in names else 30 if '上等' in label else 10
+        return 40 if flame_partners(names) else 30 if '上等' in label else 10
     if '有季特等' in label:
         return 40 if '季' in names else 30
     if 'SP千姬上等' in label:

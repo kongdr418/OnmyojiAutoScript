@@ -38,6 +38,20 @@ def load_runtime(filename):
 
 
 class MatrixScoringTests(unittest.TestCase):
+    def test_flame_requires_either_enabler_and_does_not_mean_fire_supply(self):
+        self.assertFalse(s.flame_partners(['凤凰火', '清姬']))
+        self.assertFalse(s.flame_partners(['云间不见岳']))
+        for core in s.FLAME_ENABLERS:
+            self.assertEqual(s.flame_partners([core, '凤凰火']), {'凤凰火'})
+            scored = score_team([core, '凤凰火'])
+            self.assertEqual(dict(scored.parts)['条件'], 12)
+            self.assertTrue(any('火系体系' in text for text in scored.details))
+            self.assertEqual(s.tier_points(s.CATALOG['玉藻前'], [core, '玉藻前']), 40)
+        self.assertEqual(dict(score_team(['云间不见岳', '思金神', '凤凰火']).parts)['条件'], 12)
+        self.assertFalse(s.is_fire_supplier('凤凰火'))
+        self.assertFalse(s.flame_partners(['思金神', '莹草']))
+        self.assertIn('百羽凤凰火', s.FLAME_SHIKIGAMI)
+
     def test_user_pair_overrides_sources_and_is_symmetric(self):
         names = ['初音未来', '鲸汐千姬']
         matrix = ScoringMatrix(names)
