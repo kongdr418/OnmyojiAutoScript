@@ -1,10 +1,11 @@
 """选人轮次、队友推荐及策略选择。"""
 
 import re
+import time
 
 from module.base.timer import Timer
 from module.logger import logger
-from tasks.DraftDuel.strategy import CATALOG, choose_pick, normalize_name
+from tasks.DraftDuel.strategy import CATALOG, rank_picks, normalize_name
 
 
 class DraftDuelSelectionMixin:
@@ -16,6 +17,8 @@ class DraftDuelSelectionMixin:
         picked = set()
         self.picked_roles = []
         self._team = []
+        self._draft_started_at = time.time()
+        self._draft_share_write([])
         last_hint = None
         timer = Timer(300).start()
         while not timer.reached():
@@ -78,6 +81,7 @@ class DraftDuelSelectionMixin:
                 continue
             self.picked_roles.append(name)
             self._team.append(name)
+            self._draft_share_write(self._team)
             logger.info(f'DraftDuel: pick {index} slot {slot + 1} -> {name}')
             picked.add(index)
             self.device.sleep(1)
@@ -129,7 +133,7 @@ class DraftDuelSelectionMixin:
         return None
 
     def _choose_by_strategy(self):
-        """队友没有推荐时用 strategy.choose_pick，返回卡槽下标 0~2。"""
+        """按矩阵比较三张候选，返回卡槽下标 0~2。"""
         raw = [self._role_name(slot) for slot in range(3)]
         names = [normalize_name(name) for name in raw]
         offers = [name for name in names if name]
@@ -139,7 +143,17 @@ class DraftDuelSelectionMixin:
         try:
             # OCR 可能把未归一化的名字写进队伍，过滤掉图鉴里没有的，避免 KeyError
             team = [item for item in self._team if item in CATALOG]
-            decision = choose_pick(offers, team, team_size=self.TOTAL_PICKS)
+            mate = self._draft_share_read_mate()
+            ranked = rank_picks(offers, team, mate=mate, team_size=self.TOTAL_PICKS)
+            decision = ranked[0]
+            logger.info(f'DraftDuel: matrix context own={team} mate={mate or "unknown"}')
+            for candidate in ranked:
+                parts = ' '.join(f'{label}{value:+.1f}' for label, value in candidate.score_parts)
+                logger.info(
+                    f'DraftDuel: matrix candidate {candidate.name} total={candidate.score:.1f} '
+                    f'{parts} lineup={candidate.lineup} '
+                    f'reasons={candidate.reasons}'
+                )
         except Exception as e:
             logger.warning(f'DraftDuel: strategy failed: {e}')
             return None

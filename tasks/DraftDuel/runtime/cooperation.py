@@ -32,7 +32,7 @@ class DraftDuelCooperationMixin:
 
     def _duel_share_reset(self):
         for role in ('captain', 'member'):
-            for prefix in ('draft_share', 'auto_ready'):
+            for prefix in ('draft_share', 'draft_progress', 'auto_ready'):
                 path = DUEL_SHARE_DIR / f'{prefix}_{role}.json'
                 try:
                     path.unlink()
@@ -40,6 +40,35 @@ class DraftDuelCooperationMixin:
                     pass
                 except Exception as e:
                     logger.warning(f'DraftDuel: share reset failed: {e}')
+
+    def _draft_share_write(self, names):
+        """选卡阶段单独交换进度，不把未选满的名单标为可上场。"""
+        role = self._configured_role()
+        try:
+            DUEL_SHARE_DIR.mkdir(parents=True, exist_ok=True)
+            path = DUEL_SHARE_DIR / f'draft_progress_{role}.json'
+            payload = {'names': list(names), 'ts': time.time()}
+            temporary = path.with_suffix('.tmp')
+            temporary.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8')
+            temporary.replace(path)
+        except Exception as e:
+            logger.warning(f'DraftDuel: draft progress write failed: {e}')
+
+    def _draft_share_read_mate(self):
+        """只读本次进入选卡后更新的队友进度；缺失或过期时按单方评分。"""
+        role = 'member' if self._configured_role() == 'captain' else 'captain'
+        try:
+            path = DUEL_SHARE_DIR / f'draft_progress_{role}.json'
+            payload = json.loads(path.read_text(encoding='utf-8'))
+            timestamp = float(payload['ts'])
+            if not self._draft_started_at <= timestamp <= time.time():
+                return []
+            if time.time() - timestamp > 180:
+                return []
+            names = [normalize_name(raw) for raw in payload['names']]
+            return list(dict.fromkeys(name for name in names if name))[:5]
+        except (OSError, ValueError, TypeError, KeyError, AttributeError):
+            return []
 
     def _duel_share_write(self, names):
         if not names:

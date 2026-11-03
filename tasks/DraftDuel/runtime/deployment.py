@@ -6,6 +6,7 @@ from module.base.timer import Timer
 from module.logger import logger
 from tasks.DraftDuel.field_drag import drag_to_field
 from tasks.DraftDuel.strategy import plan_duel_lineup, plan_lineup
+from tasks.DraftDuel.matrix import score_team
 from tasks.DraftDuel.runtime.portrait_match import (
     HAND_PORTRAIT_SCALE, HAND_PORTRAIT_THRESHOLDS, locate_portrait,
 )
@@ -289,12 +290,14 @@ class DraftDuelDeploymentMixin:
         self._fielding_active = True
         try:
             mate = getattr(self, '_battle_mate_names', None)
+            mate_plan = ()
             try:
                 if mate:
                     try:
                         plan, _mate_plan = plan_duel_lineup(
                             names, mate, locked=[], team_size=min(3, len(names)))
                         logger.info(f'DraftDuel: joint plan own={plan} mate={_mate_plan}')
+                        mate_plan = _mate_plan
                     except Exception as e:
                         logger.warning(f'DraftDuel: joint plan failed, fallback: {e}')
                         plan = plan_lineup(names, team_size=min(3, len(names)),
@@ -306,6 +309,12 @@ class DraftDuelDeploymentMixin:
                 logger.warning(f'DraftDuel: field plan failed: {e}')
                 return False
             logger.info(f'DraftDuel: field plan {plan}')
+            breakdown = score_team((*plan, *mate_plan), expected_size=6 if mate_plan else 3,
+                                   include_stats=True)
+            logger.info(
+                f'DraftDuel: matrix field total={breakdown.total:.1f} '
+                f'{breakdown.summary()} details={breakdown.details}'
+            )
             for _i, _name in enumerate(plan, 1):
                 logger.info(f'DraftDuel: round {_i} will field {_name}')
             self._begin_new_battle_field()
