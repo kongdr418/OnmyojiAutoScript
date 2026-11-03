@@ -12,6 +12,22 @@ from tasks.DraftDuel.runtime.portrait_match import (
 
 
 class DraftDuelDeploymentMixin:
+    def _locate_hand_portrait(self, face, target: str):
+        """同一帧逐级降低手牌匹配阈值；每次定位从最高阈值重新开始。"""
+        for threshold in HAND_PORTRAIT_THRESHOLDS:
+            located = locate_portrait(
+                face, self.device.image, self.HAND_AREA,
+                scale=HAND_PORTRAIT_SCALE, threshold=threshold,
+            )
+            if located is not None:
+                if threshold < HAND_PORTRAIT_THRESHOLDS[0]:
+                    logger.info(
+                        f'DraftDuel: {target} hand portrait matched at reduced '
+                        f'threshold {threshold:.2f}, score={located[1]:.3f}'
+                    )
+                return located
+        return None
+
     def _wait_slot_target(self, target: str):
         """目标连续两帧一致才通过；三次校验失败返回，由调用方重新拖卡。"""
         preview, stable, failures = None, 0, 0
@@ -204,14 +220,7 @@ class DraftDuelDeploymentMixin:
             if face is None:
                 logger.warning(f'DraftDuel: target {target} has no lobby face')
                 return False
-            located = None
-            for threshold in HAND_PORTRAIT_THRESHOLDS:
-                located = locate_portrait(
-                    face, self.device.image, self.HAND_AREA,
-                    scale=HAND_PORTRAIT_SCALE, threshold=threshold,
-                )
-                if located is not None:
-                    break
+            located = self._locate_hand_portrait(face, target)
             if located is None:
                 logger.warning(
                     f'DraftDuel: {target} not found in hand area, '

@@ -7,7 +7,8 @@ FIGHT_PORTRAIT_SCALE = 0.986
 # 两组截图在各框 ±2 像素范围校准后，固定为 1.60 倍。
 HAND_PORTRAIT_SCALE = 1.60
 HAND_PORTRAIT_SCALES = (HAND_PORTRAIT_SCALE,)
-HAND_PORTRAIT_THRESHOLDS = (0.75, 0.70, 0.65)
+# 高阈值未命中时每次降低 0.05；手牌定位最低到 0.50。
+HAND_PORTRAIT_THRESHOLDS = (0.75, 0.70, 0.65, 0.60, 0.55, 0.50)
 
 
 def locate_portrait(template, image, area, *, scale=HAND_PORTRAIT_SCALE, threshold=0.65, scales=None):
