@@ -16,5 +16,32 @@
     "method": "Default",
     "keyword": "",
     "description": "好友列表"
+  },
+  {
+    "itemName": "synthesis_level",
+    "roiFront": "747,424,181,34",
+    "roiBack": "747,424,181,34",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "合成目标星级"
+  },
+  {
+    "itemName": "boss_name",
+    "roiFront": "515,132,33,203",
+    "roiBack": "515,132,33,203",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": ""
+  },
+  {
+    "itemName": "metademon_pass",
+    "roiFront": "1126,3,95,39",
+    "roiBack": "1126,3,95,39",
+    "mode": "DigitCounter",
+    "method": "Default",
+    "keyword": "",
+    "description": "超鬼王门票"
   }
 ]

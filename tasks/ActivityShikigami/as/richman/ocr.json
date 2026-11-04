@@ -1,0 +1,29 @@
+[
+  {
+    "itemName": "cinque_count",
+    "roiFront": "1146,670,58,33",
+    "roiBack": "1146,670,58,33",
+    "mode": "Digit",
+    "method": "Default",
+    "keyword": "",
+    "description": "骰子数量"
+  },
+  {
+    "itemName": "level_experience",
+    "roiFront": "939,17,106,39",
+    "roiBack": "934,12,116,49",
+    "mode": "DigitCounter",
+    "method": "Default",
+    "keyword": "",
+    "description": ""
+  },
+  {
+    "itemName": "level",
+    "roiFront": "1099,19,64,35",
+    "roiBack": "1099,19,64,35",
+    "mode": "DigitCounter",
+    "method": "Default",
+    "keyword": "",
+    "description": ""
+  }
+]

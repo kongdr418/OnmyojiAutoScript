@@ -90,9 +90,8 @@ class FrameExtractor(ImageExtractor):
         handlers = []
         for spec in operations:
             if spec['type'] == 'image':
-                # Saved range crops are previews; runframe supplies optional templates.
+                # Saved crops are previews; preserve an explicitly supplied runtime file.
                 spec.pop('imageName', None)
-                spec.pop('file', None)
             kind = spec.pop('type')
             cls = {'image': 'Image', 'ocr': 'Ocr', 'click': 'Click'}[kind]
             handlers.append(cls + '(' + ', '.join(f'{k}={v!r}' for k, v in spec.items()) + ')')
@@ -351,7 +350,8 @@ class AssetsExtractor:
         :return:
         """
         item = data[0]
-        return len(item) == 4
+        return ('roiFront' in item and 'roiBack' in item
+                and not any(key in item for key in ('imageName', 'keyword', 'duration', 'mode')))
 
     @classmethod
     def is_long_click_file(cls, data: list) -> bool:

@@ -93,12 +93,12 @@ class ConfigBase(BaseModel):
             """
             exc_info = exc.errors()[0]
             val_error_type = exc_info.get('type', None)
-            val_error_key = exc_info.get('loc', None)[0]
             if val_error_type not in ['greater_than_equal',
                                       'greater_than',
                                       'less_than',
                                       'less_than_equal',]:
                 raise exc
+            val_error_key = exc_info['loc'][0]
             from module.logger import logger
 
             try:

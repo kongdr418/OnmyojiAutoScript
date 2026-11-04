@@ -118,6 +118,11 @@ Item {
         contentLoader.item.updataData()
     }
 
+    function setLoaderSettings(settings){
+        contentLoader.item.settingsData = settings
+        contentLoader.item.updataData()
+    }
+
     //设置上下文
     function setLoaderContext(configName, taskName){
         contentLoader.item.configName = configName

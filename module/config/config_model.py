@@ -343,12 +343,19 @@ class ConfigModel(ConfigBase):
                 item["title"] = value["title"] if "title" in value else inflection.underscore(key)
                 if "description" in value:
                     item["description"] = value["description"]
+                for extra in ('ui_exclusive_groups', 'ui_hidden'):
+                    if extra in value:
+                        item[extra] = value[extra]
                 item["default"] = value["default"]
                 item["value"] = jsons[key] if key in jsons else value["default"]
                 item["type"] = value["type"] if "type" in value else "enum"
                 if '$ref' in value:  # list
                     enum_key = re.search(r"/([^/]+)$", value['$ref']).group(1)
                     item["enumEnum"] = definitions[enum_key]["enum"]
+                elif value.get('type') == 'array' and '$ref' in value.get('items', {}):
+                    enum_key = re.search(r"/([^/]+)$", value['items']['$ref']).group(1)
+                    item['type'] = 'multi_enum'
+                    item['enumEnum'] = definitions[enum_key]['enum']
                 # if 'allOf' in value:
                 #     enum_key = re.search(r"/([^/]+)$", value['allOf'][0]['$ref']).group(1)
                 #     item["enumEnum"] = definitions[enum_key]["enum"]
@@ -369,9 +376,16 @@ class ConfigModel(ConfigBase):
                         groups_value[key] = groups[group_name]
             result[key] = merge_value(groups_value[key], value, schema["$defs"])
 
+        layout = getattr(task, 'settings_layout', None)
+        if layout and 'settings_layout_config' in result:
+            for item in result['settings_layout_config']:
+                if item['name'] == 'merged_settings_enable':
+                    item['ui_layout'] = {'version': 1, 'sections': layout}
+
         if isinstance(task, Chess):
             result = task.oasx_args(result)
-        return result
+        from module.config.settings_presentation import present_settings
+        return present_settings(task, result)
 
     def script_set_arg(self, task: str, group: str, argument: str, value) -> bool:
         # 验证参数
@@ -431,6 +445,12 @@ class ConfigModel(ConfigBase):
 
         # 设置参数
         try:
+            if getattr(task_object, 'settings_layout', None):
+                # 将列表、JSON 列表和旧文本统一验证后再保存，保持实际执行类型稳定。
+                candidate = group_object.model_dump()
+                candidate[argument] = value
+                validated = type(group_object).model_validate(candidate)
+                value = getattr(validated, argument)
             setattr(group_object, argument, value)
             logger.info(f'Set arg {self.config_name}.{task}.{group}.{argument}.{value}')
             self.save()  # 我是没有想到什么方法可以使得属性改变自动保存的

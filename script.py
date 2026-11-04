@@ -177,42 +177,15 @@ class Script:
         """
         return self.config.model.gui_task(task=task)
 
+    def gui_settings(self, task: str) -> str:
+        return json.dumps(self.config.model.script_task(task), ensure_ascii=False, default=str)
+
     def gui_set_task(self, task: str, group: str, argument: str, value) -> bool:
         """
         设置给gui显示的任务 的参数的具体值
         :return:
         """
-        # 验证参数
-        task = convert_to_underscore(task)
-        group = convert_to_underscore(group)
-        argument = convert_to_underscore(argument)
-        # pandtic验证
-        if isinstance(value, str):
-            if len(value) == 8:
-                try:
-                    value = datetime.strptime(value, '%H:%M:%S').time()
-                except ValueError:
-                    pass
-
-
-        path = f'{task}.{group}.{argument}'
-        task_object = getattr(self.config.model, task, None)
-        group_object = getattr(task_object, group, None)
-        argument_object = getattr(group_object, argument, None)
-
-        if argument_object is None:
-            logger.error(f'Set arg {task}.{group}.{argument}.{value} failed')
-            return False
-
-        try:
-            setattr(group_object, argument, value)
-            argument_object = getattr(group_object, argument, None)
-            logger.info(f'Set arg {task}.{group}.{argument}.{argument_object}')
-            self.config.save()  # 我是没有想到什么方法可以使得属性改变自动保存的
-            return True
-        except ValidationError as e:
-            logger.error(e)
-            return False
+        return self.config.model.script_set_arg(task, group, argument, value)
 
     @zerorpc.stream
     def gui_mirror_image(self):

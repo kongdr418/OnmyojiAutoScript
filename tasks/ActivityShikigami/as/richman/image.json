@@ -1,0 +1,142 @@
+[
+  {
+    "itemName": "rm_throw",
+    "imageName": "as_rm_throw.png",
+    "profile": "High",
+    "roiFront": "1139,604,70,43",
+    "roiBack": "1084,523,183,196",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "投掷骰子"
+  },
+  {
+    "itemName": "rm_main_unlock",
+    "imageName": "as_unlock.png",
+    "profile": "High",
+    "roiFront": "886,646,31,30",
+    "roiBack": "871,620,69,76",
+    "method": "Template matching",
+    "threshold": 0.7,
+    "description": "大富翁主界面未锁定阵容"
+  },
+  {
+    "itemName": "rm_mode_rob",
+    "imageName": "rm_rm_mode_rob.png",
+    "profile": "High",
+    "roiFront": "486,28,306,32",
+    "roiBack": "465,16,349,54",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
+  },
+  {
+    "itemName": "rm_mode_throw",
+    "imageName": "rm_rm_mode_throw.png",
+    "profile": "High",
+    "roiFront": "532,312,215,130",
+    "roiBack": "490,233,320,264",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "投掷对决模式标志"
+  },
+  {
+    "itemName": "rm_fight_unlock",
+    "imageName": "rm_rm_fight_unlock.png",
+    "profile": "High",
+    "roiFront": "1132,510,32,32",
+    "roiBack": "1121,499,53,51",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
+  },
+  {
+    "itemName": "rm_fitght_anchor",
+    "imageName": "rm_rm_fitght_anchor.png",
+    "profile": "High",
+    "roiFront": "555,433,50,28",
+    "roiBack": "163,100,1011,473",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
+  },
+  {
+    "itemName": "rm_mode_fight",
+    "imageName": "rm_rm_mode_fight.png",
+    "roiFront": "1137,604,83,38",
+    "roiBack": "1117,585,121,76",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": ""
+  },
+  {
+    "itemName": "rm_mode_fight_boss",
+    "imageName": "rm_rm_mode_fight_boss.png",
+    "roiFront": "1135,601,83,38",
+    "roiBack": "1117,585,121,76",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": ""
+  },
+  {
+    "itemName": "rm_fight_unlock_boss",
+    "imageName": "rm_rm_fight_unlock_boss.png",
+    "profile": "High",
+    "roiFront": "1129,515,32,32",
+    "roiBack": "1118,502,53,51",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
+  },
+  {
+    "itemName": "rm_throw_fight",
+    "imageName": "rm_rm_throw_fight.png",
+    "profile": "High",
+    "roiFront": "1053,582,83,38",
+    "roiBack": "1034,562,121,76",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "投掷按钮"
+  },
+  {
+    "itemName": "level_up",
+    "imageName": "rm_level_up.png",
+    "profile": "High",
+    "roiFront": "530,117,225,42",
+    "roiBack": "494,84,297,104",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
+  },
+  {
+    "itemName": "cinque_not_enough",
+    "imageName": "rm_cinque_not_enough.png",
+    "profile": "High",
+    "roiFront": "356,123,90,51",
+    "roiBack": "336,82,129,106",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
+  },
+  {
+    "itemName": "rm_fight_goto_records",
+    "imageName": "rm_rm_fight_goto_records.png",
+    "profile": "High",
+    "roiFront": "1028,639,41,34",
+    "roiBack": "1015,619,69,66",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
+  },
+  {
+    "itemName": "rm_fight_boss_goto_records",
+    "imageName": "rm_rm_fight_boss_goto_records.png",
+    "profile": "High",
+    "roiFront": "1021,642,41,34",
+    "roiBack": "1005,626,69,66",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": ""
+  }
+]

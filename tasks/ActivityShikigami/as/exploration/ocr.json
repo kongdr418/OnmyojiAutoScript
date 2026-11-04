@@ -1,0 +1,38 @@
+[
+  {
+    "itemName": "exp_main",
+    "roiFront": "20,111,68,31",
+    "roiBack": "19,85,263,323",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "主线",
+    "description": "主线"
+  },
+  {
+    "itemName": "exp_branch",
+    "roiFront": "18,226,68,31",
+    "roiBack": "19,85,263,323",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "支线",
+    "description": "支线"
+  },
+  {
+    "itemName": "exp_fight",
+    "roiFront": "25,136,68,31",
+    "roiBack": "19,85,263,323",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "遭遇战",
+    "description": "遭遇战"
+  },
+  {
+    "itemName": "event_fight_encounter_count",
+    "roiFront": "1063,621,68,31",
+    "roiBack": "1063,621,68,31",
+    "mode": "DigitCounter",
+    "method": "Default",
+    "keyword": "",
+    "description": ""
+  }
+]

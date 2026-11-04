@@ -89,10 +89,8 @@ SplitPanel{
             const component = Qt.createComponent("../../qml/Component/Args.qml")
             if (component.status === Component.Ready) {
                 setLoader(component)
-                const args = process_manager.gui_args(configName, title)
-                const value = process_manager.gui_task(configName, title)
-                setLoaderData(args, value)
                 setLoaderContext(configName, title)
+                setLoaderSettings(process_manager.gui_settings(configName, title))
             }else{
                 // 组件加载失败
             }

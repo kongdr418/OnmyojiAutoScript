@@ -1,3 +1,10 @@
 {
-
+  "MetaDemon": "Meta Demon",
+  "meta_demon_config": "Meta Demon settings",
+  "low_star_battle_conf": "Low star battle (1-4)",
+  "high_star_battle_conf": "High star battle (5-6)",
+  "ticket_farming_battle_conf": "Ticket farming battle",
+  "quick_preset_config": "High star quick presets",
+  "switch_group_team_help": "The initial value is not suitable; you need to set it according to your own situation. \n'1,2' indicates the first preset group and the second team. \nPlease use a comma from the English input method. \nPreset groups support [1-7], and preset teams support [1-4]",
+  "enable_switch_by_name_help": "This is another way to switch souls. Compared to the method above, it supports more presets, but similarly, you still need to ensure that the preset team is in a locked state"
 }

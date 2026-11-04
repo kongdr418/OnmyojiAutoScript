@@ -243,6 +243,12 @@ class ProcessManager(QObject):
             return None
 
     @Slot(str, str, result="QString")
+    def gui_settings(self, config: str, task: str) -> str:
+        if config in self.clients:
+            return self.check_script(config).gui_settings(task)
+        return '{}'
+
+    @Slot(str, str, result="QString")
     def gui_task(self, config: str, task: str) -> str:
         """
         获取显示task的gui

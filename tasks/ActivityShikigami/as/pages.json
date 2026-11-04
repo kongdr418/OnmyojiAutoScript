@@ -27,15 +27,6 @@
     "description": "进入主要的战斗界面"
   },
   {
-    "itemName": "to_battle_boss",
-    "imageName": "as_to_battle_boss.png",
-    "roiFront": "126,421,79,87",
-    "roiBack": "42,353,234,327",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "点击进入boss战斗页面"
-  },
-  {
     "itemName": "check_battle_boss",
     "imageName": "as_check_battle_boss.png",
     "roiFront": "151,18,129,46",
@@ -43,15 +34,6 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "boss界面标志"
-  },
-  {
-    "itemName": "battle_main_to_records",
-    "imageName": "as_battle_main_to_records.png",
-    "roiFront": "999,560,39,42",
-    "roiBack": "674,539,439,157",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "从main进入到式神录"
   },
   {
     "itemName": "as_to_pass",
@@ -115,15 +97,6 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "关闭眼睛按钮"
-  },
-  {
-    "itemName": "to_battle_ap",
-    "imageName": "as_to_battle_ap.png",
-    "roiFront": "825,321,39,139",
-    "roiBack": "720,255,238,269",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "活动主界面进入体力爬塔标志"
   },
   {
     "itemName": "map_goto_battle",

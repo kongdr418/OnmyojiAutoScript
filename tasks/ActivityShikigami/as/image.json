@@ -9,60 +9,6 @@
     "description": "上锁图标"
   },
   {
-    "itemName": "unlock",
-    "imageName": "as_unlock.png",
-    "roiFront": "897,646,28,25",
-    "roiBack": "686,610,313,92",
-    "method": "Template matching",
-    "threshold": 0.7,
-    "description": "还未上锁图片"
-  },
-  {
-    "itemName": "climb_mode_pass",
-    "imageName": "as_climb_mode_pass.png",
-    "roiFront": "1141,544,21,21",
-    "roiBack": "1118,510,49,105",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "活动爬塔标志"
-  },
-  {
-    "itemName": "climb_mode_ap",
-    "imageName": "as_climb_mode_ap.png",
-    "roiFront": "1091,543,24,25",
-    "roiBack": "1055,495,202,219",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "体力爬塔标志"
-  },
-  {
-    "itemName": "climb_mode_switch",
-    "imageName": "as_climb_mode_switch.png",
-    "roiFront": "1227,542,37,33",
-    "roiBack": "1200,525,78,68",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "切换按键"
-  },
-  {
-    "itemName": "climb_mode_ap100",
-    "imageName": "as_climb_mode_ap100.png",
-    "roiFront": "1186,665,22,25",
-    "roiBack": "1055,495,202,219",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "100体爬塔标志"
-  },
-  {
-    "itemName": "ap_unlock",
-    "imageName": "as_ap_unlock.png",
-    "roiFront": "799,653,22,25",
-    "roiBack": "686,610,313,92",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "体力爬塔阵容解锁"
-  },
-  {
     "itemName": "ap_lock",
     "imageName": "as_ap_lock.png",
     "roiFront": "798,656,27,26",
@@ -79,14 +25,5 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "活动通用挑战图标"
-  },
-  {
-    "itemName": "as_boss_fire",
-    "imageName": "as_as_boss_fire.png",
-    "roiFront": "1130,590,92,47",
-    "roiBack": "1080,530,192,190",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "boss挑战标志"
   }
 ]

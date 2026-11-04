@@ -1,0 +1,44 @@
+[
+  {
+    "itemName": "rm_rob_choice_1",
+    "roiFront": "155,436,100,100",
+    "roiBack": "155,436,100,100",
+    "description": ""
+  },
+  {
+    "itemName": "rm_rob_choice_2",
+    "roiFront": "430,527,100,100",
+    "roiBack": "430,527,100,100",
+    "description": ""
+  },
+  {
+    "itemName": "rm_rob_choice_3",
+    "roiFront": "727,526,100,100",
+    "roiBack": "727,526,100,100",
+    "description": ""
+  },
+  {
+    "itemName": "rm_rob_choice_4",
+    "roiFront": "1015,369,100,100",
+    "roiBack": "1015,369,100,100",
+    "description": ""
+  },
+  {
+    "itemName": "rm_fight_boss_enter",
+    "roiFront": "561,347,49,73",
+    "roiBack": "561,347,49,73",
+    "description": ""
+  },
+  {
+    "itemName": "rm_random_close_safe",
+    "roiFront": "479,513,326,144",
+    "roiBack": "479,513,326,144",
+    "description": ""
+  },
+  {
+    "itemName": "rm_random_close_safe_main",
+    "roiFront": "1102,208,153,327",
+    "roiBack": "1102,208,153,327",
+    "description": ""
+  }
+]

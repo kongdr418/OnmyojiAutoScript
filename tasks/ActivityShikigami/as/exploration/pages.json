@@ -1,0 +1,12 @@
+[
+  {
+    "itemName": "to_exploration",
+    "imageName": "exp_to_exploration.png",
+    "profile": "High",
+    "roiFront": "1028,357,91,65",
+    "roiBack": "981,318,183,141",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "探索入口"
+  }
+]

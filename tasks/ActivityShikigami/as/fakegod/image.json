@@ -1,0 +1,82 @@
+[
+  {
+    "itemName": "fg_unlock",
+    "imageName": "as_unlock.png",
+    "profile": "High",
+    "roiFront": "779,648,31,30",
+    "roiBack": "686,610,313,92",
+    "method": "Template matching",
+    "threshold": 0.7,
+    "description": "阵容未锁定"
+  },
+  {
+    "itemName": "fg_climb_mode_ap",
+    "imageName": "as_climb_mode_ap.png",
+    "profile": "High",
+    "roiFront": "1093,542,22,25",
+    "roiBack": "1055,495,202,219",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "体力爬塔标志"
+  },
+  {
+    "itemName": "fg_climb_mode_ap100",
+    "imageName": "as_climb_mode_ap100.png",
+    "profile": "High",
+    "roiFront": "1186,665,22,25",
+    "roiBack": "1055,495,202,219",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "百体爬塔标志"
+  },
+  {
+    "itemName": "fg_ap_unlock",
+    "imageName": "as_ap_unlock.png",
+    "profile": "High",
+    "roiFront": "779,648,31,30",
+    "roiBack": "686,610,313,92",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "体力阵容未锁定"
+  },
+  {
+    "itemName": "fg_act_fire",
+    "imageName": "as_act_fire.png",
+    "roiFront": "1139,599,84,45",
+    "roiBack": "1080,530,192,190",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "活动挑战按钮"
+  },
+  {
+    "itemName": "fg_climb_mode_pass",
+    "imageName": "as_climb_mode_pass.png",
+    "roiFront": "1149,643,21,21",
+    "roiBack": "1118,510,119,186",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "门票爬塔标志"
+  },
+  {
+    "itemName": "fg_as_locate",
+    "imageName": "as_as_locate.png",
+    "profile": "High",
+    "roiFront": "1212,394,34,36",
+    "roiBack": "1146,253,134,217",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "地图定位按钮"
+  },
+  {
+    "itemName": "fg_battle_main_to_records",
+    "imageName": "as_battle_main_to_records.png",
+    "profile": "High",
+    "roiFront": "1015,560,39,42",
+    "roiBack": "674,539,439,157",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "进入式神录"
+  }
+]

@@ -27,15 +27,6 @@
     "description": "买体力"
   },
   {
-    "itemName": "rm_throw",
-    "imageName": "as_rm_throw.png",
-    "roiFront": "1063,554,80,29",
-    "roiBack": "1012,445,183,196",
-    "method": "Template matching",
-    "threshold": 0.8,
-    "description": "投掷骰子"
-  },
-  {
     "itemName": "rm_check_throw",
     "imageName": "as_rm_check_throw.png",
     "roiFront": "606,337,76,87",

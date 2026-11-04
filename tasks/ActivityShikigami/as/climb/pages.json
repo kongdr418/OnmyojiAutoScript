@@ -1,0 +1,42 @@
+[
+  {
+    "itemName": "to_general_1",
+    "imageName": "as_to_general_1.png",
+    "roiFront": "814,460,110,34",
+    "roiBack": "776,402,207,140",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "进入爬塔主界面"
+  },
+  {
+    "itemName": "to_battle_boss",
+    "imageName": "as_to_battle_boss.png",
+    "roiFront": "1058,295,112,33",
+    "roiBack": "1026,251,193,125",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "进入首领战斗页面"
+  },
+  {
+    "itemName": "to_battle_ap",
+    "imageName": "climb_to_battle_ap.png",
+    "roiFront": "213,251,112,33",
+    "roiBack": "168,206,193,125",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": ""
+  },
+  {
+    "itemName": "to_battle_ap100",
+    "imageName": "climb_to_battle_ap100.png",
+    "roiFront": "397,454,107,33",
+    "roiBack": "360,409,193,125",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": ""
+  }
+]

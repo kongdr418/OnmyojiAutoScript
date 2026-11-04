@@ -5,6 +5,10 @@ import QtQuick.Layouts
 import "./ModelParse.js" as MP
 
 Item {
+    id: settingsRoot
+    property string settingsData: ""
+    property var settingsPayload: ({})
+    property var renderedGroups: []
     property string argsData: ""
     property string valueData: ""
     // 存入 配置名和 任务名两个 上下文
@@ -26,6 +30,8 @@ Item {
             property string groupName: ""
             property string groupTitle: ""
             property var argumentValue: {""}
+            property var fieldItems: []
+            property var variants: []
             expand: true
             headerText: qsTr(groupTitle) +" "+ qsTr("Setting")
             width: contentScrollable.width
@@ -43,8 +49,17 @@ Item {
                     rightMargin: 15
                     bottomMargin: 12
                 }
+                FComboBox {
+                    visible: expander.variants.length > 0
+                    height: visible ? implicitHeight : 0
+                    width: 300
+                    model: expander.variants.map(function(v) { return settingsRoot.localized(v.label) })
+                    onActivated: expander.argumentValue = settingsRoot.rowsForSources(expander.variants[currentIndex].groups)
+                }
             }
             onArgumentValueChanged: {
+                fieldItems.forEach(function(item) { item.destroy() })
+                fieldItems = []
                 for(let index in argumentValue){
                     const arg = argumentValue[index]
                     createItem(arg)
@@ -71,6 +86,7 @@ Item {
                 }
 
                 var object = null
+                if(arg.ui_hidden) return
                 if(arg.type === "string"){
                     object = string_item.createObject(group_column)
                     if(object === null){
@@ -106,6 +122,9 @@ Item {
                         return
                     }
                 }
+                else if(arg.type === "multi_enum"){
+                    object = multi_enum_item.createObject(group_column)
+                }
                 else if(arg.type === "multi_line"){
                     object = multi_line_item.createObject(group_column)
                     if(object === null){
@@ -120,10 +139,45 @@ Item {
                     return
                 }
                 object.modelData = arg
-                group_column.data.push(object)
+                fieldItems.push(object)
             }
         }
 
+    }
+
+    Component {
+        id: multi_enum_item
+        Column {
+            id: selection
+            property var modelData: null
+            width: parent.width
+            spacing: 6
+            FluText {
+                text: selection.modelData ? selection.modelData.title : ""
+                font: FluTextStyle.BodyStrong
+            }
+            Flow {
+                width: parent.width
+                spacing: 12
+                Repeater {
+                    model: selection.modelData ? selection.modelData.options : []
+                    FluCheckBox {
+                        text: modelData
+                        selected: selection.modelData.value.indexOf(modelData) >= 0
+                        clickFunc: function() {
+                            var row = selection.modelData
+                            var option = modelData
+                            var values = settingsRoot.selectionValues(row, option, !selected)
+                            if(set_task(row.sourceGroup, row.name, JSON.stringify(values))) {
+                                var updated = Object.assign({}, row)
+                                updated.value = values
+                                selection.modelData = updated
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     Component{
@@ -150,7 +204,7 @@ Item {
                         }
                     }
 
-                    if(set_task(stringItem.parent.parent.parent.groupName, modelData.name, text)){
+                    if(set_task(modelData.sourceGroup || stringItem.parent.parent.parent.groupName, modelData.name, text)){
                         showSuccess( qsTr("Successful setting"))
                     }
                 }
@@ -219,7 +273,7 @@ Item {
                 validator: IntValidator {}
                 placeholderText: ""
                 onEditingFinished: {
-                    if(set_task(itemArg.parent.parent.parent.groupName, modelData.name, parseInt(text))){
+                    if(set_task(modelData.sourceGroup || itemArg.parent.parent.parent.groupName, modelData.name, parseInt(text))){
                         showSuccess( qsTr("Successful setting"))
                     }
                 }
@@ -284,7 +338,7 @@ Item {
                 validator: DoubleValidator {}
                 placeholderText: ""
                 onEditingFinished: {
-                    if(set_task(itemArg.parent.parent.parent.groupName, modelData.name, parseFloat(text))){
+                    if(set_task(modelData.sourceGroup || itemArg.parent.parent.parent.groupName, modelData.name, parseFloat(text))){
                         showSuccess( qsTr("Successful setting"))
                     }
                 }
@@ -350,7 +404,7 @@ Item {
                 selected: true
                 clickFunc: function click_func(){
                     selected = !selected
-                    if(set_task(itemArg.parent.parent.parent.groupName, modelData.name, selected)){
+                    if(set_task(modelData.sourceGroup || itemArg.parent.parent.parent.groupName, modelData.name, selected)){
                         showSuccess( qsTr("Successful setting"))
                     }
                 }
@@ -413,7 +467,7 @@ Item {
                 }
                 model: ["0", "1", "2"]
                 onActivated: {
-                    if(set_task(itemArg.parent.parent.parent.groupName, modelData.name, currentText)){
+                    if(set_task(modelData.sourceGroup || itemArg.parent.parent.parent.groupName, modelData.name, currentText)){
                         showSuccess( qsTr("Successful setting"))
                     }
                 }
@@ -483,12 +537,12 @@ Item {
                 }
                 placeholderText: ""
                 onEditingFinished: {
-                    if(set_task(multiLineItem.parent.parent.parent.groupName, modelData.name, text)){
+                    if(set_task(modelData.sourceGroup || multiLineItem.parent.parent.parent.groupName, modelData.name, text)){
                         showSuccess( qsTr("Successful setting"))
                     }
                 }
 //                onTextChanged: {
-//                    if(set_task(multiLineItem.parent.parent.parent.groupName, modelData.name, text)){
+//                    if(set_task(modelData.sourceGroup || multiLineItem.parent.parent.parent.groupName, modelData.name, text)){
 //                        showSuccess( qsTr("Successful setting"))
 //                    }
 //                }
@@ -544,6 +598,11 @@ Item {
 
     }
     onUpdataData: {
+        if(settingsData !== "") {
+            settingsPayload = JSON.parse(settingsData)
+            renderSettings()
+            return
+        }
         if(argsData === ""){
             console.error("解析 顺序出问题了")
             return
@@ -574,7 +633,7 @@ Item {
      * @param {Object} argumentVaule 总的显示的参数
      * @returns {Object}
      */
-    function createGroup(groupName, groupTitle, argumentValue){
+    function createGroup(groupName, groupTitle, argumentValue, variants){
         if(!groupName){
             console.error("no group name")
             return
@@ -588,13 +647,79 @@ Item {
         if(object !== null){
             object.groupName = groupName
             object.groupTitle = qsTr(groupTitle)
+            object.variants = variants || []
             object.argumentValue = argumentValue
 
             contentScrollable.content.push(object)
+            renderedGroups.push(object)
         }
         else{
             console.error('create group item failed!')
         }
+    }
+
+    function localized(value) {
+        if(typeof value === "string") return value
+        return value ? (value.zh_CN || value.en_US || "") : ""
+    }
+
+    function selectionValues(row, option, enabled) {
+        var values = row.value.filter(function(item) { return item !== option })
+        if(enabled) {
+            ;(row.ui_exclusive_groups || []).forEach(function(group) {
+                if(group.indexOf(option) >= 0)
+                    values = values.filter(function(item) { return group.indexOf(item) < 0 })
+            })
+            values.push(option)
+        }
+        return values
+    }
+
+    function rowsForSources(sources) {
+        var rows = []
+        ;(sources || []).forEach(function(source) {
+            ;(settingsPayload[source.name] || []).forEach(function(original) {
+                if(original.ui_hidden || (source.fields && source.fields.indexOf(original.name) < 0)) return
+                var row = Object.assign({}, original)
+                row.sourceGroup = source.name
+                var translated = row.ui_text ? (row.ui_text.zh_CN || row.ui_text.en_US) : null
+                if(translated) {
+                    row.title = translated.title
+                    row.description = translated.description
+                }
+                if(source.labels && source.labels[row.name]) row.title = localized(source.labels[row.name])
+                row.options = row.enumEnum || row.options || []
+                if(["time", "time_delta", "date_time"].indexOf(row.type) >= 0) row.type = "string"
+                rows.push(row)
+            })
+        })
+        return rows
+    }
+
+    function renderSettings() {
+        renderedGroups.forEach(function(group) { group.destroy() })
+        renderedGroups = []
+        var controls = settingsPayload.settings_layout_config || []
+        var layout = controls.filter(function(row) { return row.name === "merged_settings_enable" })[0]
+        var used = {}
+        if(layout && layout.value && layout.ui_layout) {
+            layout.ui_layout.sections.forEach(function(section) {
+                var variants = section.variants || []
+                var sources = variants.length ? variants[0].groups : section.groups
+                createGroup(section.id, localized(section.title), rowsForSources(sources), variants)
+                ;(section.groups || []).forEach(function(source) { used[source.name] = true })
+                variants.forEach(function(variant) {
+                    variant.groups.forEach(function(source) { used[source.name] = true })
+                })
+            })
+        }
+        Object.keys(settingsPayload).forEach(function(name) {
+            if(used[name]) return
+            var rows = rowsForSources([{name: name}])
+            if(!rows.length) return
+            var first = settingsPayload[name][0]
+            createGroup(name, localized(first.ui_group_title) || name, rows)
+        })
     }
 
     function set_task(group, arg, value){

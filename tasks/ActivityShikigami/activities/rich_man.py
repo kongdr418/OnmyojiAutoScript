@@ -1,160 +1,398 @@
+"""大富翁独有棋盘流程。"""
+
 import random
-from cached_property import cached_property
-from module.base.protect import random_sleep
-from module.base.timer import Timer
+import time
+
+from module.exception import GameStuckError
 from module.logger import logger
-from tasks.ActivityShikigami.base_act import BaseAct
-from tasks.DemonEncounter.data.answer import Answer
-from tasks.Quiz.debug import Debugger, remove_symbols
+from tasks.ActivityShikigami.base_act import ActivityResourceNotEnough
+import tasks.ActivityShikigami.page as pages
 
 
-class RichManAct(BaseAct, Debugger):
+RICHMAN_ENTRY_SETTLE_SECONDS = 1.0
 
-    @cached_property
-    def answer(self) -> Answer:
-        # Misspelling
-        return Answer()
 
-    def _run_pass(self):
-        """
-            更新前请先看 ./README.md
-        """
-        logger.hr(f'Start run climb type PASS', 1)
-        self.click(self.I_TO_BATTLE_MAIN)
-        switch_souled = False
-        click_ticket, no_tickets = 0, random.randint(4, 6)
-        click_fire, no_fire = 0, random.randint(3, 5)
-        already_passed = False
-        while True:
-            self.screenshot()
-            self.update_status()
-            if self.appear(self.I_RM_NO_TICKET, interval=2) or click_ticket > no_tickets:
-                logger.warning(f'Click ticket {click_ticket} times, no tickets left')
-                break
-            if click_fire > no_fire:
-                logger.warning(f'Click fire {click_fire} times, no fire left')
-                break
-            if self.ui_reward_appear_click():  # 获得奖励
-                continue
-            if self.appear(self.I_RM_FORWARD, interval=1.2):  # 等待骰子结果
-                continue
-            if self.appear(self.I_RM_CHECK_BOSS, interval=1.5):
-                already_passed = True
-                logger.info('Already passed')
-            if already_passed and self.appear(self.I_RM_BOSS, interval=1.2):  # 已经通关了且出现首领则退出,否则还要打
-                logger.info('Boss passed, exit')
-                self.appear_then_click(self.I_UI_BACK_YELLOW, interval=1.2)
-                continue
-            already_passed = False
-            if self.click_ui_confirm(interval=2):
-                continue
-            if self.appear_then_click(self.I_RM_THROW, interval=2):  # 开始扔骰子
+class RichManAct:
+    def setup_rich_man_pages(self):
+        page_act = self.navigator.resolve_page(pages.page_act)
+        page_board = self.navigator.resolve_page(pages.page_rich_man)
+
+        def enter_board(task) -> bool:
+            logger.info(f'Wait {RICHMAN_ENTRY_SETTLE_SECONDS:.1f}s for RichMan activity overlays')
+            time.sleep(RICHMAN_ENTRY_SETTLE_SECONDS)
+            if not pages.handle_activity_overlay(task):
+                return False
+            task.screenshot()
+            return task.appear_then_click(task.I_RM_TO_BATTLE_MAIN, interval=0)
+
+        page_act.connect(page_board, enter_board, key='activity->rich_man')
+
+    def run_rich_man(self):
+        logger.hr('Start activity: RichMan', 1)
+        self.setup_rich_man_pages()
+        self.switch_soul_for_from_courtyard('rich_man')
+        self.goto_page(pages.page_rich_man)
+        common_loadout_required = True
+        self._boss_pending = False
+        self._boss_wait_exp_reset = False
+        self._boss_max_level = False
+        self._last_rich_man_throw_count = None
+
+        try:
+            while True:
+                self.screenshot()
+                if self.ui_reward_appear_click():
+                    continue
+                if self.appear_then_click(self.I_UI_CONFIRM, interval=2):
+                    continue
+
+                if not self.appear(self.I_RM_THROW):
+                    time.sleep(0.3)
+                    continue
+                if self._sync_rich_man_team_lock(switch_loadout=common_loadout_required):
+                    continue
+
+                if self._boss_should_enter():
+                    self._run_rich_man_boss_fight(switch_loadout=common_loadout_required)
+                    self._wait_for_stable_throw_before_next_round()
+                    common_loadout_required = False
+                    self._boss_pending = False
+                    self._boss_wait_exp_reset = True
+                    continue
+
+                # 全局时间与随机休眠都只在真正开始下一次掷骰子前生效。
+                if not self.prepare_next_action('rich_man'):
+                    return
+
+                raw_dice_count = self.O_CINQUE_COUNT.ocr_digit(self.device.image)
+                dice_count = self._normalize_rich_man_dice_count(raw_dice_count)
+                logger.info(f'RichMan dice count before throw: {dice_count}')
+
                 logger.hr('Throw ticket', 3)
-                click_ticket = 0
                 self.device.stuck_record_clear()
                 self.device.stuck_record_add('BATTLE_STATUS_S')
-                while True:
-                    self.screenshot()
-                    if self.ui_reward_appear_click():  # 获得奖励
-                        break
-                    if self.appear(self.I_RM_THROW_WIN, interval=1.5):  # 扔骰子获胜
-                        logger.info('Throw win')
-                        continue
-                    if self.appear(self.I_RM_THROW_EQUAL, interval=1.5):  # 扔骰子平局
-                        logger.info('Throw equal')
-                        continue
-                    if self.appear_then_click(self.I_RM_THROW, interval=2):  # 开始扔骰子
-                        logger.info('Throw again')
-                        self.device.stuck_record_clear()
-                        self.device.stuck_record_add('BATTLE_STATUS_S')
-                        continue
-                continue
-            if self.appear(self.I_RM_BUY_AP) or self.appear(self.I_RM_BUY_REWARD) or \
-                    self.appear(self.I_RM_BUY_TICKET):  # 开始买东西
-                logger.hr('Buy envent', 3)
-                click_ticket = 0
-                rich_man_conf = self.config.model.activity_shikigami.rich_man
-                timeout_timer = Timer(5).start()
-                while True:
-                    self.screenshot()
-                    if self.ui_reward_appear_click():  # 获得奖励跳出循环
-                        break
-                    if self.click_ui_confirm(interval=1) or \
-                            self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
-                        timeout_timer.reset()
-                        continue
-                    if timeout_timer.reached():  # 如果购买超时了则说明购买有问题, 则不买了
-                        logger.warning('Buy timeout, exit buy')
-                        self.appear_then_click(self.I_UI_BACK_RED, interval=1.5)
-                        continue
-                    if not rich_man_conf.buy_ap and not rich_man_conf.buy_ticket and not rich_man_conf.buy_reward:
-                        self.appear_then_click(self.I_UI_BACK_RED, interval=1.5)  # 一个都不买直接退出
-                        continue
-                    if self.config.model.activity_shikigami.rich_man.buy_ticket and self.appear_then_click(
-                            self.I_RM_BUY_TICKET, interval=1.5):
-                        continue
-                    if self.config.model.activity_shikigami.rich_man.buy_reward and self.appear_then_click(
-                            self.I_RM_BUY_REWARD, interval=1.5):
-                        continue
-                    if self.config.model.activity_shikigami.rich_man.buy_ap and self.appear_then_click(self.I_RM_BUY_AP,
-                                                                                                       interval=1.5):
-                        continue
-            if self.appear(self.I_RM_QUESTION, interval=2):  # 开始答题
-                click_ticket = 0
-                logger.hr('Start question', 3)
-                q, a1, a2, a3 = self.detect_question_and_answers()
-                index = self.answer.answer_one(question=q, options=[a1, a2, a3])
-                if index is None:
-                    logger.error('Now question has no answer, please check')
-                    self.append_one(question=q, options=[a1, a2, a3])
-                    self.config.notifier.push(title='Quiz',
-                                              content=f"New question: \n{q} \n{[a1, a2, a3]}")
-                    index = 1
-                logger.attr(index, 'Answer')
-                self.click([self.O_RM_ANSWER_1, self.O_RM_ANSWER_2, self.O_RM_ANSWER_3][index - 1], interval=1)
-                self.device.click_record_clear()
-                continue
-            if self.appear(self.I_ACT_FIRE, interval=2):  # 开始战斗
-                click_ticket = 0
-                if not switch_souled:
-                    self.switch_soul(self.I_BATTLE_MAIN_TO_RECORDS)
-                    switch_souled = True
-                if self.conf.general_climb.random_sleep:
-                    random_sleep(probability=0.2)
-                self.click(self.I_ACT_FIRE)
-                click_fire += 1
-                self.run_general_battle(self.conf.pass_battle_conf, f"act_{self.climb_type}")
-                continue
-            # if self.appear(self.I_CHECK_BATTLE_MAIN, interval=3.5):  # 扔门票骰子
-            #     self.click(self.I_CHECK_BATTLE_MAIN)
-            #     self.device.click_record_clear()
-            #     click_ticket += 1
-            #     click_fire = 0
-            #     continue
+                mode = self._throw_until_dice_count_changes(dice_count)
+                self.record_action('rich_man')
+                if mode == 'throw':
+                    self._run_throw_task()
+                elif mode == 'rob':
+                    self._run_rob_task()
+                elif mode == 'fight':
+                    self._run_rich_man_fight(switch_loadout=common_loadout_required)
+                    common_loadout_required = False
+                if mode is not None:
+                    self._wait_for_stable_throw_before_next_round()
+        except ActivityResourceNotEnough:
+            logger.info('RichMan dice exhausted')
+
+    def _normalize_rich_man_dice_count(self, raw_count: int) -> int:
+        """结合上一次成功投掷前的数量，修正本轮为零的 OCR 结果。"""
+        if raw_count > 0:
+            return raw_count
+
+        previous_count = self._last_rich_man_throw_count
+        if previous_count is None:
+            logger.info('RichMan dice count is 0 on entry; stop throwing')
+            raise ActivityResourceNotEnough
+        if previous_count <= 1:
+            logger.info(
+                f'RichMan previous throw count was {previous_count}, '
+                'current count is 0; dice exhausted'
+            )
+            raise ActivityResourceNotEnough
+
+        corrected_count = previous_count - 1
+        logger.warning(
+            f'RichMan dice OCR returned 0 after previous throw count '
+            f'{previous_count}; correct current count to {corrected_count}'
+        )
+        return corrected_count
+
+    def _read_level_experience(self) -> tuple[int, int] | None:
+        current, _, total = self.O_LEVEL_EXPERIENCE.ocr_digit_counter(self.device.image)
+        if total <= 0:
+            logger.warning(f'Invalid RichMan level experience OCR: {current}/{total}')
+            return None
+        logger.info(f'RichMan level experience: {current}/{total}')
+        return current, total
+
+    def _boss_level_is_max(self) -> bool:
+        if self._boss_max_level:
+            return True
+        current, _, total = self.O_LEVEL.ocr_digit_counter(self.device.image)
+        logger.info(f'RichMan level: {current}/{total}')
+        if current == 10 and total == 10:
+            logger.info('RichMan max level reached, disable subsequent boss challenges')
+            self._boss_max_level = True
+            self._boss_pending = False
+            self._boss_wait_exp_reset = False
+            return True
+        return False
+
+    def _confirm_boss_experience_overflow(self) -> bool:
+        first = self._read_level_experience()
+        if first is None or first[0] <= first[1]:
+            return False
+        time.sleep(0.3)
+        self.screenshot()
+        second = self._read_level_experience()
+        if second != first:
+            logger.warning(f'RichMan boss experience confirmation mismatch: {first} -> {second}')
+            return False
+        logger.info(f'RichMan boss challenge pending at experience {first[0]}/{first[1]}')
+        return True
+
+    def _boss_anchor_appear(self) -> bool:
+        return self.appear(self.I_RM_FITGHT_ANCHOR)
+
+    def _boss_should_enter(self) -> bool:
+        if self._boss_level_is_max():
+            return False
+        if self._boss_wait_exp_reset:
+            experience = self._read_level_experience()
+            if experience is not None and experience[0] <= experience[1]:
+                logger.info('RichMan boss experience reset confirmed')
+                self._boss_wait_exp_reset = False
+            return False
+        if not self._boss_pending:
+            self._boss_pending = self._confirm_boss_experience_overflow()
+        if not self._boss_pending:
+            return False
+        if self._boss_anchor_appear():
+            logger.info(f'RichMan boss anchor found at {self.I_RM_FITGHT_ANCHOR.roi_front}')
+            return True
+        logger.info('RichMan boss pending, anchor is outside its roi_back or not visible')
+        return False
+
+    def _throw_until_dice_count_changes(
+            self, previous_count: int
+    ) -> str | None:
+        """点击投掷直到数字变化，再限时识别投掷后的三种分支。"""
+        attempt = 0
         while True:
             self.screenshot()
-            if self.appear(self.I_TO_BATTLE_MAIN, interval=1):
-                break
-            if self.click_ui_confirm(interval=1) or self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
+            if self.appear(self.I_CINQUE_NOT_ENOUGH):
+                logger.warning('RichMan dice not enough prompt appeared')
+                self.click(self.C_RM_RANDOM_CLOSE_SAFE_MAIN, interval=1)
+                self.device.click_record_clear()
+                raise ActivityResourceNotEnough
+
+            current_count = self.O_CINQUE_COUNT.ocr_digit(self.device.image)
+            if current_count != previous_count:
+                logger.info(
+                    f'RichMan dice count changed: '
+                    f'{previous_count} -> {current_count}; throw succeeded'
+                )
+                self._last_rich_man_throw_count = previous_count
+                self.device.click_record_clear()
+                mode_timeout = 8.0
+                logger.info(
+                    f'Wait up to {mode_timeout:.2f}s for RichMan mode'
+                )
+                return self._wait_for_mode_after_throw(
+                    timeout=mode_timeout
+                )
+
+            if self.appear_then_click(self.I_RM_THROW, interval=2):
+                attempt += 1
+                logger.info(
+                    f'RichMan dice count unchanged at {previous_count}; '
+                    f'click throw: attempt={attempt}'
+                )
+            time.sleep(0.3)
+
+    def _detect_richman_mode(self) -> str | None:
+        if self.appear(self.I_RM_MODE_THROW):
+            return 'throw'
+        if self.appear(self.I_RM_MODE_ROB):
+            return 'rob'
+        if self.appear(self.I_RM_MODE_FIGHT):
+            return 'fight'
+        return None
+
+    def _wait_for_mode_after_throw(self, timeout: float) -> str | None:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            self.screenshot()
+            mode = self._detect_richman_mode()
+            if mode is not None:
+                logger.info(f'RichMan mode detected after throw: {mode}')
+                return mode
+            time.sleep(0.2)
+        logger.info(
+            f'RichMan mode not detected within {timeout:.1f}s; '
+            'possibly reward tile, continue to next throw cycle'
+        )
+        return None
+
+    def _run_throw_task(self):
+        logger.hr('RichMan throw task', 3)
+        deadline = time.monotonic() + 20.0
+        attempt = 0
+        while True:
+            if time.monotonic() >= deadline:
+                raise GameStuckError('RichMan throw mode timed out after 20 seconds')
+            self.screenshot()
+            if self.appear(self.I_RM_THROW):
+                logger.info(f'RichMan throw task finished after {attempt} attempt(s)')
+                return
+            if self.appear(self.I_RM_MODE_THROW) and \
+                    self.appear_then_click(self.I_RM_THROW_FIGHT, interval=1):
+                attempt += 1
                 continue
-            self.close_unknown_pages()
+            if self.ui_reward_appear_click():
+                continue
+            if self.appear_then_click(self.I_UI_CONFIRM, interval=1) or \
+                    self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
+                continue
+            time.sleep(0.5)
 
-    def detect_question_and_answers(self) -> tuple:
+    def _run_rob_task(self):
+        logger.hr('RichMan rob task', 3)
+        choices = [
+            self.C_RM_ROB_CHOICE_1,
+            self.C_RM_ROB_CHOICE_2,
+            self.C_RM_ROB_CHOICE_3,
+            self.C_RM_ROB_CHOICE_4,
+        ]
+        max_attempts = 3
+        for attempt in range(1, max_attempts + 1):
+            choice = random.choice(choices)
+            logger.info(
+                f'RichMan rob choice: {choice.name}, '
+                f'attempt={attempt}/{max_attempts}'
+            )
+            self.click(choice)
+
+            deadline = time.monotonic() + 10.0
+            while time.monotonic() < deadline:
+                self.screenshot()
+                if self.appear(self.I_RM_THROW):
+                    logger.info(
+                        f'RichMan rob task finished: '
+                        f'attempt={attempt}/{max_attempts}'
+                    )
+                    return
+                time.sleep(0.3)
+
+            self.screenshot()
+            if self.appear(self.I_RM_MODE_ROB):
+                if attempt < max_attempts:
+                    logger.warning(
+                        'RichMan rob choice timed out and rob mode is '
+                        f'still active; retry attempt={attempt + 1}/'
+                        f'{max_attempts}'
+                    )
+                    continue
+                raise GameStuckError(
+                    'RichMan rob mode remained active after 3 attempts'
+                )
+
+            raise GameStuckError(
+                'RichMan rob mode timed out before returning to throw main'
+            )
+
+    def _run_rich_man_fight(self, switch_loadout: bool):
+        logger.hr('RichMan fight task', 3)
+        source = self.battle_config('rich_man')
+        battle = source.copy(update={
+            'lock_team_enable': False,
+            'preset_enable': source.preset_enable and switch_loadout,
+            'continuous_battle': False,
+            'max_continuous': 0,
+        })
+        self._click_rich_man_challenge(self.I_RM_MODE_FIGHT, mode='normal')
+        self.run_general_battle(
+            battle,
+            battle_key=f'rich_man_fight_{self.action_count["rich_man"]}',
+            exit_matcher=self.I_RM_THROW,
+        )
+
+    def _run_rich_man_boss_fight(self, switch_loadout: bool):
+        logger.hr('RichMan boss fight task', 3)
+        self._enter_boss_fight_by_anchor()
+        source = self.battle_config('rich_man')
+        battle = source.copy(update={
+            'lock_team_enable': False,
+            'preset_enable': source.preset_enable and switch_loadout,
+            'continuous_battle': False,
+            'max_continuous': 0,
+        })
+        self._click_rich_man_challenge(self.I_RM_MODE_FIGHT_BOSS, mode='boss')
+        self.run_general_battle(
+            battle,
+            battle_key=f'rich_man_boss_{time.monotonic_ns()}',
+            exit_matcher=self.I_RM_THROW,
+        )
+        self._close_boss_level_up()
+
+    def _close_boss_level_up(self):
+        level_up_seen = False
+        while True:
+            self.screenshot()
+            if self.appear(self.I_LEVEL_UP):
+                level_up_seen = True
+                self.click(self.C_RM_RANDOM_CLOSE_SAFE, interval=1)
+                continue
+            if level_up_seen:
+                return
+            time.sleep(0.3)
+
+    def _enter_boss_fight_by_anchor(self):
+        for attempt in range(1, 3):
+            self.screenshot()
+            if self.appear(self.I_RM_MODE_FIGHT_BOSS):
+                return
+            if not self._boss_anchor_appear():
+                time.sleep(0.3)
+                continue
+            x, y, width, height = self.I_RM_FITGHT_ANCHOR.roi_front
+            click_x = max(0, min(1279, x + width // 2))
+            click_y = max(0, min(719, y + height // 2 - 70))
+            self.device.click(x=click_x, y=click_y, control_name='rm_boss_fight_dynamic_enter')
+            deadline = time.monotonic() + 5.0
+            while time.monotonic() < deadline:
+                self.screenshot()
+                if self.appear(self.I_RM_MODE_FIGHT_BOSS):
+                    return
+                time.sleep(0.3)
+        raise GameStuckError('RichMan boss entry failed after 2 dynamic click attempts')
+
+    def _click_rich_man_challenge(self, challenge_button, mode: str):
         self.screenshot()
-        results = self.O_RM_QUESTION.detect_and_ocr(self.device.image)
-        question = ''
-        answer_1 = remove_symbols(self.O_RM_ANSWER_1.ocr(self.device.image))
-        answer_2 = remove_symbols(self.O_RM_ANSWER_2.ocr(self.device.image))
-        answer_3 = remove_symbols(self.O_RM_ANSWER_3.ocr(self.device.image))
+        if self.appear_then_click(challenge_button):
+            logger.info(f'Click RichMan {mode} fight challenge')
+        else:
+            logger.warning(f'RichMan {mode} fight challenge button not found')
 
-        for result in results:
-            # box 是四个点坐标 左上， 右上， 右下， 左下
-            # x1, y1, x2, y2 = result.box[0][0], result.box[0][1], result.box[2][0], result.box[2][1]
-            # w, h = x2 - x1, y2 - y1
-            y_start = result.box[0][1]
-            y_end = result.box[2][1]
-            text = result.ocr_text
-            if y_start >= 0 and y_end <= 150:
-                question += text
+    def _sync_rich_man_team_lock(self, switch_loadout: bool) -> bool:
+        conf = self.battle_config('rich_man')
+        should_lock = conf.lock_team_enable and not (conf.preset_enable and switch_loadout)
+        return self.ui_click_until_appear(self.I_RM_MAIN_UNLOCK,
+                   page_check=self.I_RM_THROW,
+                   expected_present=not (should_lock))
 
-        return remove_symbols(question), answer_1, answer_2, answer_3
+    def _wait_for_stable_throw_before_next_round(self):
+        """连续确认投掷键稳定出现，并随机停顿后才允许下一轮投掷。"""
+        stable_count = 0
+        while True:
+            self.screenshot()
+            if self.appear(self.I_RM_THROW):
+                stable_count += 1
+                if stable_count >= 2:
+                    delay = random.uniform(0.5, 1.5)
+                    logger.info(
+                        f'RichMan throw button stable; wait {delay:.2f}s '
+                        'before next throw cycle'
+                    )
+                    time.sleep(delay)
+                    return
+                time.sleep(0.3)
+                continue
+            stable_count = 0
+            if self.ui_reward_appear_click():
+                continue
+            if self.appear_then_click(self.I_UI_CONFIRM, interval=1) or \
+                    self.appear_then_click(self.I_UI_CONFIRM_SAMLL, interval=1):
+                continue
+            time.sleep(0.5)

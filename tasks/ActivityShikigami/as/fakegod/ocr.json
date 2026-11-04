@@ -1,0 +1,47 @@
+[
+  {
+    "itemName": "fg_remain_ap",
+    "roiFront": "1123,24,95,34",
+    "roiBack": "1123,24,95,34",
+    "mode": "Quantity",
+    "method": "Default",
+    "keyword": "",
+    "description": "体力数量（兼容x.x万）"
+  },
+  {
+    "itemName": "fg_remain_pass",
+    "roiFront": "539,23,88,31",
+    "roiBack": "539,23,88,31",
+    "mode": "DigitCounter",
+    "method": "Default",
+    "keyword": "",
+    "description": "活动门票数量"
+  },
+  {
+    "itemName": "fg_remain_boss",
+    "roiFront": "1169,668,70,30",
+    "roiBack": "1169,668,70,30",
+    "mode": "DigitCounter",
+    "method": "Default",
+    "keyword": "",
+    "description": "首领剩余次数"
+  },
+  {
+    "itemName": "fg_remain_ap100",
+    "roiFront": "922,21,112,39",
+    "roiBack": "913,8,131,62",
+    "mode": "Digit",
+    "method": "Default",
+    "keyword": "",
+    "description": "百体活动次数"
+  },
+  {
+    "itemName": "fg_enter_ap100",
+    "roiFront": "67,99,92,359",
+    "roiBack": "67,99,92,359",
+    "mode": "Full",
+    "method": "Default",
+    "keyword": "雪山修行",
+    "description": "百体入口"
+  }
+]

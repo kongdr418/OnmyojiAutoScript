@@ -1,0 +1,23 @@
+[
+  {
+    "itemName": "cl_select_easy",
+    "roiFront": "1144,276,71,63",
+    "roiBack": "1144,276,71,63",
+    "profile": "Default",
+    "description": ""
+  },
+  {
+    "itemName": "cl_select_hard",
+    "roiFront": "1136,389,71,63",
+    "roiBack": "1136,389,71,63",
+    "profile": "Default",
+    "description": ""
+  },
+  {
+    "itemName": "random_close_autofight",
+    "roiFront": "1204,88,76,449",
+    "roiBack": "1204,88,76,449",
+    "profile": "Default",
+    "description": ""
+  }
+]

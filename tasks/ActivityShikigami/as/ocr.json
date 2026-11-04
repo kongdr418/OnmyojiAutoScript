@@ -18,15 +18,6 @@
     "description": "体力的数量检测"
   },
   {
-    "itemName": "remain_pass",
-    "roiFront": "756,16,88,31",
-    "roiBack": "756,16,88,31",
-    "mode": "DigitCounter",
-    "method": "Default",
-    "keyword": "",
-    "description": "活动体力的剩余检测"
-  },
-  {
     "itemName": "remain_buy",
     "roiFront": "808,531,39,42",
     "roiBack": "808,531,39,42",
@@ -43,24 +34,6 @@
     "method": "Default",
     "keyword": "",
     "description": "活动票数（没有百分比）"
-  },
-  {
-    "itemName": "remain_boss",
-    "roiFront": "1169,668,70,30",
-    "roiBack": "1169,668,70,30",
-    "mode": "DigitCounter",
-    "method": "Default",
-    "keyword": "",
-    "description": "boss剩余攻击次数"
-  },
-  {
-    "itemName": "remain_ap100",
-    "roiFront": "922,21,112,39",
-    "roiBack": "913,8,131,62",
-    "mode": "Digit",
-    "method": "Default",
-    "keyword": "",
-    "description": "100体活动门票检测"
   },
   {
     "itemName": "enter_ap100",
