@@ -107,9 +107,9 @@ class WantedQuestsAssets:
 	# 勾号
 	I_WQ_DONE = RuleImage(roi_front=(248,183,37,39), roi_back=(25,147,652,461), threshold=0.8, method="Template matching", file="./tasks/WantedQuests/wq/wq_wq_done.png")
 	# 一键追踪
-	I_TRACE_ENABLE = RuleImage(roi_front=(1141,597,84,88), roi_back=(1136,592,94,98), threshold=0.8, method="Template matching", file="./tasks/WantedQuests/wq/wq_trace_enable.png")
+	I_TRACE_ENABLE = RuleImage(roi_front=(1141,597,84,88), roi_back=(1136,592,107,107), threshold=0.8, method="Template matching", file="./tasks/WantedQuests/wq/wq_trace_enable.png")
 	# 取消追踪
-	I_TRACE_DISABLE = RuleImage(roi_front=(1141,597,84,88), roi_back=(1136,592,94,98), threshold=0.8, method="Template matching", file="./tasks/WantedQuests/wq/wq_trace_disable.png")
+	I_TRACE_DISABLE = RuleImage(roi_front=(1141,597,84,88), roi_back=(1136,592,107,107), threshold=0.8, method="Template matching", file="./tasks/WantedQuests/wq/wq_trace_disable.png")
 	# 奖励宝箱
 	I_WQ_BOX = RuleImage(roi_front=(48,187,43,38), roi_back=(0,72,118,552), threshold=0.7, method="Template matching", file="./tasks/WantedQuests/wq/wq_wq_box.png")
 	# 小号追踪

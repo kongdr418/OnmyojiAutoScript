@@ -21,7 +21,7 @@
     "itemName": "trace_enable",
     "imageName": "wq_trace_enable.png",
     "roiFront": "1141,597,84,88",
-    "roiBack": "1136,592,94,98",
+    "roiBack": "1136,592,107,107",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "一键追踪"
@@ -30,7 +30,7 @@
     "itemName": "trace_disable",
     "imageName": "wq_trace_disable.png",
     "roiFront": "1141,597,84,88",
-    "roiBack": "1136,592,94,98",
+    "roiBack": "1136,592,107,107",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "取消追踪"
