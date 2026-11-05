@@ -6,7 +6,7 @@ import os
 
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterType
-from PySide6.QtCore import Qt, QObject, QTranslator, QLocale, Slot
+from PySide6.QtCore import Qt, QObject, QTranslator, QLocale, Slot, Signal, Property
 from pathlib import Path
 
 from module.gui.utils import get_work_path
@@ -75,6 +75,7 @@ class FluentApp():
 
 
 class Translator(QObject):
+    localeChanged = Signal()
 
     def __init__(self, engine, app) -> None:
         super(Translator, self).__init__()
@@ -84,6 +85,16 @@ class Translator(QObject):
         self.path_zh_CN = str((Path.cwd() / "module" / "config" / "i18n" / "zh_CN.qm").resolve())
 
         self.translator = QTranslator()
+        self._locale = QLocale.system().name()
+
+    @Property(str, notify=localeChanged)
+    def locale(self):
+        return self._locale
+
+    def _set_locale(self, locale):
+        if self._locale != locale:
+            self._locale = locale
+            self.localeChanged.emit()
 
     @Slot(str)
     def set_language(self, language: str) -> None:
@@ -93,6 +104,7 @@ class Translator(QObject):
         :return:
         """
         if language == "简体中文":
+            self._set_locale('zh_CN')
             if not self.translator.load(self.path_zh_CN):
                 logger.error("load language 简体中文 failed!")
             QGuiApplication.installTranslator(self.translator)
@@ -100,6 +112,7 @@ class Translator(QObject):
             return
 
         if language == "English":
+            self._set_locale('en_US')
             if not self.translator.load(self.path_en_US):
                 logger.error("load language English failed!")
             QGuiApplication.installTranslator(self.translator)

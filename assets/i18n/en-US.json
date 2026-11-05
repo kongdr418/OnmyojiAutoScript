@@ -6,5 +6,16 @@
   "ticket_farming_battle_conf": "Ticket farming battle",
   "quick_preset_config": "High star quick presets",
   "switch_group_team_help": "The initial value is not suitable; you need to set it according to your own situation. \n'1,2' indicates the first preset group and the second team. \nPlease use a comma from the English input method. \nPreset groups support [1-7], and preset teams support [1-4]",
-  "enable_switch_by_name_help": "This is another way to switch souls. Compared to the method above, it supports more presets, but similarly, you still need to ensure that the preset team is in a locked state"
+  "enable_switch_by_name_help": "This is another way to switch souls. Compared to the method above, it supports more presets, but similarly, you still need to ensure that the preset team is in a locked state",
+  "assistance_config": "Ghost assistance",
+  "mode": "Run modes",
+  "role": "Role",
+  "friend_names": "Friends to share with",
+  "poll_interval": "Defeat check interval (seconds)",
+  "鬼王战斗": "Boss battle",
+  "鬼王协助": "Ghost assistance",
+  "门票刷取：觉醒七层": "Farm tickets: Awakening floor 7",
+  "门票刷取：探索": "Farm tickets: Exploration",
+  "协助": "Assist",
+  "上供": "Offer six-star ghosts"
 }

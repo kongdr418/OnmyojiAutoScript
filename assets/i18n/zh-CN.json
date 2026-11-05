@@ -327,7 +327,7 @@
   "quick_loadout_custom_preset_help": "示例：boss_name:(1,1); 或 boss_name:(\"预设组\",\"预设名\"); 多项配置以分号分隔；ALL表示匹配除已单独指定外的所有怪物，例如 ALL:(1,1);",
   "martial_arts": "武道大会",
   "MartialArts": "武道大会",
-  "mode": "配置选择模式",
+  "mode": "运行模式",
   "group_number": "分组编号",
   "preset_number": "预设编号",
   "preset_name": "预设名",
@@ -415,5 +415,9 @@
   "ticket_farming_enable": "门票刷取：按编号切换御魂",
   "ticket_farming_group_team": "门票刷取：御魂分组、队号",
   "ticket_farming_by_name": "门票刷取：按名称切换御魂",
-  "ticket_farming_group_team_name": "门票刷取：御魂分组名、预设名"
+  "ticket_farming_group_team_name": "门票刷取：御魂分组名、预设名",
+  "assistance_config": "鬼王协助",
+  "role": "身份",
+  "friend_names": "分享好友名字",
+  "poll_interval": "击杀等待检查间隔（秒）"
 }

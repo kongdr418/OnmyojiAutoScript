@@ -7,7 +7,7 @@ from datetime import timedelta, time
 from tasks.Component.GeneralBattle.config_general_battle import GeneralBattleConfig
 
 from tasks.Component.config_base import ConfigBase, TimeDelta, Time, dynamic_hide
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from module.config.multi_select import normalize_multi_select
 from enum import IntEnum, Enum
 from tasks.Component.config_scheduler import Scheduler
@@ -25,40 +25,40 @@ class BossType(IntEnum):
 
 class MetaDemonMode(str, Enum):
     BOSS_BATTLE = '鬼王战斗'
+    BOSS_ASSIST = '鬼王协助'
     AWAKE = '门票刷取：觉醒七层'
     EXPLORATION = '门票刷取：探索'
 
 
-class TicketFarmingMode(str, Enum):
-    DISABLED = '不刷取门票'
-    AWAKE = MetaDemonMode.AWAKE.value
-    EXPLORATION = MetaDemonMode.EXPLORATION.value
-
-
 class MetaDemonConfig(ConfigBase):
-    boss_battle_enable: bool = Field(default=True, title='执行鬼王战斗', description='启用门票刷取时先刷票，再执行鬼王战斗；关闭后仅刷票。')
-    ticket_farming_mode: TicketFarmingMode = Field(default=TicketFarmingMode.DISABLED, title='门票刷取模式', description='觉醒固定七层；探索使用探索任务的章节设置。门票满或达到时间限制后进入鬼王战斗。')
+    mode: list[MetaDemonMode] = Field(default=[MetaDemonMode.BOSS_BATTLE], title='运行模式', json_schema_extra={'ui_exclusive_groups': [['门票刷取：觉醒七层', '门票刷取：探索'], ['鬼王战斗', '鬼王协助']]}, description='勾选执行；两种门票刷取至多选一种；鬼王战斗与鬼王协助至多选一种，门票刷取优先执行')
 
-    @model_validator(mode='before')
+    @field_validator('mode', mode='before')
     @classmethod
-    def migrate_modes(cls, data):
-        if not isinstance(data, dict) or 'mode' not in data:
-            return data
-        data = dict(data)
-        value = data.pop('mode')
+    def parse_modes(cls, value):
         selected = [MetaDemonMode('门票刷取：探索' if item == '门票刷取：探索绘卷' else item)
                     for item in normalize_multi_select(value)]
         tickets = [item for item in (MetaDemonMode.AWAKE, MetaDemonMode.EXPLORATION) if item in selected]
         if len(tickets) > 1:
             raise ValueError('觉醒和探索门票刷取至多选择一种')
-        data.setdefault('boss_battle_enable', MetaDemonMode.BOSS_BATTLE in selected)
-        data.setdefault('ticket_farming_mode', tickets[0].value if tickets else TicketFarmingMode.DISABLED)
-        return data
+        bosses = [item for item in (MetaDemonMode.BOSS_BATTLE, MetaDemonMode.BOSS_ASSIST) if item in selected]
+        if len(bosses) > 1:
+            raise ValueError('鬼王战斗和鬼王协助至多选择一种')
+        return tickets + bosses
 
-    @property
-    def mode(self) -> list[MetaDemonMode]:
-        tickets = [] if self.ticket_farming_mode == TicketFarmingMode.DISABLED else [MetaDemonMode(self.ticket_farming_mode.value)]
-        return tickets + ([MetaDemonMode.BOSS_BATTLE] if self.boss_battle_enable else [])
+    @model_validator(mode='before')
+    @classmethod
+    def migrate_scalar_modes(cls, data):
+        """兼容旧版开关和下拉框配置，已有 mode 列表优先。"""
+        if not isinstance(data, dict):
+            return data
+        data = dict(data)
+        legacy = 'boss_battle_enable' in data or 'ticket_farming_mode' in data
+        old_boss = data.pop('boss_battle_enable', True)
+        old_ticket = data.pop('ticket_farming_mode', '不刷取门票')
+        if 'mode' not in data and legacy:
+            data['mode'] = ([] if old_ticket == '不刷取门票' else [old_ticket]) + ([MetaDemonMode.BOSS_BATTLE] if old_boss else [])
+        return data
 
     limit_time: Time = Field(default=Time(minute=45), description='limit_time_help')
     limit_count: int = Field(default=50, description='limit_count_help')
@@ -154,6 +154,25 @@ class MetaDemonQuickPresetConfig(ConfigBase):
         description='示例：boss_name:("预设组","预设名"); 多项以分号分隔；ALL 表示其他怪物。')
 
 
+class AssistanceRole(str, Enum):
+    ASSIST = '协助'
+    OFFERING = '上供'
+
+
+class MetaDemonAssistanceConfig(ConfigBase):
+    role: AssistanceRole = Field(default=AssistanceRole.OFFERING, title='鬼王协助身份',
+        description='上供：仅召唤六星鬼王，分享给指定好友后等待击杀；协助暂未实现。')
+    friend_names: str = Field(default='', title='分享好友名字',
+        description='填写游戏内好友完整名字；多个名字用分号或换行分隔，按名称精确匹配，不使用近似名字。')
+    poll_interval: int = Field(default=5, ge=2, le=60, title='击杀等待检查间隔（秒）',
+        description='分享后按此间隔检查鬼王是否已被击杀，不重复分享或自行挑战。')
+
+    @property
+    def friends(self) -> list[str]:
+        import re
+        return list(dict.fromkeys(name.strip() for name in re.split(r'[;；\n\r]+', self.friend_names) if name.strip()))
+
+
 class MetaDemonScheduler(Scheduler):
     wait_interval: TimeDelta = Field(default=TimeDelta(hours=1, minutes=40), description='疲劳度满时等多长时间后再次运行本任务,建议设置等待完全恢复疲劳度所需的时间\n例:100分钟恢复100点疲劳度,再次运行必定可以继续战斗')
 
@@ -163,25 +182,35 @@ class MetaDemonScheduler(Scheduler):
 class MetaDemon(ConfigBase):
     settings_layout_config: SettingsLayoutConfig = Field(default_factory=SettingsLayoutConfig)
     settings_layout: ClassVar[list[dict]] = [
-            settings_section('scheduler', '任务调度', groups=[{'name': 'scheduler'}]),
-            settings_section('general_config', '通用设置', groups=[{'name': 'meta_demon_config'}, {'name': 'general_config'}]),
-            settings_section('switch_soul_config', '执行任务前切换御魂', variants=[
-                {'id': key, 'label': label, 'groups': [{'name': 'switch_soul_config',
-                    'fields': [f'{key}_{suffix}' for suffix in ('enable', 'group_team', 'by_name', 'group_team_name')],
-                    'labels': {f'{key}_enable': '启用', f'{key}_group_team': '御魂装配分组设置',
-                               f'{key}_by_name': '通过OCR来切换御魂预设', f'{key}_group_team_name': '分组名、预设名'}}]}
-                for key, label in (('low_star', '低星鬼王'), ('high_star', '高星鬼王'), ('ticket_farming', '门票刷取'))]),
-            settings_section('battle_config', '战斗配置', variants=[
-                {'id': key, 'label': label, 'groups': [{'name': f'{key}_battle_conf'}]}
-                for key, label in (('low_star', '低星鬼王'), ('high_star', '高星鬼王'), ('ticket_farming', '门票刷取'))]),
-            settings_section('quick_preset_config', '快速预设详情', groups=[{'name': 'quick_preset_config'}]),
-        ]
+        settings_section('scheduler', '任务调度', groups=[{'name': 'scheduler'}]),
+        settings_section('general_config', '通用设置', groups=[
+            {'name': 'meta_demon_config', 'fields': ['mode']},
+            {'name': 'assistance_config', 'fields': ['friend_names']},
+            {'name': 'meta_demon_config', 'fields': [key for key in MetaDemonConfig.model_fields if key != 'mode']},
+            {'name': 'general_config'},
+            {'name': 'assistance_config', 'fields': ['role']},
+        ]),
+        settings_section('switch_soul_config', '执行任务前切换御魂', variants=[
+            {'id': key, 'label': label, 'groups': [{'name': 'switch_soul_config',
+                'fields': [f'{key}_{suffix}' for suffix in ('enable', 'group_team', 'by_name', 'group_team_name')],
+                'labels': {f'{key}_enable': '启用', f'{key}_group_team': '御魂装配分组设置',
+                           f'{key}_by_name': '通过OCR来切换御魂预设', f'{key}_group_team_name': '分组名、预设名'}}]}
+            for key, label in (('low_star', '低星鬼王'), ('high_star', '高星鬼王'), ('ticket_farming', '门票刷取'))]),
+        settings_section('battle_config', '战斗配置', variants=[
+            {'id': key, 'label': label, 'groups': [{'name': f'{key}_battle_conf'}]}
+            for key, label in (('low_star', '低星鬼王'), ('high_star', '高星鬼王'), ('ticket_farming', '门票刷取'))]),
+        settings_section('quick_preset_config', '快速预设详情', groups=[{'name': 'quick_preset_config'}]),
+        settings_section('assistance_config', '鬼王协助', groups=[
+            {'name': 'assistance_config', 'fields': [key for key in MetaDemonAssistanceConfig.model_fields if key not in ('friend_names', 'role')]},
+        ]),
+    ]
 
     scheduler: MetaDemonScheduler = Field(default_factory=MetaDemonScheduler)
     meta_demon_config: MetaDemonConfig = Field(default_factory=MetaDemonConfig)
     general_config: MetaDemonGeneralConfig = Field(default_factory=MetaDemonGeneralConfig)
     switch_soul_config: MetaDemonSwitchSoulConfig = Field(default_factory=MetaDemonSwitchSoulConfig)
     quick_preset_config: MetaDemonQuickPresetConfig = Field(default_factory=MetaDemonQuickPresetConfig)
+    assistance_config: MetaDemonAssistanceConfig = Field(default_factory=MetaDemonAssistanceConfig)
     low_star_battle_conf: GeneralBattleConfig = Field(default_factory=GeneralBattleConfig)
     high_star_battle_conf: GeneralBattleConfig = Field(default_factory=GeneralBattleConfig)
     ticket_farming_battle_conf: GeneralBattleConfig = Field(default_factory=GeneralBattleConfig)

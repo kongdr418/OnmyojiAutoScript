@@ -22,6 +22,11 @@ from module.exception import TaskEnd
 
 class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi, EvoZoneAssets, SwitchSoul):
 
+    @property
+    def _config(self) -> EvoZone:
+        """允许复用战斗流程的任务提供自己的专用设置。"""
+        return self.config.evo_zone
+
     def _register_custom_pages(self) -> None:
         reward_page = self.navigator.resolve_page(page_reward)
         if reward_page is None:
@@ -30,20 +35,20 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
 
     def _handle_reward(self, context: BattleContext, config: GeneralBattleConfig) -> BattleAction:
         # 无论胜利与否, 都会出现是否邀请一次队友, 区别在于, 失败的话不会出现那个勾选默认邀请的框
-        if self.config.evo_zone.evo_zone_config.user_status == UserStatus.LEADER and \
-            self.check_and_invite(self.config.evo_zone.invite_config.default_invite):
+        if self._config.evo_zone_config.user_status == UserStatus.LEADER and \
+            self.check_and_invite(self._config.invite_config.default_invite):
             return BattleAction.CONTINUE
         return super()._handle_reward(context, config)
 
     def run(self) -> bool:
 
-        limit_count = self.config.evo_zone.evo_zone_config.limit_count
-        limit_time = self.config.evo_zone.evo_zone_config.limit_time
+        limit_count = self._config.evo_zone_config.limit_count
+        limit_time = self._config.evo_zone_config.limit_time
         self.current_count = 0
         self.limit_count: int = limit_count
         self.limit_time: timedelta = timedelta(hours=limit_time.hour, minutes=limit_time.minute,
                                                seconds=limit_time.second)
-        con = self.config.evo_zone
+        con = self._config
         if con.switch_soul_config.enable:
             self.goto_page(page_shikigami_records)
             self.run_switch_soul(con.switch_soul_config.switch_group_team)
@@ -52,7 +57,7 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
             self.run_switch_soul_by_name(con.switch_soul_config.group_name, con.switch_soul_config.team_name)
 
         self.goto_page(page_main)
-        config: EvoZone = self.config.evo_zone
+        config: EvoZone = self._config
         if config.evo_zone_config.soul_buff_enable:
             self.open_buff()
             self.awake(is_open=True)
@@ -87,7 +92,7 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
     def evozone_enter(self) -> bool:
         logger.info('Enter evozone')
         kirintype = self.I_LIGHTNING_KIRIN
-        match self.config.evo_zone.evo_zone_config.kirin_type:
+        match self._config.evo_zone_config.kirin_type:
             case KirinType.FIREKIRIN:
                 kirintype = self.I_FIRE_KIRIN
             case KirinType.WINDKIRIN:
@@ -119,11 +124,11 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
         logger.info('Start run leader')
         self.goto_page(page_awake_zones)
         self.evozone_enter()
-        layer = self.config.evo_zone.evo_zone_config.layer
+        layer = self._config.evo_zone_config.layer
         logger.info("test0")
         self.check_layer(layer)
         logger.info("test1")
-        self.check_lock(self.config.evo_zone.general_battle_config.lock_team_enable, self.I_EVOZONE_LOCK, self.I_EVOZONE_UNLOCK)
+        self.check_lock(self._config.general_battle_config.lock_team_enable, self.I_EVOZONE_LOCK, self.I_EVOZONE_UNLOCK)
         logger.info("test2")
         # 创建队伍
         logger.info('Create team')
@@ -165,9 +170,9 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
                 continue
             # 点击挑战
             if not is_first:
-                if self.run_invite(config=self.config.evo_zone.invite_config):
+                if self.run_invite(config=self._config.invite_config):
                     self.run_general_battle(
-                        config=self.config.evo_zone.general_battle_config,
+                        config=self._config.general_battle_config,
                         exit_matcher=self.I_CHECK_TEAM,
                     )
                 else:
@@ -177,14 +182,14 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
                     break
             # 第一次会邀请队友
             if is_first:
-                if not self.run_invite(config=self.config.evo_zone.invite_config, is_first=True):
+                if not self.run_invite(config=self._config.invite_config, is_first=True):
                     logger.warning('Invite failed and exit this evozone task')
                     success = False
                     break
                 else:
                     is_first = False
                     self.run_general_battle(
-                        config=self.config.evo_zone.general_battle_config,
+                        config=self._config.general_battle_config,
                         exit_matcher=self.I_CHECK_TEAM,
                     )
 
@@ -215,9 +220,9 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
                 continue
             if self.is_in_room(False):
                 self.device.stuck_record_clear()
-                if self.wait_battle(wait_time=self.config.evo_zone.invite_config.wait_time):
+                if self.wait_battle(wait_time=self._config.invite_config.wait_time):
                     self.run_general_battle(
-                        config=self.config.evo_zone.general_battle_config,
+                        config=self._config.general_battle_config,
                         exit_matcher=self.I_CHECK_TEAM,
                     )
                 else:
@@ -225,7 +230,7 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
             # 队长秒开的时候，检测是否进入到战斗中
             if self.is_in_battle(False):
                 self.run_general_battle(
-                    config=self.config.evo_zone.general_battle_config,
+                    config=self._config.general_battle_config,
                     exit_matcher=self.I_CHECK_TEAM,
                 )
 
@@ -245,9 +250,9 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
         logger.info('Start run alone')
         self.goto_page(page_awake_zones)
         self.evozone_enter()
-        layer = self.config.evo_zone.evo_zone_config.layer
+        layer = self._config.evo_zone_config.layer
         self.check_layer(layer)
-        self.check_lock(self.config.evo_zone.general_battle_config.lock_team_enable, self.I_EVOZONE_LOCK, self.I_EVOZONE_UNLOCK)
+        self.check_lock(self._config.general_battle_config.lock_team_enable, self.I_EVOZONE_LOCK, self.I_EVOZONE_UNLOCK)
 
         def is_in_evozone(screenshot=False) -> bool:
             if screenshot:
@@ -272,7 +277,7 @@ class ScriptTask(GeneralBattle, GeneralInvite, GeneralBuff, GeneralRoom, GameUi,
 
                 if not self.appear(self.I_EVOZONE_FIRE):
                     self.run_general_battle(
-                        config=self.config.evo_zone.general_battle_config,
+                        config=self._config.general_battle_config,
                         exit_matcher=self.I_EVOZONE_FIRE,
                     )
                     break

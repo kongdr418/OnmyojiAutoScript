@@ -9,6 +9,10 @@ Item {
     property string settingsData: ""
     property var settingsPayload: ({})
     property var renderedGroups: []
+    property string uiLocale: typeof translator !== "undefined" ? translator.locale : Qt.locale().name
+    onUiLocaleChanged: {
+        if(Object.keys(settingsPayload).length) renderSettings()
+    }
     property string argsData: ""
     property string valueData: ""
     // 存入 配置名和 任务名两个 上下文
@@ -162,7 +166,7 @@ Item {
                 Repeater {
                     model: selection.modelData ? selection.modelData.options : []
                     FluCheckBox {
-                        text: modelData
+                        text: selection.modelData.optionLabels[index]
                         selected: selection.modelData.value.indexOf(modelData) >= 0
                         clickFunc: function() {
                             var row = selection.modelData
@@ -467,7 +471,7 @@ Item {
                 }
                 model: ["0", "1", "2"]
                 onActivated: {
-                    if(set_task(modelData.sourceGroup || itemArg.parent.parent.parent.groupName, modelData.name, currentText)){
+                    if(set_task(modelData.sourceGroup || itemArg.parent.parent.parent.groupName, modelData.name, modelData.options[currentIndex])){
                         showSuccess( qsTr("Successful setting"))
                     }
                 }
@@ -504,8 +508,8 @@ Item {
                     console.error("enum model is null")
                     return
                 }
-                itemArg_text.model = modelData.options
-                itemArg_text.show(modelData.value)
+                itemArg_text.model = modelData.optionLabels || modelData.options
+                itemArg_text.currentIndex = modelData.options.indexOf(modelData.value)
                 itemArg_title.text = qsTr(modelData.title)
                 if( typeof modelData.description === 'undefined'){
                     return
@@ -660,7 +664,13 @@ Item {
 
     function localized(value) {
         if(typeof value === "string") return value
-        return value ? (value.zh_CN || value.en_US || "") : ""
+        if(!value) return ""
+        var locale = uiLocale.replace(/-/g, "_")
+        if(value[locale] !== undefined) return value[locale]
+        var language = locale.split("_")[0].toLowerCase()
+        var keys = Object.keys(value)
+        var matching = keys.filter(function(key) { return key.split("_")[0].toLowerCase() === language })
+        return value[matching[0] || keys[0]] || ""
     }
 
     function selectionValues(row, option, enabled) {
@@ -682,13 +692,16 @@ Item {
                 if(original.ui_hidden || (source.fields && source.fields.indexOf(original.name) < 0)) return
                 var row = Object.assign({}, original)
                 row.sourceGroup = source.name
-                var translated = row.ui_text ? (row.ui_text.zh_CN || row.ui_text.en_US) : null
+                var translated = row.ui_text ? localized(row.ui_text) : null
                 if(translated) {
                     row.title = translated.title
                     row.description = translated.description
                 }
                 if(source.labels && source.labels[row.name]) row.title = localized(source.labels[row.name])
                 row.options = row.enumEnum || row.options || []
+                row.optionLabels = row.options.map(function(option) {
+                    return translated && translated.options ? (translated.options[option] || option) : option
+                })
                 if(["time", "time_delta", "date_time"].indexOf(row.type) >= 0) row.type = "string"
                 rows.push(row)
             })

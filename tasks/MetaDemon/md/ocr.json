@@ -43,5 +43,14 @@
     "method": "Default",
     "keyword": "",
     "description": "超鬼王门票"
+  },
+  {
+    "itemName": "metademon_pass_exp",
+    "roiFront": "919,16,114,34",
+    "roiBack": "919,16,114,34",
+    "mode": "DigitCounter",
+    "method": "Default",
+    "keyword": "",
+    "description": "探索页面超鬼王门票获得数量"
   }
 ]

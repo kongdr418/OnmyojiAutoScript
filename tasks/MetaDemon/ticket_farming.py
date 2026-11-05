@@ -1,15 +1,19 @@
 """超鬼王门票刷取，复用觉醒和探索的战斗流程。"""
 from datetime import datetime
+from cached_property import cached_property
 
+from module.exception import TaskEnd
 from module.logger import logger
-from tasks.MetaDemon.assets import MetaDemonAssets
-from tasks.EvoZone.config import Layer, UserStatus as AwakeUserStatus
+from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
+from tasks.EvoZone.config import EvoZone, EvoZoneConfig, Layer, UserStatus as AwakeUserStatus
 from tasks.EvoZone.script_task import ScriptTask as AwakeTask
-from tasks.Exploration.config import AutoRotate, UpType, UserStatus as ExplorationUserStatus
+from tasks.Exploration.config import Exploration, ExplorationConfig, AutoRotate, UpType, UserStatus as ExplorationUserStatus
 from tasks.Exploration.script_task import ScriptTask as ExplorationTask
 from tasks.GameUi.default_pages import page_reward
-from tasks.GameUi.page import page_main, page_shikigami_records
+import tasks.GameUi.page as pages
 from tasks.MetaDemon.config import MetaDemonMode, ExplorationTarget
+from tasks.MetaDemon.assets import MetaDemonAssets
+from tasks.GameUi.assets import GameUiAssets
 
 
 class TicketsFull(Exception):
@@ -18,6 +22,10 @@ class TicketsFull(Exception):
 
 def metademon_tickets_full(task) -> bool:
     """读取当前奖励截图的门票/上限；无有效上限时不判满。"""
+    # I_REWARD is the red-daruma settlement image; I_UI_REWARD is the
+    # separate "获得奖励" banner and does not identify this battle reward screen.
+    if not task.appear(GeneralBattleAssets.I_REWARD):
+        return False
     current, remaining, total = MetaDemonAssets.O_METADEMON_PASS.ocr_digit_counter(task.device.image)
     if total <= 0 or current < 0:
         logger.warning('超鬼王门票 OCR 未识别到有效计数')
@@ -41,17 +49,25 @@ class TicketRewardMixin:
     def install_ticket_reward_hook(self):
         reward = self.navigator.resolve_page(page_reward)
         if reward is None:
-            raise RuntimeError('超鬼王刷票奖励页面 session 初始化失败')
+            raise RuntimeError("超鬼王刷票奖励页面 session 初始化失败")
         # 导航进入奖励页时也必须先 OCR，再执行原来的结算点击。
         reward.on_enter_success.insert(0, lambda task: task.check_ticket_reward())
 
 
 class AwakeTicketTask(TicketRewardMixin, AwakeTask):
+    @cached_property
+    def _config(self):
+        return ticket_farming_config(self.config.meta_demon, MetaDemonMode.AWAKE)
+
     def _infer_task_category(self):
         return 'evo_zone'
 
 
 class ExplorationTicketTask(TicketRewardMixin, ExplorationTask):
+    @cached_property
+    def _config(self):
+        return ticket_farming_config(self.config.meta_demon, MetaDemonMode.EXPLORATION)
+
     def _infer_task_category(self):
         return 'exploration'
 
@@ -73,41 +89,56 @@ class ExplorationTicketTask(TicketRewardMixin, ExplorationTask):
 
 
 
-def configure_ticket_farming(meta, awake, exploration):
-    """将超鬼王刷票设置映射到独立的觉醒、探索配置副本。"""
+def ticket_farming_config(meta, mode):
+    """仅把超鬼王专用字段适配为复用流程需要的设置，不读取独立任务配置。"""
     common = meta.general_config
-    target = {ExplorationTarget.ALL: UpType.ALL, ExplorationTarget.COIN: UpType.COIN,
-              ExplorationTarget.EXP: UpType.EXP, ExplorationTarget.DARUMA: UpType.DARUMAA}
-    exploration.exploration_config.auto_rotate = AutoRotate.yes if common.exploration_rotate else AutoRotate.no
-    exploration.exploration_config.up_type = target[common.exploration_target]
-    exploration.scrolls.scrolls_enable = False
-    awake.evo_zone_config.soul_buff_enable = common.awake_buff_enable
     soul = meta.switch_soul_config.switch_for('ticket_farming')
-    preset = meta.battle_config('ticket_farming')
-    for config in (awake, exploration):
-        config.switch_soul_config = soul.model_copy(deep=True)
-        config.general_battle_config = config.general_battle_config.model_copy(
-            update=preset.model_dump())
+    battle = meta.ticket_farming_battle_conf
+    if mode == MetaDemonMode.AWAKE:
+        return EvoZone(
+            evo_zone_config=EvoZoneConfig(user_status=AwakeUserStatus.ALONE, layer=Layer.SEVEN,
+                limit_time=meta.meta_demon_config.limit_time, limit_count=2 ** 31 - 1,
+                soul_buff_enable=common.awake_buff_enable),
+            switch_soul_config=soul, general_battle_config=battle)
+    if mode == MetaDemonMode.EXPLORATION:
+        target = {ExplorationTarget.ALL: UpType.ALL, ExplorationTarget.COIN: UpType.COIN,
+                  ExplorationTarget.EXP: UpType.EXP, ExplorationTarget.DARUMA: UpType.DARUMAA}
+        return Exploration(
+            exploration_config=ExplorationConfig(user_status=ExplorationUserStatus.ALONE,
+                limit_time=meta.meta_demon_config.limit_time, minions_cnt=2 ** 31 - 1,
+                auto_rotate=AutoRotate.yes if common.exploration_rotate else AutoRotate.no,
+                up_type=target[common.exploration_target]),
+            switch_soul_config=soul, general_battle_config=battle)
+    raise ValueError(f'未知门票刷取模式: {mode}')
+
+
+def tickets_full_before_farming(owner) -> bool:
+    """Check the courtyard's exploration landing page before any farming setup."""
+    owner.goto_page(pages.page_exploration)
+    for _ in range(3):
+        owner.screenshot()
+        if not owner.appear(GameUiAssets.I_CHECK_EXPLORATION):
+            continue
+        current, _, total = MetaDemonAssets.O_METADEMON_PASS_EXP.ocr_digit_counter(owner.device.image)
+        if current >= 0 and total > 0:
+            logger.info(f'门票刷取前检测: {current}/{total}')
+            return current >= total
+    logger.warning('探索入口未识别到有效超鬼王门票计数，继续刷取并由奖励页检测满票')
+    return False
 
 
 def run_ticket_farming(owner, mode) -> bool:
-    """使用内存配置副本执行门票刷取。"""
-    # Config.__getattr__ 代理 model，copy.copy 在恢复空对象时会递归查询 model。
-    # 跳过构造器，仅复制外层状态，再独立复制模型，避免读取或写入用户配置。
-    config = object.__new__(type(owner.config))
-    config.__dict__.update(vars(owner.config))
-    config.model = owner.config.model.model_copy(deep=True)
+    """共享运行环境；御魂和战斗参数直接使用超鬼王门票刷取配置。"""
+    if mode not in (MetaDemonMode.AWAKE, MetaDemonMode.EXPLORATION):
+        raise ValueError(f'未知门票刷取模式: {mode}')
+    if tickets_full_before_farming(owner):
+        logger.info('超鬼王门票已满，跳过门票刷取')
+        return True
+    config = owner.config
     limit_time = config.meta_demon.meta_demon_config.limit_time_v
-    configure_ticket_farming(config.meta_demon, config.evo_zone, config.exploration)
     if mode == MetaDemonMode.AWAKE:
-        settings = config.evo_zone.evo_zone_config
-        settings.user_status = AwakeUserStatus.ALONE
-        settings.layer = Layer.SEVEN
         runner = AwakeTicketTask(config, owner.device)
     elif mode == MetaDemonMode.EXPLORATION:
-        settings = config.exploration.exploration_config
-        settings.user_status = ExplorationUserStatus.ALONE
-        settings.minions_cnt = 2 ** 31 - 1
         runner = ExplorationTicketTask(config, owner.device)
     else:
         raise ValueError(f'未知门票刷取模式: {mode}')
@@ -116,18 +147,17 @@ def run_ticket_farming(owner, mode) -> bool:
     runner.limit_count = 2 ** 31 - 1
     runner.install_ticket_reward_hook()
     buff_opened = False
-    exploration_buffs = []
     try:
         if mode == MetaDemonMode.AWAKE:
-            soul = config.evo_zone.switch_soul_config
+            soul = runner._config.switch_soul_config
             if soul.enable or soul.enable_switch_by_name:
-                runner.goto_page(page_shikigami_records)
+                runner.goto_page(pages.page_shikigami_records)
                 if soul.enable_switch_by_name:
                     runner.run_switch_soul_by_name(soul.group_name, soul.team_name)
                 else:
                     runner.run_switch_soul(soul.switch_group_team)
             if config.meta_demon.general_config.awake_buff_enable:
-                runner.goto_page(page_main)
+                runner.goto_page(pages.page_main)
                 runner.open_buff()
                 runner.awake(is_open=True)
                 buff_opened = True
@@ -135,9 +165,6 @@ def run_ticket_farming(owner, mode) -> bool:
             runner.limit_time = limit_time
             runner.run_alone()
         else:
-            settings = config.exploration.exploration_config
-            exploration_buffs = [name for name in ('gold_50', 'gold_100', 'exp_50', 'exp_100')
-                                 if getattr(settings, f'buff_{name}_click')]
             runner.pre_process()
             runner.limit_time = limit_time
             runner.exec_exp_page()
@@ -145,12 +172,9 @@ def run_ticket_farming(owner, mode) -> bool:
         return True
     finally:
         runner._ticket_farming_complete = True
-        if buff_opened or exploration_buffs:
-            runner.goto_page(page_main)
+        if buff_opened:
+            runner.goto_page(pages.page_main)
             runner.open_buff()
-            if buff_opened:
-                runner.awake(is_open=False)
-            for name in exploration_buffs:
-                getattr(runner, name)(is_open=False)
+            runner.awake(is_open=False)
             runner.close_buff()
     return False
