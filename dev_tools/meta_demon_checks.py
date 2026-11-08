@@ -1,139 +1,124 @@
-"""MetaDemon loadout categories, settings payload and ticket-runner mapping."""
+"""超鬼王：模式、配置迁移、召唤星级复核、高星快速上阵与强力追击。"""
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
+import numpy as np
+from pydantic import ValidationError
+
 from module.config.config_model import ConfigModel
-from tasks.MetaDemon.config import BossType, ExplorationTarget, MetaDemon, MetaDemonMode, loadout_group
 from tasks.MetaDemon.boss_battle import BossBattle
-from tasks.MetaDemon.assets import MetaDemonAssets
-from tasks.MetaDemon.ticket_farming import ticket_farming_config, ExplorationTicketTask, AwakeTicketTask
-from tasks.EvoZone.config import EvoZone
-from tasks.Exploration.config import AutoRotate, Exploration, UpType
+from tasks.MetaDemon.config import (
+    BossType, MetaDemon, MetaDemonConfig, MetaDemonMode, MetaDemonQuickPresetConfig, loadout_group,
+)
+from tasks.MetaDemon.synthesis import parse_synthesis_material_level
 
 
 class MetaDemonSettingsChecks(unittest.TestCase):
-    def test_previous_scalar_modes_migrate_without_resetting_other_settings(self):
-        from tasks.MetaDemon.config import MetaDemonConfig
-        for old, expected in (
-            ({'boss_battle_enable': True, 'ticket_farming_mode': '不刷取门票'}, [MetaDemonMode.BOSS_BATTLE]),
-            ({'boss_battle_enable': False, 'ticket_farming_mode': '不刷取门票'}, []),
-            ({'boss_battle_enable': True, 'ticket_farming_mode': MetaDemonMode.AWAKE.value}, [MetaDemonMode.AWAKE, MetaDemonMode.BOSS_BATTLE]),
-            ({'boss_battle_enable': False, 'ticket_farming_mode': MetaDemonMode.EXPLORATION.value}, [MetaDemonMode.EXPLORATION]),
-            ({'boss_battle_enable': True, 'mode': [MetaDemonMode.BOSS_ASSIST]}, [MetaDemonMode.BOSS_ASSIST]),
-        ):
-            with self.subTest(old=old):
-                conf = MetaDemonConfig(**old, fire_sequence='4 2', limit_count=17)
-                self.assertEqual(conf.mode, expected)
-                self.assertEqual((conf.fire_sequence, conf.limit_count), ('4 2', 17))
-                saved = conf.model_dump()
-                self.assertNotIn('boss_battle_enable', saved)
-                self.assertNotIn('ticket_farming_mode', saved)
-                self.assertEqual(MetaDemonConfig.model_validate(saved).mode, expected)
+    def test_modes_are_mutually_exclusive_and_accept_historical_values(self):
+        self.assertEqual(MetaDemonConfig().mode, [MetaDemonMode.BOSS_BATTLE])
+        self.assertEqual(MetaDemonConfig(mode=['鬼王协助']).mode, [MetaDemonMode.BOSS_ASSIST])
+        with self.assertRaises(ValidationError):
+            MetaDemonConfig(mode=['鬼王战斗', '鬼王协助'])
+        with self.assertRaises(ValidationError):
+            MetaDemonConfig(mode=['门票刷取：探索'])
+        saved = MetaDemonConfig(mode=['鬼王协助']).model_dump()
+        self.assertEqual(MetaDemonConfig.model_validate(saved).mode, [MetaDemonMode.BOSS_ASSIST])
 
     def test_synthesis_checks_selected_material_before_consuming(self):
-        from tasks.MetaDemon.synthesis import parse_synthesis_material_level
         for title, level in [('合成二星裂变之眼', 1), ('合成 六星 裂变之眼', 5), ('未知标题', None)]:
             self.assertEqual(parse_synthesis_material_level(title), level)
         owner = object.__new__(BossBattle)
-        owner.device = SimpleNamespace(image=None)
+        owner.device = SimpleNamespace(image=Mock(name='image'), image_frame_id='frame')
         owner.screenshot = Mock()
         owner.appear = Mock(side_effect=lambda rule, **kwargs: rule is owner.I_MD_SYNTHESIS_ONE_STAR)
         owner.appear_then_click = Mock(return_value=True)
+        owner.click = Mock(return_value=True)
         with patch.object(owner.O_SYNTHESIS_LEVEL, 'ocr', return_value='合成六星裂变之眼'), \
+             patch('tasks.MetaDemon.boss_battle.recognize_ticket_stars', return_value=1), \
              patch('tasks.MetaDemon.boss_battle.time.sleep'):
             owner.do_synthesis(owner.I_MD_SYNTHESIS_ONE_STAR, 3, BossType.ONE_STAR)
-        self.assertEqual(owner.appear_then_click.call_count, 3)
-        for call in owner.appear_then_click.call_args_list:
+        # 标题星级与配置星级不一致时，允许点选材料但绝不点击开始合成。
+        self.assertEqual(owner.click.call_count, 3)
+        for call in owner.click.call_args_list:
             self.assertIs(call.args[0], owner.I_MD_SYNTHESIS_ONE_STAR)
+        owner.appear_then_click.assert_not_called()
 
-    def test_high_star_legacy_battle_preset_is_preserved(self):
-        conf = MetaDemon(switch_soul={'five_stars': '3,2', 'enable_five_stars_preset': True})
+    def test_legacy_switch_soul_migrates_low_star_preset_only(self):
+        conf = MetaDemon(switch_soul={'enable': True, 'two_stars': '4,2', 'enable_two_stars_preset': True})
         high = conf.battle_config('high_star')
-        self.assertEqual((high.preset_enable, high.preset_group, high.preset_team), (True, 3, 2))
-
-    def test_exploration_label_migrates(self):
-        conf = MetaDemon(meta_demon_config={'mode': ['鬼王战斗', '门票刷取：探索绘卷']})
-        self.assertEqual(conf.meta_demon_config.mode, [MetaDemonMode.EXPLORATION, MetaDemonMode.BOSS_BATTLE])
-        self.assertEqual(MetaDemonMode.EXPLORATION.value, '门票刷取：探索')
+        # 旧版 switch_soul 里的高星预设不再自动启用，避免沿用过期阵容。
+        self.assertFalse(high.preset_enable)
+        self.assertTrue(conf.low_star_battle_conf.preset_enable)
+        self.assertEqual((conf.low_star_battle_conf.preset_group, conf.low_star_battle_conf.preset_team), (4, 2))
 
     def test_categories_and_independent_presets(self):
-        self.assertEqual([loadout_group(BossType(i)) for i in range(1, 7)], ['low_star']*4+['high_star']*2)
-        conf = MetaDemon(preset_config={'low_star_enable': True, 'low_star_group': 2, 'low_star_team': 3,
-            'ticket_farming_enable': True, 'ticket_farming_group': 4, 'ticket_farming_team': 2})
-        low = conf.battle_config('low_star')
-        ticket = conf.battle_config('ticket_farming')
-        self.assertEqual((low.preset_group, low.preset_team), (2,3))
-        self.assertEqual((ticket.preset_group, ticket.preset_team), (4,2))
-        self.assertFalse(conf.battle_config('high_star').preset_enable)
+        for star, group in ((BossType.ONE_STAR, 'low_star'), (BossType.FOUR_STARS, 'low_star'),
+                            (BossType.FIVE_STARS, 'high_star'), (BossType.SIX_STARS, 'high_star'),
+                            (None, 'low_star')):
+            self.assertEqual(loadout_group(star), group)
+        conf = MetaDemon(low_star_battle_conf={'preset_enable': True, 'preset_group': 2},
+                         high_star_battle_conf={'preset_enable': True, 'preset_group': 5})
+        self.assertEqual(conf.battle_config('low_star').preset_group, 2)
+        self.assertEqual(conf.battle_config('high_star').preset_group, 5)
 
     def test_legacy_souls_and_low_preset_migrate(self):
-        conf = MetaDemon(switch_soul={'enable': True, 'one_star': '2,3', 'two_stars': '3,4',
-            'five_stars': '活动,高星', 'enable_one_star_preset': True})
-        low = conf.switch_soul_config.switch_for('low_star')
-        high = conf.switch_soul_config.switch_for('high_star')
-        self.assertTrue(low.enable)
-        self.assertEqual(low.switch_group_team, '2,3')
-        self.assertTrue(high.enable_switch_by_name)
-        self.assertEqual((high.group_name, high.team_name), ('活动','高星'))
+        conf = MetaDemon(switch_soul={'enable': True, 'two_stars': '4,2', 'enable_two_stars_preset': True})
+        souls = conf.switch_soul_config
+        self.assertTrue(souls.low_star_enable)
+        self.assertEqual(souls.low_star_group_team, '4,2')
         self.assertTrue(conf.low_star_battle_conf.preset_enable)
-        self.assertNotIn('switch_soul', conf.model_dump())
-
-    def test_common_settings_map_to_ticket_runners(self):
-        expected = {ExplorationTarget.ALL: UpType.ALL, ExplorationTarget.COIN: UpType.COIN,
-                    ExplorationTarget.EXP: UpType.EXP, ExplorationTarget.DARUMA: UpType.DARUMAA}
-        for target, up_type in expected.items():
-            meta = MetaDemon(general_config={'exploration_rotate': True,
-                'awake_buff_enable': True, 'exploration_target': target},
-                switch_soul_config={'ticket_farming_by_name': True, 'ticket_farming_group_team_name': '刷票,探索'},
-                preset_config={'ticket_farming_enable': True, 'ticket_farming_group': 3, 'ticket_farming_team': 2})
-            awake = ticket_farming_config(meta, MetaDemonMode.AWAKE)
-            exploration = ticket_farming_config(meta, MetaDemonMode.EXPLORATION)
-            self.assertEqual(exploration.exploration_config.auto_rotate, AutoRotate.yes)
-            self.assertEqual(exploration.exploration_config.up_type, up_type)
-            self.assertFalse(exploration.scrolls.scrolls_enable)
-            self.assertTrue(awake.evo_zone_config.soul_buff_enable)
-            for task in (awake, exploration):
-                self.assertTrue(task.switch_soul_config.enable_switch_by_name)
-                self.assertEqual(task.switch_soul_config.group_name, '刷票')
-                self.assertTrue(task.general_battle_config.preset_enable)
-                self.assertEqual(task.general_battle_config.preset_group, 3)
-            self.assertIsNot(awake.switch_soul_config, exploration.switch_soul_config)
-
-    def test_ticket_rotation_reuses_exploration_and_disables_scrolls(self):
-        from tasks.Exploration.script_task import ScriptTask as ExplorationTask
-        self.assertIs(ExplorationTicketTask.switch_rotate, ExplorationTask.switch_rotate)
-        self.assertIs(ExplorationTicketTask.run_on_exp_settings, ExplorationTask.run_on_exp_settings)
-        for enabled in (False, True):
-            meta = MetaDemon(general_config={'exploration_rotate': enabled, 'scrolls_enable': True})
-            awake = ticket_farming_config(meta, MetaDemonMode.AWAKE)
-            exploration = ticket_farming_config(meta, MetaDemonMode.EXPLORATION)
-            self.assertEqual(exploration.exploration_config.auto_rotate,
-                             AutoRotate.yes if enabled else AutoRotate.no)
-            self.assertFalse(exploration.scrolls.scrolls_enable)
-            self.assertNotIn('scrolls_enable', meta.general_config.model_dump())
-        # Even a stale enabled scrolls setting cannot perform ticket OCR or scheduling.
-        owner = object.__new__(ExplorationTicketTask)
-        owner.O_REALM_RAID_NUMBER1_META = Mock()
-        owner.O_REALM_RAID_NUMBER_META = Mock()
-        owner.set_next_run = Mock()
-        import tasks.Exploration.page as pages
-        exploration.scrolls.scrolls_enable = True
-        for page in (pages.page_exp_main, pages.page_exp_settings, pages.page_exploration, pages.page_exp_entrance):
-            owner.activate_realm_raid(exploration.scrolls, exploration.exploration_config, page)
-        owner.O_REALM_RAID_NUMBER1_META.ocr_digit_counter.assert_not_called()
-        owner.O_REALM_RAID_NUMBER_META.ocr_digit_counter.assert_not_called()
-        owner.set_next_run.assert_not_called()
+        self.assertEqual((conf.low_star_battle_conf.preset_group, conf.low_star_battle_conf.preset_team), (4, 2))
 
     def test_settings_payload_has_flat_groups_and_defaults(self):
         payload = ConfigModel.script_task(SimpleNamespace(meta_demon=MetaDemon()), 'MetaDemon')
-        self.assertEqual(set(payload), {'scheduler','meta_demon_config','general_config','switch_soul_config','low_star_battle_conf','high_star_battle_conf','ticket_farming_battle_conf','quick_preset_config','settings_layout_config','assistance_config'})
+        self.assertEqual(set(payload), {'scheduler', 'meta_demon_config', 'general_config', 'switch_soul_config',
+                                        'low_star_battle_conf', 'high_star_battle_conf', 'quick_preset_config',
+                                        'settings_layout_config', 'assistance_config'})
         for group in payload.values():
             self.assertIsInstance(group, list)
             for field in group:
                 self.assertIn('default', field)
-        common = {field['name']: field for field in payload['general_config']}
-        self.assertEqual(common['exploration_target']['enumEnum'], ['全部','金币','经验','达摩'])
+        modes = {field['name']: field for field in payload['meta_demon_config']}['mode']
+        self.assertEqual(modes['enumEnum'], ['鬼王战斗', '鬼王协助'])
+
+    def test_legacy_powerful_list_migrates_to_high_star_switch(self):
+        for old, expected in (('5', True), ('6', True), ('4', False), ('', False), ('4 6', True)):
+            with self.subTest(old=old):
+                conf = MetaDemon(meta_demon_config={'powerful_list': old})
+                self.assertIs(conf.meta_demon_config.high_star_powerful_enable, expected)
+                self.assertEqual(conf.meta_demon_config.powerful_count, 1)
+                self.assertNotIn('powerful_list', conf.meta_demon_config.model_dump())
+
+    def test_powerful_fire_only_for_high_stars_within_attempt_budget(self):
+        owner = object.__new__(BossBattle)
+        owner.conf = MetaDemon(meta_demon_config={'high_star_powerful_enable': True, 'powerful_count': 2})
+        owner._current_boss_attempts = 0
+        for star, expected in ((BossType.FOUR_STARS, False), (BossType.FIVE_STARS, True),
+                               (BossType.SIX_STARS, True), (None, False)):
+            owner.cur_boss_type = star
+            self.assertIs(owner.enable_powerful_fire, expected)
+        owner.cur_boss_type = BossType.SIX_STARS
+        owner._current_boss_attempts = 2
+        self.assertFalse(owner.enable_powerful_fire)
+
+    def test_named_presets_parse_and_reject_invalid_rules(self):
+        conf = MetaDemonQuickPresetConfig(
+            preset_groups='高星,高星组,天狗;通用,通用组,其他',
+            high_star_custom_preset='高星:大天狗,酒吞童子;通用:ALL')
+        self.assertEqual(conf.named_presets(), {'大天狗': ('高星组', '天狗'),
+                                                '酒吞童子': ('高星组', '天狗'),
+                                                'ALL': ('通用组', '其他')})
+        for groups, rules in (('高星,高星组,天狗', '缺失:大天狗'),
+                              ('高星,高星组,天狗', '高星'),
+                              ('高星,高星组,天狗;高星,二组,队', '高星:ALL'),
+                              ('高星,高星组', '高星:ALL')):
+            with self.subTest(groups=groups, rules=rules), self.assertRaises(ValueError):
+                MetaDemonQuickPresetConfig(preset_groups=groups, high_star_custom_preset=rules).named_presets()
+
+    def test_legacy_custom_preset_format_migrates(self):
+        conf = MetaDemonQuickPresetConfig(high_star_custom_preset='大天狗:("高星","天狗");ALL:("通用","其他")')
+        self.assertEqual(conf.named_presets(), {'大天狗': ('高星', '天狗'), 'ALL': ('通用', '其他')})
 
     def test_low_and_high_share_loadout_within_category(self):
         owner = object.__new__(BossBattle)
@@ -144,14 +129,15 @@ class MetaDemonSettingsChecks(unittest.TestCase):
         owner.goto_page = Mock()
         owner.run_switch_soul = Mock()
         owner.run_quick_loadout = Mock(return_value=True)
-        for star in range(1,7):
+        for star in range(1, 7):
             owner.cur_boss_type = BossType(star)
             self.assertTrue(owner.check_and_switch_soul())
         owner.run_switch_soul.assert_called_once_with('2,3')
         owner.run_quick_loadout.assert_called_once()
         config = owner.run_quick_loadout.call_args.args[0]
-        self.assertEqual((config.group_name, config.preset_name), ('默认分组','超鬼王'))
+        self.assertEqual((config.group_name, config.preset_name), ('默认分组', '超鬼王'))
         self.assertIs(owner.run_quick_loadout.call_args.kwargs['frame'], owner.F_QUICK_LOADOUT_FRAME)
+        self.assertFalse(owner.run_quick_loadout.call_args.kwargs['skip_equip_soul'])
         owner._battle_shared_state = {'meta_demon_low_star': object()}
         owner.cur_boss_type = BossType.ONE_STAR
         self.assertTrue(owner.check_and_switch_soul())
@@ -172,26 +158,28 @@ class MetaDemonSettingsChecks(unittest.TestCase):
         owner.run_quick_loadout.assert_not_called()
         self.assertTrue(owner.conf.battle_config('high_star').preset_enable)
 
-    def test_quick_loadout_only_overrides_high_star(self):
-        conf = MetaDemon(general_config={'high_star_quick_loadout_enable': True},
-            low_star_battle_conf={'preset_enable': True},
-            high_star_battle_conf={'preset_enable': True, 'green_enable': True},
-            ticket_farming_battle_conf={'preset_enable': True, 'green_enable': True})
-        self.assertTrue(conf.battle_config('low_star').preset_enable)
-        self.assertFalse(conf.battle_config('high_star').preset_enable)
-        self.assertTrue(conf.battle_config('high_star').green_enable)
-        self.assertTrue(conf.high_star_battle_conf.preset_enable)
-        awake = ticket_farming_config(conf, MetaDemonMode.AWAKE)
-        exploration = ticket_farming_config(conf, MetaDemonMode.EXPLORATION)
-        for task in (awake, exploration):
-            self.assertTrue(task.general_battle_config.preset_enable)
-            self.assertTrue(task.general_battle_config.green_enable)
+    def test_quick_loadout_skips_soul_equip_when_configured(self):
+        owner = object.__new__(BossBattle)
+        owner.conf = MetaDemon(
+            general_config={'high_star_quick_loadout_enable': True},
+            switch_soul_config={'high_star_group_team_name': '高星组,天狗'},
+            quick_preset_config={'high_star_custom_preset_enable': True,
+                                 'preset_groups': '高星,高星组,天狗',
+                                 'high_star_custom_preset': '高星:ALL',
+                                 'skip_equip_soul': True})
+        owner.cur_boss_type = BossType.SIX_STARS
+        owner._boss_generation = 1
+        owner._read_quick_loadout_stage_name = Mock(return_value='大天狗')
+        owner.run_quick_loadout = Mock(return_value=True)
+        self.assertTrue(owner.check_and_switch_soul())
+        self.assertTrue(owner.run_quick_loadout.call_args.kwargs['skip_equip_soul'])
 
     def test_custom_high_presets_once_per_new_boss(self):
         owner = object.__new__(BossBattle)
         owner.conf = MetaDemon(general_config={'high_star_quick_loadout_enable': True},
             quick_preset_config={'high_star_custom_preset_enable': True,
-                'high_star_custom_preset': '大天狗:("高星","天狗");ALL:("通用","其他")'})
+                'preset_groups': '高星,高星组,天狗;通用,通用组,其他',
+                'high_star_custom_preset': '高星:大天狗;通用:ALL'})
         owner.cur_boss_type = BossType.FIVE_STARS
         owner._boss_generation = 1
         owner._read_quick_loadout_stage_name = Mock(return_value='大天狗')
@@ -201,23 +189,28 @@ class MetaDemonSettingsChecks(unittest.TestCase):
         self.assertTrue(owner.check_and_switch_soul())
         owner.run_quick_loadout.assert_called_once()
         target = owner.run_quick_loadout.call_args.args[0]
-        self.assertEqual((target.group_name, target.preset_name), ('高星', '天狗'))
+        self.assertEqual((target.group_name, target.preset_name), ('高星组', '天狗'))
         owner._boss_generation = 2
         owner._read_quick_loadout_stage_name.return_value = '酒吞童子'
         self.assertTrue(owner.check_and_switch_soul())
         self.assertEqual(owner.run_quick_loadout.call_count, 2)
         target = owner.run_quick_loadout.call_args.args[0]
-        self.assertEqual((target.group_name, target.preset_name), ('通用', '其他'))
+        self.assertEqual((target.group_name, target.preset_name), ('通用组', '其他'))
         owner.goto_page.assert_not_called()
 
-    def test_numeric_custom_target_rejected_without_deploy(self):
-        owner = object.__new__(BossBattle)
-        owner.conf = MetaDemon(general_config={'high_star_quick_loadout_enable': True},
+    def test_numeric_legacy_preset_target_migrates_to_named_default(self):
+        conf = MetaDemon(general_config={'high_star_quick_loadout_enable': True},
             quick_preset_config={'high_star_custom_preset_enable': True, 'high_star_custom_preset': 'ALL:(1,1)'})
+        self.assertEqual(conf.quick_preset_config.named_presets(), {'ALL': ('默认分组', '队伍1')})
+        owner = object.__new__(BossBattle)
+        owner.conf = conf
         owner.cur_boss_type = BossType.SIX_STARS
-        owner.run_quick_loadout = Mock()
-        self.assertFalse(owner.check_and_switch_soul())
-        owner.run_quick_loadout.assert_not_called()
+        owner._boss_generation = 1
+        owner._read_quick_loadout_stage_name = Mock(return_value='大天狗')
+        owner.run_quick_loadout = Mock(return_value=True)
+        self.assertTrue(owner.check_and_switch_soul())
+        target = owner.run_quick_loadout.call_args.args[0]
+        self.assertEqual((target.group_name, target.preset_name), ('默认分组', '队伍1'))
 
     def test_custom_high_presets_ignored_when_quick_disabled(self):
         owner = object.__new__(BossBattle)
@@ -231,189 +224,50 @@ class MetaDemonSettingsChecks(unittest.TestCase):
         owner.run_switch_soul.assert_called_once_with('2,3')
         owner.run_quick_loadout.assert_not_called()
 
-    def test_ticket_entry_uses_dedicated_config_without_copying_runtime(self):
-        from module.config.config import Config
-        from tasks.MetaDemon.ticket_farming import run_ticket_farming, TicketsFull
-        from tasks.EvoZone.config import Layer, UserStatus as AwakeStatus
-        from tasks.Exploration.config import UserStatus as ExplorationStatus
-        for mode, runner_class in ((MetaDemonMode.AWAKE, AwakeTicketTask),
-                                   (MetaDemonMode.EXPLORATION, ExplorationTicketTask)):
-            with self.subTest(mode=mode):
-                original = object.__new__(Config)
-                original.config_name = 'TICKET_CHECK'
-                original.task = 'MetaDemon'
-                original.model = ConfigModel()
-                original.model.meta_demon.general_config.exploration_rotate = True
-                battle = original.model.meta_demon.ticket_farming_battle_conf
-                battle.preset_enable, battle.preset_group, battle.preset_team = True, 3, 2
-                original.model.exploration.scrolls.scrolls_enable = True
-                original.model.exploration.general_battle_config.preset_group = 7
-                original.model.evo_zone.general_battle_config.preset_group = 6
-                before = original.model.model_dump()
-                device = object()
-                runner = object.__new__(runner_class)
-                runner.config = original
-                runner.device = device
-                runner.run_alone = Mock(side_effect=TicketsFull)
-                runner.exec_exp_page = Mock(side_effect=TicketsFull)
-                runner.pre_process = Mock()
-                runner.install_ticket_reward_hook = Mock()
+    def test_ticket_star_recheck_rejects_wrong_star_and_accepts_candidate(self):
+        owner = object.__new__(BossBattle)
+        owner.device = SimpleNamespace(image=Mock(name='image'), image_frame_id='frame')
+        owner.appear = Mock(return_value=True)
+        ticket = owner.I_MD_SIX_STARS
+        with patch('tasks.MetaDemon.boss_battle.recognize_ticket_stars', return_value=5), \
+             patch.object(type(ticket), 'match_all', return_value=[]):
+            self.assertFalse(owner.ticket_matches_star(ticket, BossType.SIX_STARS))
+        # 另一个候选区域通过复核时必须采用该区域，而不能沿用模板命中的区域。
+        with patch('tasks.MetaDemon.boss_battle.recognize_ticket_stars',
+                   side_effect=lambda image, area, **kwargs: 6 if tuple(area)[:2] == (700, 300) else 5), \
+             patch.object(type(ticket), 'match_all', return_value=[(0.9, 700, 300, 66, 69)]):
+            ticket.roi_front = [856, 316, 66, 69]
+            self.assertTrue(owner.ticket_matches_star(ticket, BossType.SIX_STARS))
+            self.assertEqual(list(ticket.roi_front[:2]), [700, 300])
 
-                def build(config, actual_device):
-                    self.assertIs(actual_device, device)
-                    self.assertIs(config, original)
-                    return runner
+    def test_recognize_ticket_stars_counts_illuminated_stars(self):
+        from tasks.MetaDemon.ticket_stars import recognize_ticket_stars
+        self.assertIsNone(recognize_ticket_stars(None, (0, 0, 66, 69)))
 
-                with patch('tasks.MetaDemon.ticket_farming.tickets_full_before_farming', return_value=False), \
-                     patch('tasks.MetaDemon.ticket_farming.AwakeTicketTask', side_effect=build), \
-                     patch('tasks.MetaDemon.ticket_farming.ExplorationTicketTask', side_effect=build):
-                    self.assertTrue(run_ticket_farming(SimpleNamespace(config=original, device=device), mode))
-                runner.install_ticket_reward_hook.assert_called_once()
-                self.assertTrue(runner._ticket_farming_complete)
-                self.assertIs(runner._config.general_battle_config, battle)
-                self.assertEqual((runner._config.general_battle_config.preset_group,
-                                  runner._config.general_battle_config.preset_team), (3, 2))
-                if mode == MetaDemonMode.AWAKE:
-                    self.assertEqual(runner._config.evo_zone_config.layer, Layer.SEVEN)
-                    self.assertEqual(runner._config.evo_zone_config.user_status, AwakeStatus.ALONE)
-                    runner.run_alone.assert_called_once()
-                    runner.exec_exp_page.assert_not_called()
-                else:
-                    self.assertEqual(runner._config.exploration_config.user_status, ExplorationStatus.ALONE)
-                    self.assertEqual(runner._config.exploration_config.auto_rotate, AutoRotate.yes)
-                    self.assertFalse(runner._config.scrolls.scrolls_enable)
-                    runner.pre_process.assert_called_once()
-                    runner.exec_exp_page.assert_called_once()
-                    runner.run_alone.assert_not_called()
-                self.assertEqual(original.model.model_dump(), before)
+        def ticket(stars):
+            # 识别先缩放到 72x72，这里直接按缩放后的坐标画点亮的星位。
+            card = np.zeros((72, 72, 3), dtype=np.uint8)
+            for index, center in enumerate((11, 21, 31, 41, 51, 61)):
+                if index < stars:
+                    card[58:67, center - 3:center + 3] = (255, 160, 20)
+            return card
 
-    def test_inherited_ticket_flows_do_not_require_independent_task_settings(self):
-        from datetime import datetime, timedelta
-        from tasks.EvoZone.config import Layer
-        meta = MetaDemon(switch_soul_config={'ticket_farming_enable': True,
-            'ticket_farming_group_team': '2,3'}, ticket_farming_battle_conf={
-                'preset_enable': True, 'preset_group': 3, 'preset_team': 2})
-        # Deliberately omit evo_zone/exploration: reading either is a regression.
-        runtime = SimpleNamespace(meta_demon=meta)
-        awake = object.__new__(AwakeTicketTask)
-        awake.config = runtime
-        awake.goto_page = Mock()
-        awake.evozone_enter = Mock()
-        awake.check_layer = Mock()
-        awake.check_lock = Mock()
-        awake.screenshot = Mock()
-        awake.appear = Mock(side_effect=[True, False, True])
-        awake.appear_then_click = Mock(return_value=True)
-        awake.current_count, awake.limit_count = 0, 1
-        awake.start_time, awake.limit_time = datetime.now(), timedelta(minutes=1)
-        awake.run_general_battle = Mock(side_effect=lambda **kw: setattr(awake, 'current_count', 1))
-        awake.run_alone()
-        awake.check_layer.assert_called_once_with(Layer.SEVEN)
-        self.assertIs(awake.run_general_battle.call_args.kwargs['config'], meta.ticket_farming_battle_conf)
-        self.assertEqual(awake._config.switch_soul_config.switch_group_team, '2,3')
-        exploration = object.__new__(ExplorationTicketTask)
-        exploration.config = runtime
-        exploration.C_SAFE_RANDOM_CLICK_AREA_EXP = Mock()
-        exploration.goto_page = Mock()
-        exploration.run_switch_soul = Mock()
-        exploration.run_general_battle = Mock()
-        exploration._match_end = Mock()
-        exploration.pre_process()
-        exploration.run_switch_soul.assert_called_once_with('2,3')
-        exploration.run_on_battle()
-        self.assertIs(exploration.run_general_battle.call_args.args[0], meta.ticket_farming_battle_conf)
+        for stars in (1, 3, 6):
+            self.assertEqual(recognize_ticket_stars(ticket(stars), (0, 0, 72, 72)), stars)
+        self.assertIsNone(recognize_ticket_stars(ticket(0), (0, 0, 72, 72)))
+        # 点亮顺序不连续时无法判定星级，必须返回 None 而不是猜测。
+        broken = ticket(3)
+        broken[58:67, 51:57] = (255, 160, 20)
+        broken[58:67, 21:27] = 0
+        self.assertIsNone(recognize_ticket_stars(broken, (0, 0, 72, 72)))
 
-    def test_normal_awake_config_keeps_original_task_settings(self):
-        from tasks.EvoZone.script_task import ScriptTask as NormalAwakeTask
-        config = EvoZone()
-        task = object.__new__(NormalAwakeTask)
-        task.config = SimpleNamespace(evo_zone=config)
-        self.assertIs(task._config, config)
-
-    def test_ticket_counter_uses_existing_resource_and_checks_capacity(self):
-        from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
-        from tasks.MetaDemon.ticket_farming import metademon_tickets_full
-        image = object()
-        task = SimpleNamespace(device=SimpleNamespace(image=image),
-            appear=Mock(side_effect=lambda target: target is GeneralBattleAssets.I_REWARD))
-        for counter, full in (((1000, 0, 1000), True), ((1001, -1, 1000), True),
-                              ((999, 1, 1000), False), ((0, 0, 0), False),
-                              ((-1, 1001, 1000), False)):
-            with self.subTest(counter=counter), patch.object(
-                    MetaDemonAssets.O_METADEMON_PASS, 'ocr_digit_counter', return_value=counter) as ocr:
-                self.assertEqual(metademon_tickets_full(task), full)
-                ocr.assert_called_once_with(image)
-
-    def test_full_tickets_interrupt_both_reward_flows_and_cleanup_skips_ocr(self):
-        from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
-        from tasks.MetaDemon.ticket_farming import TicketsFull
-        for runner_class in (AwakeTicketTask, ExplorationTicketTask):
-            runner = object.__new__(runner_class)
-            runner.device = SimpleNamespace(image=object())
-            runner.appear = Mock(return_value=True)
-            with self.subTest(task=runner_class.__name__), patch.object(
-                    MetaDemonAssets.O_METADEMON_PASS, 'ocr_digit_counter', return_value=(1000, 0, 1000)) as ocr:
-                with self.assertRaises(TicketsFull):
-                    runner._handle_reward(None, None)
-                self.assertEqual(ocr.call_count, 1)
-                runner._ticket_farming_complete = True
-                runner.check_ticket_reward()
-                self.assertEqual(ocr.call_count, 1)
-
-    def test_ticket_ocr_is_skipped_without_red_daruma_reward_image(self):
-        from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
-        for runner_class in (AwakeTicketTask, ExplorationTicketTask):
-            runner = object.__new__(runner_class)
-            runner.device = SimpleNamespace(image=object())
-            runner.appear = Mock(return_value=False)
-            with self.subTest(task=runner_class.__name__), patch.object(
-                    MetaDemonAssets.O_METADEMON_PASS, 'ocr_digit_counter') as ocr:
-                runner.check_ticket_reward()
-                runner.appear.assert_called_once_with(GeneralBattleAssets.I_REWARD)
-                ocr.assert_not_called()
-
-    def test_exploration_exhausted_targets_keep_exit_request_through_stale_frame(self):
-        from tasks.Exploration.script_task import ScriptTask as NormalExplorationTask
-        from tasks.Exploration.config import UserStatus
-        import tasks.Exploration.page as pages
-        for task_class in (NormalExplorationTask, ExplorationTicketTask):
-            with self.subTest(task=task_class.__name__):
-                task = object.__new__(task_class)
-                task.pre_page = None
-                task.user_status = UserStatus.ALONE
-                task.need_exit = False
-                task.fire_monster_type = ''
-                task.collect_reward = Mock(return_value=False)
-                task.switch_rotate = Mock(return_value=False)
-                task.get_fire_button = Mock(return_value=None)
-                task.swipe = Mock(return_value=True)
-                task.arrive_end = Mock(return_value=True)
-                task.appear_then_click = Mock(return_value=True)
-                task.screenshot = Mock()
-                task.get_current_page = Mock(return_value=pages.page_exp_exit)
-                task.run_on_exp_main()
-                self.assertTrue(task.need_exit)
-                task.get_fire_button.reset_mock()
-                task.get_fire_button.return_value = object()
-                task.run_on_exp_main()  # delayed scene frame after clicking back
-                task.get_fire_button.assert_not_called()
-                self.assertTrue(task.need_exit)
-                task.run_on_exp_exit()
-                self.assertIs(task.appear_then_click.call_args.args[0], task.I_E_EXIT_CONFIRM)
-
-    def test_fire_does_not_cancel_requested_exit_but_accidental_popup_still_cancels(self):
-        from tasks.Exploration.script_task import ScriptTask as NormalExplorationTask
-        import tasks.Exploration.page as pages
-        task = object.__new__(NormalExplorationTask)
-        task.need_exit = True
-        task.screenshot = Mock()
-        task.get_current_page = Mock(return_value=pages.page_exp_exit)
-        self.assertTrue(task.fire(object()))
-        self.assertTrue(task.need_exit)
-        task.need_exit = False
-        task.appear_then_click = Mock(return_value=True)
-        task.run_on_exp_exit()
-        self.assertIs(task.appear_then_click.call_args.args[0], task.I_E_EXIT_CANCEL)
+    def test_disabled_souls_do_not_navigate(self):
+        owner = object.__new__(BossBattle)
+        owner.conf = MetaDemon()
+        owner.cur_boss_type = BossType.ONE_STAR
+        owner.goto_page = Mock()
+        self.assertTrue(owner.check_and_switch_soul())
+        owner.goto_page.assert_not_called()
 
     def _summon_owner(self, frames, star=BossType.TWO_STARS):
         from copy import deepcopy
@@ -423,6 +277,13 @@ class MetaDemonSettingsChecks(unittest.TestCase):
         owner.cur_boss_type = None
         owner.current_count = 7
         owner._boss_generation = 0
+        owner._current_boss_attempts = 0
+        owner.device = SimpleNamespace(image=Mock(name='image'), image_frame_id='frame')
+        # 真实星级识别依赖截图内容，这里固定为目标星级，只验证调用顺序。
+        recognize = patch('tasks.MetaDemon.boss_battle.recognize_ticket_stars',
+                          side_effect=lambda image, area, **kwargs: int(star))
+        recognize.start()
+        self.addCleanup(recognize.stop)
         names = ('I_MD_FIRE', 'I_MD_GET_BOSS', 'I_MD_TICKET_EMPTY', 'I_MD_SWITCH_TICKET',
                  'I_MD_CLOSE_POPUP', 'I_MD_CHECK_SELECTED', 'I_MD_ONE_STAR', 'I_MD_TWO_STARS',
                  'I_MD_THREE_STARS', 'I_MD_FOUR_STARS', 'I_MD_FIVE_STARS', 'I_MD_SIX_STARS')
@@ -438,7 +299,7 @@ class MetaDemonSettingsChecks(unittest.TestCase):
             state['time'] += 1
 
         def appear(rule, **kwargs):
-            frame = frames[min(state['index'], len(frames)-1)]
+            frame = frames[min(state['index'], len(frames) - 1)]
             if rule is owner.I_MD_FIRE:
                 return frame.get('fire', False)
             if rule is owner.I_MD_GET_BOSS:
@@ -462,6 +323,7 @@ class MetaDemonSettingsChecks(unittest.TestCase):
         owner.screenshot = Mock(side_effect=screenshot)
         owner.appear = Mock(side_effect=appear)
         owner.appear_then_click = Mock(side_effect=click)
+        owner.click = Mock(side_effect=click)
         return owner, state, clicks
 
     def test_summon_sequence_override_only_uses_six_without_changing_config(self):
@@ -493,72 +355,15 @@ class MetaDemonSettingsChecks(unittest.TestCase):
         self.assertEqual(sum(rule is owner.I_MD_GET_BOSS for _, rule in clicks), 2)
         self.assertFalse(any(rule is owner.I_MD_TWO_STARS for _, rule in clicks))
 
-    def test_summon_rejects_wrong_selection_and_bounds_missing_panel_wait(self):
-        for frames in ([{'panel': True}], [{}]):
-            with self.subTest(frames=frames):
-                owner, state, clicks = self._summon_owner(frames)
-                with patch('tasks.MetaDemon.boss_battle.time.monotonic', side_effect=lambda: state['time']):
-                    self.assertFalse(owner.check_and_switch_ticket())
-                self.assertFalse(any(rule is owner.I_MD_GET_BOSS for _, rule in clicks))
-                self.assertIsNone(owner.cur_boss_type)
-                self.assertEqual(owner._boss_generation, 0)
-                self.assertLessEqual(owner.screenshot.call_count, 25)
-
-    def test_full_ticket_precheck_skips_both_farming_runners(self):
-        from tasks.MetaDemon.assets import MetaDemonAssets
-        from tasks.MetaDemon.ticket_farming import run_ticket_farming
-        import tasks.Exploration.page as pages
-        for mode in (MetaDemonMode.AWAKE, MetaDemonMode.EXPLORATION):
-            owner = SimpleNamespace(goto_page=Mock(), screenshot=Mock(), appear=Mock(return_value=True),
-                                    device=SimpleNamespace(image=object()))
-            with self.subTest(mode=mode), patch.object(MetaDemonAssets.O_METADEMON_PASS_EXP,
-                    'ocr_digit_counter', return_value=(50, 0, 50)) as ocr, \
-                 patch('tasks.MetaDemon.ticket_farming.AwakeTicketTask') as awake, \
-                 patch('tasks.MetaDemon.ticket_farming.ExplorationTicketTask') as exploration:
-                self.assertTrue(run_ticket_farming(owner, mode))
-                owner.goto_page.assert_called_once_with(pages.page_exploration)
-                ocr.assert_called_once_with(owner.device.image)
-                awake.assert_not_called()
-                exploration.assert_not_called()
-
-    def test_ticket_precheck_retries_invalid_counter_and_rejects_wrong_page(self):
-        from tasks.MetaDemon.assets import MetaDemonAssets
-        from tasks.MetaDemon.ticket_farming import tickets_full_before_farming
-        owner = SimpleNamespace(goto_page=Mock(), screenshot=Mock(), appear=Mock(return_value=True),
-                                device=SimpleNamespace(image=object()))
-        with patch.object(MetaDemonAssets.O_METADEMON_PASS_EXP, 'ocr_digit_counter',
-                          side_effect=[(0,0,0), (-1,51,50), (49,1,50)]) as ocr:
-            self.assertFalse(tickets_full_before_farming(owner))
-            self.assertEqual(ocr.call_count, 3)
-        owner.appear.return_value = False
-        with patch.object(MetaDemonAssets.O_METADEMON_PASS_EXP, 'ocr_digit_counter') as ocr:
-            self.assertFalse(tickets_full_before_farming(owner))
-            ocr.assert_not_called()
-
-    def test_full_tickets_still_continue_to_battle_or_assistance_mode(self):
-        from tasks.MetaDemon.script_task import ScriptTask
-        from tasks.MetaDemon.assets import MetaDemonAssets
-        for next_mode in (MetaDemonMode.BOSS_BATTLE, MetaDemonMode.BOSS_ASSIST):
-            owner = object.__new__(ScriptTask)
-            owner.config = SimpleNamespace(meta_demon=MetaDemon(meta_demon_config={
-                'mode': [MetaDemonMode.EXPLORATION, next_mode]}))
-            owner.device = SimpleNamespace(image=object())
-            owner.goto_page, owner.screenshot = Mock(), Mock()
-            owner.appear = Mock(return_value=True)
-            with patch.object(MetaDemonAssets.O_METADEMON_PASS_EXP, 'ocr_digit_counter', return_value=(50,0,50)), \
-                 patch('tasks.MetaDemon.boss_battle.BossBattle.run', return_value='battle') as battle, \
-                 patch('tasks.MetaDemon.assistance.run_assistance', return_value='assistance') as assistance:
-                self.assertEqual(owner.run(), 'battle' if next_mode == MetaDemonMode.BOSS_BATTLE else 'assistance')
-                self.assertEqual(battle.call_count, int(next_mode == MetaDemonMode.BOSS_BATTLE))
-                self.assertEqual(assistance.call_count, int(next_mode == MetaDemonMode.BOSS_ASSIST))
-
-    def test_disabled_souls_do_not_navigate(self):
-        owner = object.__new__(BossBattle)
-        owner.conf = MetaDemon()
-        owner.cur_boss_type = BossType.ONE_STAR
-        owner.goto_page = Mock()
-        self.assertTrue(owner.check_and_switch_soul())
-        owner.goto_page.assert_not_called()
+    def test_summon_does_not_treat_missed_template_as_exhausted_tickets(self):
+        owner, state, clicks = self._summon_owner([{'panel': True}])
+        with patch('tasks.MetaDemon.boss_battle.time.monotonic', side_effect=lambda: state['time']):
+            self.assertFalse(owner.check_and_switch_ticket())
+        self.assertFalse(owner.State.done)
+        self.assertFalse(any(rule is owner.I_MD_GET_BOSS for _, rule in clicks))
+        self.assertIsNone(owner.cur_boss_type)
+        self.assertEqual(owner._boss_generation, 0)
+        self.assertLessEqual(owner.screenshot.call_count, 25)
 
 
 if __name__ == '__main__':

@@ -408,5 +408,25 @@
     "method": "Template matching",
     "profile": "High",
     "description": "庭院超鬼王活动入口"
+  },
+  {
+    "itemName": "share_demon",
+    "imageName": "md_share_demon.png",
+    "roiFront": "47,137,80,82",
+    "roiBack": "47,137,80,82",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "分享鬼王头像"
+  },
+  {
+    "itemName": "fight_share_demon",
+    "imageName": "md_fight_share_demon.png",
+    "roiFront": "49,376,80,82",
+    "roiBack": "30,361,298,276",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "协助鬼王头像"
   }
 ]

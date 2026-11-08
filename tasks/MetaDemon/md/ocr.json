@@ -36,15 +36,6 @@
     "description": ""
   },
   {
-    "itemName": "metademon_pass",
-    "roiFront": "1126,3,95,39",
-    "roiBack": "1126,3,95,39",
-    "mode": "DigitCounter",
-    "method": "Default",
-    "keyword": "",
-    "description": "超鬼王门票"
-  },
-  {
     "itemName": "metademon_pass_exp",
     "roiFront": "919,16,114,34",
     "roiBack": "919,16,114,34",

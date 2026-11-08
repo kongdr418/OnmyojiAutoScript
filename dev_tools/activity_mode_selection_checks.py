@@ -13,15 +13,17 @@ from tasks.ActivityShikigami.config import GeneralConfig
 class SelectionChecks(unittest.TestCase):
     def test_meta_default_and_legacy(self):
         self.assertEqual(MetaDemonConfig().mode, [Mode.BOSS_BATTLE])
-        self.assertEqual(MetaDemonConfig(mode=Mode.AWAKE.value).mode, [Mode.AWAKE])
+        self.assertEqual(MetaDemonConfig(mode=Mode.BOSS_ASSIST.value).mode, [Mode.BOSS_ASSIST])
         self.assertEqual(MetaDemonConfig(mode=[]).mode, [])
 
-
-    def test_meta_ticket_exclusivity_and_priority(self):
-        self.assertEqual(MetaDemonConfig(mode=[Mode.BOSS_BATTLE, Mode.EXPLORATION]).mode,
-                         [Mode.EXPLORATION, Mode.BOSS_BATTLE])
+    def test_meta_boss_modes_are_exclusive(self):
+        self.assertEqual(MetaDemonConfig(mode=[Mode.BOSS_BATTLE]).mode, [Mode.BOSS_BATTLE])
+        self.assertEqual(MetaDemonConfig(mode=[Mode.BOSS_ASSIST]).mode, [Mode.BOSS_ASSIST])
         with self.assertRaises(ValidationError):
-            MetaDemonConfig(mode=[Mode.AWAKE, Mode.EXPLORATION])
+            MetaDemonConfig(mode=[Mode.BOSS_BATTLE, Mode.BOSS_ASSIST])
+        # 门票刷取已迁出本任务，旧值不应再被接受。
+        with self.assertRaises(ValidationError):
+            MetaDemonConfig(mode=['门票刷取：觉醒七层'])
 
     def test_activity_defaults_only_climb_and_easy(self):
         from tasks.ActivityShikigami.config import ActivityTask, ClimbTask
@@ -93,23 +95,13 @@ class DispatchChecks(unittest.TestCase):
             self.assertEqual(model.activity_shikigami.general_config.model_dump(), before)
             self.assertEqual(save.call_count, 1)
 
-    def test_farming_executes_before_selected_boss(self):
-        events = []
-        class Boss:
-            def run(self):
-                events.append('boss')
-        path = Path(__file__).resolve().parents[1] / 'tasks/MetaDemon/script_task.py'
-        tree = ast.parse(path.read_text(encoding='utf-8'))
-        cls = next(n for n in tree.body if isinstance(n, ast.ClassDef))
-        ns = dict(BossBattle=Boss, MetaDemonMode=Mode, datetime=datetime, logger=Mock())
-        exec(compile(ast.Module(body=[cls], type_ignores=[]), str(path), 'exec'), ns)
-        runner = ns['ScriptTask']()
-        runner.config = SimpleNamespace(meta_demon=SimpleNamespace(meta_demon_config=
-            MetaDemonConfig(mode=[Mode.BOSS_BATTLE, Mode.AWAKE])))
-        fake = SimpleNamespace(run_ticket_farming=lambda owner, mode: events.append(mode) or True)
-        with patch.dict(sys.modules, {'tasks.MetaDemon.ticket_farming': fake}):
-            runner.run()
-        self.assertEqual(events, [Mode.AWAKE, 'boss'])
+    def test_ticket_farming_is_its_own_task(self):
+        meta_path = Path(__file__).resolve().parents[1] / 'tasks/MetaDemon/script_task.py'
+        ticket_path = Path(__file__).resolve().parents[1] / 'tasks/MetaDemonTicket/script_task.py'
+        self.assertNotIn('ticket', meta_path.read_text(encoding='utf-8').lower())
+        tree = ast.parse(ticket_path.read_text(encoding='utf-8'))
+        self.assertTrue(any(isinstance(node, ast.ClassDef) and node.name == 'ScriptTask' for node in tree.body))
+        self.assertNotIn('MetaDemonMode', ticket_path.read_text(encoding='utf-8'))
 
 if __name__ == '__main__':
     unittest.main()

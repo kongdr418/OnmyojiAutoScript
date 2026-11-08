@@ -375,8 +375,9 @@ class QuickLoadout(BaseTask, SwitchSoulAssets):
         frame: RuleFrame,
         name_ocr: RuleOcr | None = None,
         dismiss: RuleClick | None = None,
+        skip_equip_soul: bool = False,
     ) -> bool:
-        """装配目标预设御魂并将该预设上阵。"""
+        """装配目标预设御魂并将该预设上阵；skip_equip_soul 时只上阵不装配御魂。"""
         if not config.enable:
             return True
         if isinstance(config, NamedQuickLoadoutConfig) and config.custom_preset_enable:
@@ -398,7 +399,8 @@ class QuickLoadout(BaseTask, SwitchSoulAssets):
             if row_y is None:
                 self._dismiss_quick_loadout(frame, dismiss=dismiss)
                 return False
-            self._equip_quick_loadout_souls(layout, row_y)
+            if not skip_equip_soul:
+                self._equip_quick_loadout_souls(layout, row_y)
             return self._deploy_quick_loadout(layout, frame, row_y, dismiss=dismiss)
         except Exception:
             self._dismiss_quick_loadout(frame, dismiss=dismiss)

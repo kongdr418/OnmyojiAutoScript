@@ -58,6 +58,7 @@ from tasks.GuildActivityMonitor.config import GuildActivityMonitor
 from tasks.ActivityShikigami.config import ActivityShikigami
 from tasks.MartialTournament.config import MartialTournament
 from tasks.MetaDemon.config import MetaDemon
+from tasks.MetaDemonTicket.config import MetaDemonTicket
 from tasks.FrogBoss.config import FrogBoss
 from tasks.FloatParade.config import FloatParade
 from tasks.Quiz.config import Quiz
@@ -126,6 +127,7 @@ class ConfigModel(ConfigBase):
     activity_shikigami: ActivityShikigami = Field(default_factory=ActivityShikigami)
     martial_tournament: MartialTournament = Field(default_factory=MartialTournament)
     meta_demon: MetaDemon = Field(default_factory=MetaDemon)
+    meta_demon_ticket: MetaDemonTicket = Field(default_factory=MetaDemonTicket)
     frog_boss: FrogBoss = Field(default_factory=FrogBoss)
     float_parade: FloatParade = Field(default_factory=FloatParade)
     quiz: Quiz = Field(default_factory=Quiz)
@@ -175,6 +177,9 @@ class ConfigModel(ConfigBase):
             super().__init__()
             return
         data = self.read_json(config_name)
+        # 旧版把超鬼王门票刷取放在 MetaDemon 内部，加载时迁入独立任务。
+        from tasks.MetaDemonTicket.config import split_legacy_meta_demon
+        data = split_legacy_meta_demon(data)
         data["config_name"] = config_name
         super().__init__(**data)
 
@@ -356,6 +361,17 @@ class ConfigModel(ConfigBase):
                     enum_key = re.search(r"/([^/]+)$", value['items']['$ref']).group(1)
                     item['type'] = 'multi_enum'
                     item['enumEnum'] = definitions[enum_key]['enum']
+                # 唯一互斥组覆盖全部选项时本质是单选：按枚举下发，客户端才会渲染成下拉框。
+                exclusive = item.get('ui_exclusive_groups') or []
+                options = item.get('enumEnum') or []
+                if (item['type'] == 'multi_enum' and len(exclusive) == 1 and options
+                        and len(exclusive[0]) == len(options)
+                        and all(option in exclusive[0] for option in options)):
+                    current = [str(getattr(entry, 'value', entry)) for entry in (item['value'] or [])]
+                    defaults = [str(getattr(entry, 'value', entry)) for entry in (item['default'] or [])]
+                    item['type'] = 'enum'
+                    item['value'] = current[0] if current else ''
+                    item['default'] = defaults[0] if defaults else ''
                 # if 'allOf' in value:
                 #     enum_key = re.search(r"/([^/]+)$", value['allOf'][0]['$ref']).group(1)
                 #     item["enumEnum"] = definitions[enum_key]["enum"]

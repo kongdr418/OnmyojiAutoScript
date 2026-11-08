@@ -13,7 +13,8 @@ from module.config.utils import convert_to_underscore
 
 
 BATTLE_TASKS = frozenset(('Orochi', 'EvoZone', 'Exploration', 'FallenSun',
-                         'EternitySea', 'BondlingFairyland', 'OtherWorldTwilight'))
+                         'EternitySea', 'BondlingFairyland', 'OtherWorldTwilight', 'MetaDemon',
+                         'MetaDemonTicket'))
 
 
 def instance_name(value):
@@ -49,6 +50,12 @@ class Cooperation:
                 CREATE TABLE IF NOT EXISTS room_checks
                   (source TEXT PRIMARY KEY, target TEXT, task TEXT, token TEXT,
                    created REAL, ready INTEGER, answered REAL);
+                CREATE TABLE IF NOT EXISTS task_completions
+                  (source TEXT, target TEXT, task TEXT, created REAL, reason TEXT,
+                   PRIMARY KEY(source, target, task));
+                CREATE TABLE IF NOT EXISTS battle_states
+                  (source TEXT, target TEXT, task TEXT, session TEXT, payload TEXT, updated REAL,
+                   PRIMARY KEY(source, target, task));
             ''')
 
     @contextmanager
@@ -105,6 +112,39 @@ class Cooperation:
                        (self.name, peer, task, token, time.time()))
         return token
 
+    def publish_battle_state(self, task, peer, session, payload):
+        """使用同一协同数据库交换轮次内的 JSON 状态。"""
+        with self.connect() as db:
+            db.execute('INSERT OR REPLACE INTO battle_states VALUES (?, ?, ?, ?, ?, ?)',
+                       (self.name, peer, task, session, json.dumps(payload, ensure_ascii=False), time.time()))
+
+    def peer_battle_state(self, task, peer):
+        with self.connect() as db:
+            row = db.execute('SELECT session, payload, updated FROM battle_states '
+                             'WHERE source=? AND target=? AND task=?',
+                             (peer, self.name, task)).fetchone()
+        return {'session': row[0], 'payload': json.loads(row[1]), 'updated': row[2]} if row else None
+
+    def begin_completion_phase(self, task, peer):
+        """开始新一轮角色阶段时，作废本实例此前的完成通知。"""
+        with self.connect() as db:
+            db.execute('DELETE FROM task_completions WHERE source=? AND target=? AND task=?',
+                       (self.name, peer, task))
+        return time.time()
+
+    def notify_task_completion(self, task, peer, reason):
+        with self.connect() as db:
+            db.execute('INSERT OR REPLACE INTO task_completions VALUES (?, ?, ?, ?, ?)',
+                       (self.name, peer, task, time.time(), reason))
+        logger.info(f'Cooperation completed: {self.name} -> {peer}/{task}: {reason}')
+
+    def peer_task_completion(self, task, peer, since):
+        with self.connect() as db:
+            row = db.execute('SELECT created, reason FROM task_completions '
+                             'WHERE source=? AND target=? AND task=?',
+                             (peer, self.name, task)).fetchone()
+        return row[1] if row and row[0] >= since else None
+
     def pending_room_check(self, task, peer):
         with self.connect() as db:
             row = db.execute('SELECT token, created FROM room_checks WHERE source=? '
@@ -140,7 +180,29 @@ class Cooperation:
         if not path.is_file():
             raise ScriptError(f'协同脚本不存在：{name}')
         with path.open(encoding='utf-8-sig') as stream:
-            return json.load(stream)
+            data = json.load(stream)
+        if 'meta_demon_ticket' not in data and 'meta_demon' in data:
+            from tasks.MetaDemonTicket.config import split_legacy_meta_demon
+            data = split_legacy_meta_demon(data)
+        return data
+
+    def matches_meta_demon_tickets(self, peer):
+        """两端都是刷票任务、同一玩法、一队长一队员，且互相指向对方。"""
+        if not peer or peer == self.name or not (self.root / 'config' / f'{peer}.json').is_file():
+            return False
+        own, other = (self.read(name).get('meta_demon_ticket', {}) for name in (self.name, peer))
+        if not all(item.get('scheduler', {}).get('enable') for item in (own, other)):
+            return False
+        own_general, other_general = (item.get('general_config', {}) for item in (own, other))
+        if {own_general.get('user_status'), other_general.get('user_status')} != {'leader', 'member'}:
+            return False
+        mode = own_general.get('mode')
+        if mode not in ('门票刷取：觉醒', '门票刷取：探索') or mode != other_general.get('mode'):
+            return False
+        own_target = own.get('invite_config', {}).get('cooperation_script', '').strip()
+        other_target = other.get('invite_config', {}).get('cooperation_script', '').strip()
+        return (own_target in ('', peer) and other_target in ('', self.name)
+                and bool(own_target or other_target))
 
     def validate(self, task, peer):
         peer = instance_name(peer)
@@ -148,9 +210,13 @@ class Cooperation:
         if task not in BATTLE_TASKS or peer == self.name:
             raise ScriptError('组队身份有误')
         own, other = self.read(self.name).get(key, {}), self.read(peer).get(key, {})
+        if task == 'MetaDemonTicket' and not self.matches_meta_demon_tickets(peer):
+            raise ScriptError('超鬼王门票刷取协同配置不匹配')
         for name, item in ((self.name, own), (peer, other)):
             if not item.get('scheduler', {}).get('enable', False):
                 raise ScriptError(f'协同任务未启用：{name}/{task}')
+        if task == 'MetaDemon':
+            return self._validate_meta_demon(own, other, peer)
         def role(item):
             return next((v.get('user_status') for v in item.values()
                          if isinstance(v, dict) and 'user_status' in v), None)
@@ -168,6 +234,22 @@ class Cooperation:
                 raise ScriptError('组队身份有误')
         for name, item in ((self.name, own), (peer, other)):
             logger.info(f'Cooperation {name}/{task}: next_run={item["scheduler"].get("next_run")}')
+        return other
+
+    def _validate_meta_demon(self, own, other, peer):
+        """超鬼王协同：一端上供、一端协助，双方都开启鬼王协助模式。"""
+        from tasks.MetaDemon.config import AssistanceRole, MetaDemonMode
+        pair = ((own, peer), (other, self.name))
+        settings = [item.get('assistance_config', {}) for item, _ in pair]
+        targets = [setting.get('cooperation_script', '').strip() for setting in settings]
+        if ({setting.get('role') for setting in settings} != {AssistanceRole.OFFERING, AssistanceRole.ASSIST}
+                or not all(MetaDemonMode.BOSS_ASSIST in item.get('meta_demon_config', {}).get('mode', [])
+                           for item, _ in pair)
+                or not any(targets)
+                or any(target not in ('', name) for target, (_, name) in zip(targets, pair))):
+            raise ScriptError('超鬼王协同双方须启用鬼王协助，并分别配置上供和协助身份')
+        for item, name in pair:
+            logger.info(f'Cooperation {name}/MetaDemon: next_run={item["scheduler"].get("next_run")}')
         return other
 
     def accepted_peer(self, task):
@@ -189,23 +271,41 @@ class Cooperation:
             return db.execute('SELECT task, source FROM wakes WHERE target=? ORDER BY created',
                               (self.name,)).fetchall()
 
+    def runner_task(self, peer):
+        with self.connect() as db:
+            runner = db.execute('SELECT task, heartbeat FROM runners WHERE name=?', (peer,)).fetchone()
+        return runner[0] if runner and 0 <= time.time() - runner[1] < 30 else None
+
     def wake_next(self, config):
         """Only called at a scheduler boundary, so an active task is never interrupted."""
         for task, source in self.requested():
             key = convert_to_underscore(task)
             item = getattr(config.model, key, None)
-            configured = getattr(getattr(item, 'invite_config', None), 'cooperation_script', '')
+            settings_group = 'assistance_config' if task == 'MetaDemon' else 'invite_config'
+            configured = getattr(getattr(item, settings_group, None), 'cooperation_script', '')
             # Ignore obsolete requests when either side changed the pairing or disabled it.
             if not (self.root / 'config' / f'{source}.json').is_file():
                 self.ack(task)
                 continue
+            if ((task == 'MetaDemon' and self.runner_task(source) != task)
+                    or (task == 'MetaDemonTicket' and not self.matches_meta_demon_tickets(source))):
+                self.ack(task)
+                continue
             sender = self.read(source).get(key, {})
-            sender_peer = sender.get('invite_config', {}).get('cooperation_script', '').strip()
+            sender_peer = sender.get(settings_group, {}).get('cooperation_script', '').strip()
             if (item is None or not item.scheduler.enable
                     or (configured != source and sender_peer != self.name)):
                 self.ack(task)
                 continue
-            self.validate(task, source)
+            if task == 'MetaDemon':
+                try:
+                    self.validate(task, source)
+                except ScriptError as exc:
+                    logger.info(f'忽略超鬼王协同唤醒：{exc}')
+                    self.ack(task)
+                    continue
+            else:
+                self.validate(task, source)
             config.reload()
             config.task_call(task, force_call=False)
             peers = getattr(config, '_cooperation_peers', None) or {}
@@ -224,7 +324,23 @@ class Cooperation:
         with self.connect() as db:
             db.execute('DELETE FROM wakes WHERE target=? AND task=?', (self.name, task))
 
-    def prepare(self, config, task, peer):
+    def skip_without_wake(self, task, peer, reason):
+        """清除双方旧唤醒；仅向心跳有效的实例发布跳过通知，不创建唤醒。"""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            db.execute('DELETE FROM wakes WHERE task=? AND '
+                       '((target=? AND source=?) OR (target=? AND source=?))',
+                       (task, peer, self.name, self.name, peer))
+            db.execute('DELETE FROM waiting WHERE task=? AND '
+                       '((name=? AND peer=?) OR (name=? AND peer=?))',
+                       (task, self.name, peer, peer, self.name))
+            runner = db.execute('SELECT heartbeat FROM runners WHERE name=?', (peer,)).fetchone()
+            if runner and 0 <= time.time() - runner[0] < 30:
+                db.execute('INSERT OR REPLACE INTO task_completions VALUES (?, ?, ?, ?, ?)',
+                           (self.name, peer, task, time.time(), reason))
+                logger.info(f'Cooperation skip: {self.name} -> {peer}/{task}: {reason}')
+
+    def prepare(self, config, task, peer, *, defer=True):
         self.validate(task, peer)
         now = time.time()
         with self.connect() as db:
@@ -234,21 +350,32 @@ class Cooperation:
             peer_waiting = db.execute('SELECT 1 FROM waiting WHERE name=? AND task=?',
                                       (peer, task)).fetchone()
             available = runner is not None and now - runner[1] < 30
+            if task == 'MetaDemon' and (not available or runner[0] not in ('', task)):
+                reason = runner[0] if available else '未运行'
+                db.execute('DELETE FROM wakes WHERE target=? AND source=? AND task=?',
+                           (peer, self.name, task))
+                logger.info(f'超鬼王协同跳过：{peer}（{reason}）')
+                return False
             if available and runner[0] == task and not peer_waiting:
                 db.execute('DELETE FROM waiting WHERE task=? AND name IN (?, ?)',
                            (task, self.name, peer))
                 db.execute('DELETE FROM wakes WHERE task=? AND target IN (?, ?)',
                            (task, self.name, peer))
                 logger.info(f'Cooperation ready: {self.name} + {peer}/{task}')
-                return
+                return True
             db.execute('INSERT OR REPLACE INTO wakes VALUES (?, ?, ?, ?)',
                        (peer, task, self.name, now))
             busy = not available or bool(runner[0])
+            if task == 'MetaDemonTicket' and available and runner[0] == task:
+                busy = False
             if busy:
                 db.execute('INSERT OR REPLACE INTO waiting VALUES (?, ?, ?, ?)',
                            (self.name, task, peer, now))
         if busy:
             reason = runner[0] if available else '未运行'
+            if not defer:
+                logger.info(f'Cooperation waiting: {peer} ({reason}); {task} 本轮跳过')
+                return False
             config.task_delay(task=task, success=False, server=False)
             target = getattr(config.model, convert_to_underscore(task)).scheduler.next_run
             config.task_runtime_outcome = {
@@ -264,13 +391,15 @@ class Cooperation:
             logger.info(f'Cooperation waiting: {peer} ({reason}); {task} retry at {target}, may be woken earlier')
             raise TaskEnd
         logger.info(f'Cooperation requested: wake {peer}/{task}')
+        return True
 
 
 def prepare_task_cooperation(config, task):
     """Check and wake the partner as soon as the scheduler activates this task."""
     item = getattr(config.model, convert_to_underscore(task))
+    settings_group = 'assistance_config' if task == 'MetaDemon' else 'invite_config'
     runtime = getattr(config, 'cooperation_runtime', None)
-    peer = item.invite_config.cooperation_script
+    peer = getattr(getattr(item, settings_group, None), 'cooperation_script', '')
     if not peer:
         peer = (runtime.peers.get(task, '') if runtime is not None else '')
         peer = peer or (runtime.accepted_peer(task) if runtime is not None else '')

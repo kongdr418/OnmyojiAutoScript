@@ -1,6 +1,8 @@
 {
   "MetaDemon": "超鬼王",
+  "MetaDemonTicket": "超鬼王门票",
   "meta_demon_config": "超鬼王配置",
+  "meta_demon_ticket": "超鬼王门票刷取",
   "low_star_battle_conf": "低星鬼王战斗配置",
   "high_star_battle_conf": "高星鬼王战斗配置",
   "ticket_farming_battle_conf": "门票刷取战斗配置",
@@ -391,7 +393,20 @@
   "boss_battle_enable": "执行鬼王战斗",
   "ticket_farming_mode": "门票刷取模式",
   "fire_sequence": "鬼王攻击顺序",
-  "powerful_list": "开启强力追击的鬼王星级",
+  "high_star_powerful_enable": "启用高星强力追击",
+  "powerful_count": "强力追击次数",
+  "preset_groups": "预设组列表",
+  "skip_equip_soul": "不装配御魂",
+  "high_star_custom_preset": "自定义配置上阵预设",
+  "high_star_custom_preset_enable": "指定高星切换预设",
+  "awake_layer": "觉醒层数",
+  "awake_kirin_type": "觉醒麒麟",
+  "user_status": "组队身份",
+  "invite_config": "通用邀请",
+  "general_battle_config": "战斗配置",
+  "find_mode": "好友查找方式",
+  "wait_time": "等待时间",
+  "default_invite": "默认邀请",
   "synthesis_list": "合成鬼王材料星级",
   "climb_task_sequence": "爬塔启用",
   "next_run": "下次执行时间",
@@ -419,5 +434,5 @@
   "assistance_config": "鬼王协助",
   "role": "身份",
   "friend_names": "分享好友名字",
-  "poll_interval": "击杀等待检查间隔（秒）"
+  "poll_interval": "协助轮询间隔（秒）"
 }

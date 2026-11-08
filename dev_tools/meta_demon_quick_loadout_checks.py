@@ -83,7 +83,7 @@ class QuickLoadoutChecks(unittest.TestCase):
     def test_only_frame_is_required_and_back_is_preserved(self):
         import inspect
         self.assertEqual(set(inspect.signature(QuickLoadout.run_quick_loadout).parameters),
-                         {'self', 'config', 'frame', 'name_ocr', 'dismiss'})
+                         {'self', 'config', 'frame', 'name_ocr', 'dismiss', 'skip_equip_soul'})
         back = self.frame.roi_back
         self.owner.appear = Mock(return_value=True)
         self.assertTrue(self.owner._quick_loadout_panel_visible(self.frame))
