@@ -100,7 +100,8 @@ class DraftDuelLifecycleMixin:
     def _run_member(self, con: DraftDuelConfig):
         # 队员不用进大厅，原地等队长的组队邀请
         logger.info('DraftDuel: wait for team invite')
-        if not self._wait_accept_invite(con):
+        # 首次邀请只等 2 分钟；任务总时长仍由外层 limit_time 控制。
+        if not self._wait_accept_invite(con, timeout=120):
             logger.warning('DraftDuel: no invite to accept')
             self.set_next_run(task='DraftDuel', success=False, finish=True)
             raise TaskEnd('DraftDuel')
