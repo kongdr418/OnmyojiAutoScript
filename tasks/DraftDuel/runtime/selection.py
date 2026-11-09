@@ -7,6 +7,7 @@ from module.base.timer import Timer
 from module.logger import logger
 from tasks.DraftDuel.strategy import CATALOG, rank_picks, normalize_name
 from tasks.DraftDuel.matrix import joint_draft_choices
+from tasks.DraftDuel.runtime.model_policy import recommend_pick
 
 
 class DraftDuelSelectionMixin:
@@ -159,6 +160,13 @@ class DraftDuelSelectionMixin:
             team = [item for item in self._team if item in CATALOG]
             snapshot = self._draft_share_read_snapshot()
             mate = snapshot.get('names', [])
+            if getattr(self.config.draft_duel.draft_duel_config, 'use_trained_model', False):
+                role = 'captain' if self.config.draft_duel.draft_duel_config.user_status.value == 'leader' else 'member'
+                selected = recommend_pick(role, offers, team, mate)
+                if selected in names:
+                    logger.info(f'DraftDuel: model selected {selected}, role={role}')
+                    return names.index(selected)
+                logger.warning('DraftDuel: model unavailable, fallback to OAS strategy')
             ranked = rank_picks(offers, team, mate=mate, team_size=self.TOTAL_PICKS)
             decision = ranked[0]
             peer_offers = snapshot.get('offers', [])

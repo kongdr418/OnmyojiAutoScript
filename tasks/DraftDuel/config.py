@@ -24,6 +24,11 @@ class DraftDuelConfig(ConfigBase):
         default=False,
         description='draft_duel_use_teammate_recommendation_help',
     )
+    use_trained_model: bool = Field(
+        title='使用训练模型',
+        default=False,
+        description='使用协同训练模型，失败自动回退 OAS 策略',
+    )
     # 单次任务的时间上限，到点后不再开始新的一轮
     limit_time: Time = Field(
         default=Time(minute=30),

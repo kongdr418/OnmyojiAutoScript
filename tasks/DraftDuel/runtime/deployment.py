@@ -7,6 +7,7 @@ from module.logger import logger
 from tasks.DraftDuel.field_drag import drag_to_field
 from tasks.DraftDuel.strategy import plan_duel_lineup, plan_lineup
 from tasks.DraftDuel.matrix import score_team
+from tasks.DraftDuel.runtime.model_policy import recommend_lineup
 from tasks.DraftDuel.runtime.portrait_match import (
     HAND_PORTRAIT_SCALE, HAND_PORTRAIT_THRESHOLDS, locate_portrait,
 )
@@ -291,23 +292,36 @@ class DraftDuelDeploymentMixin:
         try:
             mate = getattr(self, '_battle_mate_names', None)
             mate_plan = ()
-            try:
-                if mate:
-                    try:
-                        plan, _mate_plan = plan_duel_lineup(
-                            names, mate, locked=[], team_size=min(3, len(names)))
-                        logger.info(f'DraftDuel: joint plan own={plan} mate={_mate_plan}')
-                        mate_plan = _mate_plan
-                    except Exception as e:
-                        logger.warning(f'DraftDuel: joint plan failed, fallback: {e}')
-                        plan = plan_lineup(names, team_size=min(3, len(names)),
-                                           locked=[], max_fire=1)
-                else:
-                    plan = plan_lineup(names, team_size=min(3, len(names)), locked=[],
-                                       max_fire=1)
-            except Exception as e:
-                logger.warning(f'DraftDuel: field plan failed: {e}')
-                return False
+            plan = None
+            if getattr(self.config.draft_duel.draft_duel_config, 'use_trained_model', False) and mate:
+                role = 'captain' if self.config.draft_duel.draft_duel_config.user_status.value == 'leader' else 'member'
+                own_arg, mate_arg = (names, mate) if role == 'captain' else (mate, names)
+                model_choices = recommend_lineup(own_arg, mate_arg)
+                if model_choices:
+                    candidate = model_choices.get(role) or []
+                    if len(candidate) == 3 and all(name in names for name in candidate):
+                        plan = list(candidate)
+                        mate_plan = tuple(model_choices.get(
+                            'member' if role == 'captain' else 'captain') or ())
+                        logger.info(f'DraftDuel: model field plan own={plan} mate={mate_plan}')
+            if plan is None:
+                try:
+                    if mate:
+                        try:
+                            plan, _mate_plan = plan_duel_lineup(
+                                names, mate, locked=[], team_size=min(3, len(names)))
+                            logger.info(f'DraftDuel: joint plan own={plan} mate={_mate_plan}')
+                            mate_plan = _mate_plan
+                        except Exception as e:
+                            logger.warning(f'DraftDuel: joint plan failed, fallback: {e}')
+                            plan = plan_lineup(names, team_size=min(3, len(names)),
+                                               locked=[], max_fire=1)
+                    else:
+                        plan = plan_lineup(names, team_size=min(3, len(names)), locked=[],
+                                           max_fire=1)
+                except Exception as e:
+                    logger.warning(f'DraftDuel: field plan failed: {e}')
+                    return False
             logger.info(f'DraftDuel: field plan {plan}')
             breakdown = score_team((*plan, *mate_plan), expected_size=6 if mate_plan else 3,
                                    include_stats=True)

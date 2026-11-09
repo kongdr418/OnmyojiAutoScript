@@ -100,6 +100,10 @@ class DraftDuelInvitationMixin:
                 continue
             if self.appear(self.I_NEW_MATCH) and self.appear(self.I_START):
                 logger.info('DraftDuel: match timeout, click start again')
+                # 排不到人时游戏会自动回大厅；这里本来就应该继续点“战”。
+                # 清掉开始按钮的历史只避免 OAS 的 10 次防连点保护误杀，
+                # 页面判断仍然存在，不会在非大厅页乱点。
+                self.device.click_record_remove(self.I_START)
                 self.appear_then_click(self.I_START, interval=1)
                 self.device.sleep(1.0)
                 continue
