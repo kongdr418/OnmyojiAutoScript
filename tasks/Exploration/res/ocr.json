@@ -37,20 +37,20 @@
   },
   {
     "itemName": "realm_raid_number_meta",
-    "roiFront": "739,11,78,37",
-    "roiBack": "739,11,78,37",
+    "roiFront": "547,12,78,37",
+    "roiBack": "547,12,78,37",
     "mode": "DigitCounter",
     "method": "Default",
     "keyword": "",
-    "description": "探索右上角 突破卷的数量 超鬼王时期（暂沿用原识别区域）"
+    "description": "探索右上角 突破卷的数量 超鬼王时期"
   },
   {
     "itemName": "realm_raid_number1_meta",
-    "roiFront": "936,10,82,36",
-    "roiBack": "936,10,82,36",
+    "roiFront": "920,11,78,37",
+    "roiBack": "920,11,78,37",
     "mode": "DigitCounter",
     "method": "Default",
     "keyword": "",
-    "description": "（点出困难28时候）探索右上角 突破卷的数量 超鬼王时期（暂沿用原识别区域）"
+    "description": "（点出困难28时候）探索右上角 突破卷的数量 超鬼王时期"
   }
 ]
