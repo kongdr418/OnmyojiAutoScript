@@ -22,6 +22,8 @@
   "draft_duel_config": "协同对弈配置",
   "draft_duel_user_status_help": "队长负责邀请好友和开始匹配；队员原地等待组队邀请",
   "use_teammate_recommendation": "选择队友推荐式神",
+  "use_trained_model": "使用训练模型",
+  "save_real_match": "保存真实对局",
   "draft_duel_use_teammate_recommendation_help": "默认关闭，直接按策略选卡；开启后优先选择队友推荐式神，倒计时到22秒仍无推荐时按策略选择。",
   "user_status": "身份",
   "completion_count": "完成局数",

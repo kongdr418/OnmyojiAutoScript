@@ -29,6 +29,11 @@ class DraftDuelConfig(ConfigBase):
         default=False,
         description='使用协同训练模型，失败自动回退 OAS 策略',
     )
+    save_real_match: bool = Field(
+        title='保存真实对局记录',
+        default=False,
+        description='每局结束后保存真实对局记录，方便后续分析。记录在log/DraftDuel/real_matches下，可发给群里kongdr',
+    )
     # 单次任务的时间上限，到点后不再开始新的一轮
     limit_time: Time = Field(
         default=Time(minute=30),

@@ -83,8 +83,14 @@ class DraftDuelDeploymentMixin:
             if label in ('open', 'locked'):
                 logger.info(f'DraftDuel: prep screen reached, state={label}')
                 names = getattr(self, '_battle_detail', None) or self.picked_roles
+                if getattr(self, '_match_record', None):
+                    self._match_record.record_draft(
+                        self.picked_roles, getattr(self, '_battle_mate_names', None)
+                    )
                 self._battle_fielded = True
                 if self._use_auto_form():
+                    if getattr(self, '_match_record', None):
+                        self._match_record.record_auto_battle()
                     return self._auto_form_field()
                 if not self._field_battle_lineup(names):
                     return False
@@ -323,6 +329,8 @@ class DraftDuelDeploymentMixin:
                     logger.warning(f'DraftDuel: field plan failed: {e}')
                     return False
             logger.info(f'DraftDuel: field plan {plan}')
+            if getattr(self, '_match_record', None):
+                self._match_record.record_battle_plan(plan, mate_plan)
             breakdown = score_team((*plan, *mate_plan), expected_size=6 if mate_plan else 3,
                                    include_stats=True)
             logger.info(

@@ -29,6 +29,8 @@ class DraftDuelSelectionMixin:
             if self.appear(self.I_DRAFT_DUEL_COMPLETED_HALL):
                 logger.info('DraftDuel: selection finished')
                 logger.info(f'DraftDuel: lineup {self.picked_roles}')
+                if getattr(self, '_match_record', None):
+                    self._match_record.record_draft(self.picked_roles, self._duel_share_read_mate())
                 if not self._bind_lobby_faces():
                     self.device.sleep(0.3)
                     continue
@@ -96,6 +98,8 @@ class DraftDuelSelectionMixin:
                 continue
             self.picked_roles.append(name)
             self._team.append(name)
+            if getattr(self, '_match_record', None):
+                self._match_record.record_draft_pick(index, self._draft_offers, name)
             self._draft_share_write(self._team)
             logger.info(f'DraftDuel: pick {index} slot {slot + 1} -> {name}')
             picked.add(index)

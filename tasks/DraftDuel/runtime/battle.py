@@ -20,6 +20,8 @@ class DraftDuelBattleMixin:
         else:
             self._run_losses = getattr(self, '_run_losses', 0) + 1
         logger.info(f'DraftDuel: result {self._run_wins}W{self._run_losses}L')
+        if getattr(self, '_match_record', None):
+            self._match_record.record_battle_result(result)
         if self._run_finished():
             # 6 胜或 2 负：先标记本局结束，避免再去点“战”开下一场
             self._match_ended = True
@@ -52,6 +54,9 @@ class DraftDuelBattleMixin:
             # 两个红 X 的结算页：已经二败出局；阈值 0.95 避免大厅 0-4 番胜误匹配
             if getattr(self, '_run_losses', 0) < 2:
                 self._run_losses = 2
+                if (getattr(self, '_match_record', None)
+                        and not getattr(self, '_result_counted', False)):
+                    self._match_record.record_battle_result('loss')
             self._match_ended = True
             logger.info(f'DraftDuel: 0-4 settlement -> 2 losses, {self._run_wins}W2L')
             self._click_rule(self.C_CONTINUE, 'dd_continue')
@@ -145,6 +150,8 @@ class DraftDuelBattleMixin:
                 if not getattr(self, '_battle_fielded', False):
                     self._battle_fielded = True
                     if self._use_auto_form():
+                        if getattr(self, '_match_record', None):
+                            self._match_record.record_auto_battle()
                         if not self._auto_form_field():
                             return False
                     else:

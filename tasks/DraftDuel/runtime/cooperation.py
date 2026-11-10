@@ -5,6 +5,8 @@ import time
 
 from module.logger import logger
 from tasks.DraftDuel.config import UserStatus
+from tasks.DraftDuel.runtime.game_record import GameRecordReader, save_run
+from tasks.DraftDuel.runtime.match_record import RealMatchRecorder
 from tasks.DraftDuel.strategy import DATA_DIR, normalize_name
 
 
@@ -13,6 +15,14 @@ DUEL_SHARE_DIR = DATA_DIR / 'duel_share'
 
 class DraftDuelCooperationMixin:
     def _reset_match_state(self):
+        self._run_started_at = time.time()
+        self._match_record = None
+        try:
+            con = self.config.draft_duel.draft_duel_config
+            if getattr(con, 'save_real_match', False):
+                self._match_record = RealMatchRecorder(self._configured_role())
+        except Exception as e:
+            logger.warning(f'DraftDuel: real match recorder init failed: {e}')
         self._run_wins = 0
         self._run_losses = 0
         self._result_counted = False
@@ -29,6 +39,24 @@ class DraftDuelCooperationMixin:
     def _configured_role(self) -> str:
         con = self.config.draft_duel.draft_duel_config
         return 'member' if con.user_status == UserStatus.MEMBER else 'captain'
+
+    def _save_game_record(self) -> bool:
+        """Prefer the game's own pvp2v2_record, matched by run time."""
+        con = self.config.draft_duel.draft_duel_config
+        if not getattr(con, 'save_real_match', False):
+            return False
+        try:
+            reader = GameRecordReader(self.device)
+            found = reader.latest_run(getattr(self, '_run_started_at', time.time() - 600))
+            if not found:
+                logger.warning('DraftDuel: no matching game pvp2v2_record found')
+                return False
+            draft = getattr(getattr(self, '_match_record', None), 'data', {}).get('draft')
+            save_run(found, self._configured_role(), self._run_started_at, draft=draft)
+            return True
+        except Exception as exc:
+            logger.warning(f'DraftDuel: game record match failed: {exc}')
+            return False
 
     def _duel_share_reset(self):
         for role in ('captain', 'member'):

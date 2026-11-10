@@ -90,6 +90,8 @@ class DraftDuelLifecycleMixin:
                 logger.warning('DraftDuel: battle wait failed')
                 self.set_next_run(task='DraftDuel', success=False, finish=True)
                 raise TaskEnd('DraftDuel')
+            if not self._save_game_record() and getattr(self, '_match_record', None):
+                self._match_record.save(self._run_wins, self._run_losses)
             completed += 1
             logger.info(f'DraftDuel: match {completed}/{target_label} finished')
 
@@ -142,6 +144,8 @@ class DraftDuelLifecycleMixin:
                 logger.warning('DraftDuel: member fielding or settlement failed')
                 self.set_next_run(task='DraftDuel', success=False, finish=True)
                 raise TaskEnd('DraftDuel')
+            if not self._save_game_record() and getattr(self, '_match_record', None):
+                self._match_record.save(self._run_wins, self._run_losses)
             completed += 1
         self.goto_page(page_town)
         self.set_next_run(task='DraftDuel', success=True, finish=True)
