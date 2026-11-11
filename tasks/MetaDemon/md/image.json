@@ -385,5 +385,14 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "协助鬼王头像"
+  },
+  {
+    "itemName": "shop_close",
+    "imageName": "md_shop_close.png",
+    "roiFront": "1181,98,41,37",
+    "roiBack": "1160,90,120,100",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "礼包/商店窗口的亮叉"
   }
 ]

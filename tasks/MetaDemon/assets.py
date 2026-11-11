@@ -72,6 +72,8 @@ class MetaDemonAssets:
 	I_MD_START_SYNTHESIS = RuleImage(roi_front=(906,562,108,39), roi_back=(884,548,155,62), threshold=0.8, method="Template matching", file="./tasks/MetaDemon/md/md_md_start_synthesis.png")
 	# 合成花钱标志
 	I_MD_SYNTHESIS_NEED_MONEY = RuleImage(roi_front=(1055,545,68,54), roi_back=(1004,521,178,109), threshold=0.8, method="Template matching", file="./tasks/MetaDemon/md/md_md_synthesis_need_money.png")
+	# 礼包/商店窗口的亮叉（窗口底层还压着一个点不动的暗叉）
+	I_MD_SHOP_CLOSE = RuleImage(roi_front=(1181,98,41,37), roi_back=(1160,90,120,100), threshold=0.8, method="Template matching", file="./tasks/MetaDemon/md/md_shop_close.png")
 	# 邀请好友
 	I_MD_INVITE_FRIENDS = RuleImage(roi_front=(713,545,125,60), roi_back=(693,529,161,95), threshold=0.8, method="Template matching", file="./tasks/MetaDemon/md/md_md_invite_friends.png")
 	# 鬼王集结

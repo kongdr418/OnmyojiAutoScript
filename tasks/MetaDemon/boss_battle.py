@@ -195,6 +195,18 @@ class BossBattle(GeneralBattle, SwitchSoul, QuickLoadout, GameUi, MetaDemonAsset
         self.synthesis_boss_ticket()
         return self.check_and_switch_ticket() and self.check_and_switch_soul() and self.check_and_switch_powerful()
 
+    def close_synthesis_shop(self) -> bool:
+        """关闭礼包/购买窗口
+        """
+        while 1:
+            self.screenshot()
+            if self.appear(self.I_MD_START_SYNTHESIS):
+                return True
+            if self.appear_then_click(self.I_MD_SHOP_CLOSE, interval=0.8):
+                continue
+            if self.appear_then_click(self.I_MD_CLOSE_POPUP, interval=0.8):
+                continue
+
     def synthesis_boss_ticket(self):
         """合成鬼王"""
         if self.State.synthesis_done:
@@ -232,7 +244,7 @@ class BossBattle(GeneralBattle, SwitchSoul, QuickLoadout, GameUi, MetaDemonAsset
             if click_cnt >= max_cnt:  # 兜底,多次点击开始合成都没有出现获得奖励则退出
                 break
             if self.appear(self.I_MD_SYNTHESIS_NEED_MONEY, interval=0.8):  # 出现花钱购买合成券
-                self.ui_click(self.I_MD_CLOSE_POPUP, self.I_MD_START_SYNTHESIS, interval=0.6)  # 关闭购买弹窗
+                self.close_synthesis_shop()  # 关闭购买弹窗
                 break
             if self.appear(self.I_UI_REWARD, interval=0.8):  # 出现获得奖励说明合成成功
                 self.click(ipages.random_click(), interval=0.6)
