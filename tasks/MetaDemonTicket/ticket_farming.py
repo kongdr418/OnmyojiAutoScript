@@ -7,7 +7,7 @@ from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
 from tasks.EvoZone.config import EvoZone, EvoZoneConfig, UserStatus as AwakeUserStatus
 from tasks.EvoZone.script_task import ScriptTask as AwakeTask
 from tasks.Exploration.config import (
-    AutoRotate, Exploration, ExplorationConfig, ExplorationLevel,
+    AutoRotate, Exploration, ExplorationConfig,
     UpType, UserStatus as ExplorationUserStatus,
 )
 from tasks.Exploration.script_task import ScriptTask as ExplorationTask
@@ -130,7 +130,7 @@ def ticket_farming_config(meta, mode):
             battle = battle.model_copy(update={'lock_team_enable': False})
         return Exploration(
             exploration_config=ExplorationConfig(user_status=ExplorationUserStatus(common.user_status.value),
-                exploration_level=ExplorationLevel.EXPLORATION_28,
+                exploration_level=common.exploration_level,
                 limit_time=common.limit_time, minions_cnt=2 ** 31 - 1,
                 auto_rotate=AutoRotate.yes if common.exploration_rotate else AutoRotate.no,
                 up_type=target[common.exploration_target]),

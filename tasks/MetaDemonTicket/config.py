@@ -12,7 +12,7 @@ from tasks.Component.GeneralBattle.config_general_battle import GeneralBattleCon
 from tasks.Component.GeneralInvite.config_invite import InviteConfig
 from tasks.Component.SwitchSoul.switch_soul_config import SwitchSoulConfig
 from tasks.EvoZone.config import KirinType, Layer
-from tasks.Exploration.config import UserStatus
+from tasks.Exploration.config import ExplorationLevel, UserStatus
 
 
 class TicketMode(str, Enum):
@@ -38,6 +38,8 @@ class TicketGeneralConfig(ConfigBase):
     awake_layer: Layer = Field(default=Layer.SEVEN, title='觉醒层数',
         description='门票刷取：觉醒使用的层数，可选一至十层；默认七层。')
     exploration_target: ExplorationTarget = Field(default=ExplorationTarget.ALL, title='探索目标')
+    exploration_level: ExplorationLevel = Field(default=ExplorationLevel.EXPLORATION_28, title='探索章节',
+        description='门票刷取：探索使用的章节，可选范围与探索任务一致，默认第二十八章。')
 
     @property
     def limit_time_v(self) -> timedelta:

@@ -2187,7 +2187,8 @@
       "awake_buff_enable": false,
       "awake_kirin_type": "雷麒麟",
       "awake_layer": "柒层",
-      "exploration_target": "全部"
+      "exploration_target": "全部",
+      "exploration_level": "第二十八章"
     },
     "invite_config": {
       "friend_list": "",
