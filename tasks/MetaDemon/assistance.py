@@ -1,4 +1,4 @@
-"""Share six-star bosses and challenge bosses shared by friends."""
+"""Share bosses chosen by the offering side and challenge bosses shared by friends."""
 from base64 import b64decode, b64encode
 import re
 import time
@@ -50,15 +50,28 @@ class AssistanceLink:
                     or other_settings.get('cooperation_script', '') not in ('', self.runtime.name)):
                 raise ScriptError('鬼王协同脚本应为匹配的上供和协助实例')
 
-    def publish(self, portrait=''):
+    def publish(self, portrait='', star=None):
         if self.peer:
             if portrait:
                 self.session = uuid4().hex
             remaining = (self.task.limit_time - (datetime.now() - self.task.start_time)).total_seconds()
-            self.runtime.publish_battle_state(self.CHANNEL, self.peer, self.session, {
+            payload = {
                 'portrait': portrait,
                 'expires': time.time() + max(0, remaining),
-            })
+            }
+            if star is not None:
+                payload['star'] = int(star)
+            self.runtime.publish_battle_state(self.CHANNEL, self.peer, self.session, payload)
+
+    def target_star(self, target):
+        """读取上供端随鬼王截图一起同步的星级。"""
+        state = self.runtime.peer_battle_state(self.CHANNEL, self.peer)
+        if not state or state['session'] != target[0]:
+            return None
+        try:
+            return BossType(int(state['payload'].get('star')))
+        except (TypeError, ValueError):
+            return None
 
     def target(self):
         state = self.runtime.peer_battle_state(self.CHANNEL, self.peer)
@@ -105,6 +118,8 @@ class AssistanceLink:
 
 class GhostOffering:
     INVITE_RETRY_SECONDS = 20
+    # 好友行点击被吞（面板滑入动画）时的补点间隔
+    CLICK_RETRY_SECONDS = 1.2
 
     def __init__(self, task, link=None):
         self.task = task
@@ -139,7 +154,8 @@ class GhostOffering:
 
     def selected_count(self):
         t = self.task
-        return len(t.I_MD_FRIEND_SELECTED.match_all(t.device.image, frame_id=t.device.image_frame_id))
+        # 与 self 分支一致：用 NMS 去重后的结果计数，避免同一勾选被重复统计成多人。
+        return len(t.I_MD_FRIEND_SELECTED.match_all_any(t.device.image, frame_id=t.device.image_frame_id))
 
     def list_to_top(self):
         t = self.task
@@ -175,16 +191,25 @@ class GhostOffering:
     def select_friend(self, name, area):
         t = self.task
         before = self.selected_count()
-        t.click(RuleClick(roi_front=area, roi_back=area, name='metademon_offering_friend'))
-        deadline = time.monotonic() + 4
+        rule = RuleClick(roi_front=area, roi_back=area, name='metademon_offering_friend')
+        deadline = time.monotonic() + 6
+        next_click = 0.0
+        attempts = 0
         while self.within_limit() and time.monotonic() < deadline:
             t.screenshot()
             if not t.appear(t.I_MD_INVITE_FRIENDS):
                 return False
-            if self.selected_count() == before + 1:
+            selected = self.selected_count()
+            if selected == before + 1:
                 logger.info(f'鬼王上供已选好友: {name}')
                 return True
-        logger.warning(f'好友 {name} 点击后未确认选中，停止本次分享')
+            # 面板滑入动画或点击穿透会吞掉第一次点击，没选中就重试；
+            # 已有选中时不再补点，避免把刚选上的好友又点掉。
+            if selected == before and attempts < 3 and time.monotonic() >= next_click:
+                attempts += 1
+                t.click(rule)
+                next_click = time.monotonic() + self.CLICK_RETRY_SECONDS
+        logger.warning(f'好友 {name} 点击后未确认选中（点击 {attempts} 次），停止本次分享')
         return False
 
     def select_friends(self):
@@ -262,8 +287,8 @@ class GhostOffering:
 
     def share(self):
         t = self.task
-        if t.cur_boss_type != BossType.SIX_STARS:
-            logger.warning('仅允许分享本次已确认召唤的六星鬼王')
+        if t.cur_boss_type not in self.settings.offering_star.stars:
+            logger.warning(f'仅允许分享本次已确认召唤的{self.settings.offering_star.value}鬼王')
             return False
         portrait_sent = False
         select_recipients = True
@@ -318,7 +343,7 @@ class GhostOffering:
         if not encoded:
             logger.warning('上供鬼王截图编码失败')
             return False
-        self.link.publish(b64encode(png).decode('ascii'))
+        self.link.publish(b64encode(png).decode('ascii'), star=t.cur_boss_type)
         logger.info('已同步上供鬼王截图，等待协助端确认')
         return True
 
@@ -338,9 +363,9 @@ class GhostOffering:
             return True
         if not self.settled and t.appear(t.I_MD_FIRE):
             self.empty_frames = 0
-            if t.cur_boss_type != BossType.SIX_STARS:
+            if t.cur_boss_type not in self.settings.offering_star.stars:
                 if not self.unknown_reported:
-                    logger.warning('已有鬼王星级未确认，不分享、不挑战；等待其消失后仅召唤六星')
+                    logger.warning(f'已有鬼王星级未确认或不满足上供要求，不分享、不挑战；等待其消失后仅召唤{self.settings.offering_star.value}')
                     self.unknown_reported = True
             elif self.shared_generation != t._boss_generation:
                 if not self.share():
@@ -369,7 +394,7 @@ class GhostOffering:
             if not self.within_limit():
                 return True
         self.empty_frames = 0
-        return t.check_and_switch_ticket(sequence=(BossType.SIX_STARS,)) or t.State.done
+        return t.check_and_switch_ticket(sequence=self.settings.offering_star.stars) or t.State.done
 
 
 class GhostAssistant:
@@ -419,7 +444,8 @@ class GhostAssistant:
     def fight(self, target):
         t = self.task
         if self.active_target != target:
-            t.cur_boss_type = BossType.SIX_STARS
+            t.cur_boss_type = (self.link.target_star(target)
+                               or t.conf.assistance_config.offering_star.floor)
             t._boss_generation += 1
             t._current_boss_attempts = 0
             self.active_target = target

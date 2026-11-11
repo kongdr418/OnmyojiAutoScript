@@ -29,6 +29,28 @@ class MetaDemonMode(str, Enum):
     BOSS_ASSIST = '鬼王协助'
 
 
+class OfferingStar(str, Enum):
+    """上供端召唤并分享的鬼王星级下限。"""
+
+    FOUR_PLUS = '四星及以上'
+    FIVE_PLUS = '五星及以上'
+    SIX = '六星'
+
+    @property
+    def floor(self) -> BossType:
+        return {
+            OfferingStar.FOUR_PLUS: BossType.FOUR_STARS,
+            OfferingStar.FIVE_PLUS: BossType.FIVE_STARS,
+            OfferingStar.SIX: BossType.SIX_STARS,
+        }[self]
+
+    @property
+    def stars(self) -> tuple[BossType, ...]:
+        """满足下限的星级，按高星优先排列。"""
+        return tuple(star for star in (BossType.SIX_STARS, BossType.FIVE_STARS, BossType.FOUR_STARS)
+                     if star >= self.floor)
+
+
 class MetaDemonConfig(ConfigBase):
     mode: list[MetaDemonMode] = Field(default=[MetaDemonMode.BOSS_BATTLE], title='配置选择模式',
         json_schema_extra={'ui_exclusive_groups': [['鬼王战斗', '鬼王协助']]})
@@ -205,7 +227,9 @@ class MetaDemonAssistanceConfig(ConfigBase):
     cooperation_script: str = Field(default='', title='鬼王协助协同脚本',
         description='关联另一端的本地脚本。协助者接收上供端的鬼王截图，并在好友列表中匹配后挑战。')
     role: AssistanceRole = Field(default=AssistanceRole.OFFERING, title='鬼王协助身份',
-        description='上供召唤六星鬼王并分享；协助从超鬼王主页寻找好友分享的鬼王并挑战。')
+        description='上供召唤鬼王并分享；协助从超鬼王主页寻找好友分享的鬼王并挑战。')
+    offering_star: OfferingStar = Field(default=OfferingStar.SIX, title='上供鬼王星级',
+        description='上供端召唤并分享的鬼王星级：四星及以上 / 五星及以上 / 六星，按高星优先召唤。')
     friend_names: str = Field(default='', title='分享好友名字',
         description='填写游戏内好友完整名字；多个名字用分号或换行分隔，按名称精确匹配，不使用近似名字。')
     poll_interval: int = Field(default=5, ge=2, le=60, title='协助轮询间隔（秒）',
