@@ -55,8 +55,8 @@
   },
   {
     "itemName": "metademon_pass",
-    "roiFront": "1126,3,95,39",
-    "roiBack": "1126,3,95,39",
+    "roiFront": "1119,7,114,32",
+    "roiBack": "1119,7,114,32",
     "mode": "DigitCounter",
     "method": "Default",
     "keyword": "",

@@ -161,6 +161,6 @@ class GeneralBattleAssets:
 
 	# Ocr Rule Assets
 	# 超鬼王门票
-	O_METADEMON_PASS = RuleOcr(roi=(1126,3,95,39), area=(1126,3,95,39), mode="DigitCounter", method="Default", keyword="", name="metademon_pass")
+	O_METADEMON_PASS = RuleOcr(roi=(1119,7,114,32), area=(1119,7,114,32), mode="DigitCounter", method="Default", keyword="", name="metademon_pass")
 
 
