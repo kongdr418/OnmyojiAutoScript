@@ -6,7 +6,6 @@
     "roiBack": "1104,546,154,147",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "挑战鬼王"
   },
   {
@@ -16,7 +15,6 @@
     "roiBack": "1018,617,81,77",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "式神录"
   },
   {
@@ -26,7 +24,6 @@
     "roiBack": "714,431,100,51",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "鬼王结算中"
   },
   {
@@ -36,7 +33,6 @@
     "roiBack": "628,487,327,163",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "领取昨日奖励"
   },
   {
@@ -46,7 +42,6 @@
     "roiBack": "261,299,754,133",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "一星鬼王召唤票"
   },
   {
@@ -56,7 +51,6 @@
     "roiBack": "266,303,751,134",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "二星鬼王召唤票"
   },
   {
@@ -66,7 +60,6 @@
     "roiBack": "266,302,749,129",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "三星鬼王召唤票"
   },
   {
@@ -76,7 +69,6 @@
     "roiBack": "261,299,754,132",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "四星鬼王召唤票"
   },
   {
@@ -86,7 +78,6 @@
     "roiBack": "267,303,749,129",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "五星鬼王召唤票"
   },
   {
@@ -96,7 +87,6 @@
     "roiBack": "265,299,754,133",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "六星鬼王召唤票"
   },
   {
@@ -106,7 +96,6 @@
     "roiBack": "514,421,242,101",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "立即召唤鬼王"
   },
   {
@@ -116,7 +105,6 @@
     "roiBack": "264,275,751,39",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "检查是否选中对应鬼王票"
   },
   {
@@ -126,7 +114,6 @@
     "roiBack": "895,39,345,209",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "关闭超鬼王内弹窗"
   },
   {
@@ -136,7 +123,6 @@
     "roiBack": "527,455,235,80",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "喝茶"
   },
   {
@@ -146,7 +132,6 @@
     "roiBack": "1108,508,36,36",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "禁用强力追击"
   },
   {
@@ -156,7 +141,6 @@
     "roiBack": "1111,507,31,34",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "开启强力追击"
   },
   {
@@ -166,7 +150,6 @@
     "roiBack": "1112,480,148,68",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "切换鬼王门票"
   },
   {
@@ -176,7 +159,6 @@
     "roiBack": "1105,546,157,154",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "召唤鬼王"
   },
   {
@@ -186,7 +168,6 @@
     "roiBack": "209,150,100,501",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "合成一星"
   },
   {
@@ -196,7 +177,6 @@
     "roiBack": "207,152,99,500",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "合成二星"
   },
   {
@@ -206,7 +186,6 @@
     "roiBack": "208,152,97,498",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "合成三星"
   },
   {
@@ -216,7 +195,6 @@
     "roiBack": "208,148,96,500",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "合成四星"
   },
   {
@@ -226,7 +204,6 @@
     "roiBack": "206,149,103,503",
     "method": "Template matching",
     "threshold": 0.85,
-    "profile": "High",
     "description": "合成五星"
   },
   {
@@ -236,7 +213,6 @@
     "roiBack": "884,548,155,62",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "开始合成"
   },
   {
@@ -246,7 +222,6 @@
     "roiBack": "1004,521,178,109",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "合成花钱标志"
   },
   {
@@ -256,7 +231,6 @@
     "roiBack": "693,529,161,95",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "邀请好友"
   },
   {
@@ -266,7 +240,6 @@
     "roiBack": "239,143,70,74",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "鬼王集结"
   },
   {
@@ -276,7 +249,6 @@
     "roiBack": "1172,199,100,100",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "合成标志"
   },
   {
@@ -286,7 +258,6 @@
     "roiBack": "622,144,420,407",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "合成鬼王空位"
   },
   {
@@ -296,7 +267,6 @@
     "roiBack": "351,174,578,357",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "好友选中标志"
   },
   {
@@ -306,7 +276,6 @@
     "roiBack": "447,295,368,154",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "无鬼王门票标志"
   },
   {
@@ -316,7 +285,6 @@
     "roiBack": "1028,465,117,97",
     "method": "Template matching",
     "threshold": 0.96,
-    "profile": "High",
     "description": "快速召唤序列一星"
   },
   {
@@ -326,7 +294,6 @@
     "roiBack": "1029,466,117,98",
     "method": "Template matching",
     "threshold": 0.96,
-    "profile": "High",
     "description": "快速召唤序列二星"
   },
   {
@@ -336,7 +303,6 @@
     "roiBack": "1029,466,117,98",
     "method": "Template matching",
     "threshold": 0.96,
-    "profile": "High",
     "description": "快速召唤序列三星"
   },
   {
@@ -346,7 +312,6 @@
     "roiBack": "1029,466,117,98",
     "method": "Template matching",
     "threshold": 0.96,
-    "profile": "High",
     "description": "快速召唤序列四星"
   },
   {
@@ -356,7 +321,6 @@
     "roiBack": "1029,466,117,98",
     "method": "Template matching",
     "threshold": 0.96,
-    "profile": "High",
     "description": "快速召唤序列五星"
   },
   {
@@ -366,7 +330,6 @@
     "roiBack": "1029,466,117,98",
     "method": "Template matching",
     "threshold": 0.96,
-    "profile": "High",
     "description": "快速召唤序列六星"
   },
   {
@@ -376,7 +339,6 @@
     "roiBack": "675,249,566,240",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "活动列表页超鬼王活动标志"
   },
   {
@@ -386,7 +348,6 @@
     "roiBack": "1054,7,62,63",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "鬼王页面标志"
   },
   {
@@ -396,7 +357,6 @@
     "roiBack": "869,14,171,288",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "超鬼王主界面"
   },
   {
@@ -404,9 +364,8 @@
     "imageName": "md_main_goto_activity.png",
     "roiFront": "1188,304,35,28",
     "roiBack": "1164,134,83,393",
-    "threshold": 0.7,
     "method": "Template matching",
-    "profile": "High",
+    "threshold": 0.7,
     "description": "庭院超鬼王活动入口"
   },
   {
@@ -416,7 +375,6 @@
     "roiBack": "47,137,80,82",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "分享鬼王头像"
   },
   {
@@ -426,7 +384,6 @@
     "roiBack": "30,361,298,276",
     "method": "Template matching",
     "threshold": 0.8,
-    "profile": "High",
     "description": "协助鬼王头像"
   }
 ]

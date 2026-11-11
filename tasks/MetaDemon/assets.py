@@ -104,9 +104,9 @@ class MetaDemonAssets:
 	I_MD_CHECK_MAIN_PAGE = RuleImage(roi_front=(907,60,76,208), roi_back=(869,14,171,288), threshold=0.8, method="Template matching", file="./tasks/MetaDemon/md/md_md_check_main_page.png")
 	# 庭院超鬼王活动入口
 	I_MAIN_GOTO_ACTIVITY = RuleImage(roi_front=(1188,304,35,28), roi_back=(1164,134,83,393), threshold=0.7, method="Template matching", file="./tasks/MetaDemon/md/md_main_goto_activity.png")
-	# 分享鬼王头像（仅取 roi_back 区域截图上供给协助端）
+	# 分享鬼王头像
 	I_SHARE_DEMON = RuleImage(roi_front=(47,137,80,82), roi_back=(47,137,80,82), threshold=0.8, method="Template matching", file="./tasks/MetaDemon/md/md_share_demon.png")
-	# 协助鬼王头像（roi_back 为好友分享列表中搜索截图的区域）
+	# 协助鬼王头像
 	I_FIGHT_SHARE_DEMON = RuleImage(roi_front=(49,376,80,82), roi_back=(30,361,298,276), threshold=0.8, method="Template matching", file="./tasks/MetaDemon/md/md_fight_share_demon.png")
 
 
