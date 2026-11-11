@@ -100,12 +100,20 @@ class TicketFarmingChecks(unittest.TestCase):
         ocr.assert_not_called()
 
     def test_ticket_counter_requires_valid_numerator_and_total(self):
-        for values in ((1000, 0, 1000), (1001, -1, 1000), (999, 1, 1000), (-1, 0, 0)):
+        # 计数越界（112/50 这类误读）必须当作识别错误，不能判定门票已满。
+        cases = {
+            (1000, 0, 1000): True,    # 正好满票
+            (999, 1, 1000): False,    # 未满
+            (1001, -1, 1000): False,  # 超过上限 = 误读
+            (112, -62, 50): False,    # 真实案例：112/50 误读
+            (-1, 0, 0): False,        # 未识别
+        }
+        for values, expected in cases.items():
             with self.subTest(values=values):
                 owner = SimpleNamespace(appear=Mock(return_value=True), device=SimpleNamespace(image=object()))
                 with patch.object(GeneralBattleAssets.O_METADEMON_PASS, 'ocr_digit_counter',
                                   return_value=values):
-                    self.assertEqual(metademon_tickets_full(owner), values[0] >= values[2] and values[2] > 0)
+                    self.assertEqual(metademon_tickets_full(owner), expected)
 
     def test_precheck_retries_invalid_counter_and_rejects_wrong_page(self):
         owner = SimpleNamespace(goto_page=Mock(), screenshot=Mock(), appear=Mock(return_value=True),
