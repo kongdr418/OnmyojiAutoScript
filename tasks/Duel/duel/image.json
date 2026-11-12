@@ -196,5 +196,23 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "小白弹窗"
+  },
+  {
+    "itemName": "duel_main_uesless_message",
+    "imageName": "duel_duel_main_uesless_message.png",
+    "roiFront": "526,224,222,56",
+    "roiBack": "521,219,232,66",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "斗技入口附属消息页"
+  },
+  {
+    "itemName": "exit_waiting",
+    "imageName": "duel_exit_waiting.png",
+    "roiFront": "569,587,139,57",
+    "roiBack": "564,582,149,67",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "取消匹配按键"
   }
 ]

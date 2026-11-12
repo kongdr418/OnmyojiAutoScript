@@ -34,5 +34,14 @@
     "method": "Default",
     "keyword": "",
     "description": "被办式神名称"
+  },
+  {
+    "itemName": "d_celeb",
+    "roiFront": "503,442,250,54",
+    "roiBack": "503,442,250,54",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "名士名称"
   }
 ]
