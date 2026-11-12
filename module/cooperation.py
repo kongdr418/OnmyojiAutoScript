@@ -342,6 +342,15 @@ class Cooperation:
 
     def prepare(self, config, task, peer, *, defer=True):
         self.validate(task, peer)
+        if task == 'MetaDemon':
+            deadline = time.monotonic() + 30
+            while self.runner_task(peer) is None:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    logger.info(f'超鬼王协同等待心跳超时：{peer}，已等待30秒')
+                    break
+                logger.info(f'超鬼王协同未检测到有效心跳：{peer}，5秒后重试，剩余{remaining:.0f}秒')
+                time.sleep(min(5, remaining))
         now = time.time()
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')

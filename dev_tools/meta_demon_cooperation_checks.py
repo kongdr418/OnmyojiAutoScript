@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, call, patch
 
 from module.cooperation import Cooperation
 from module.exception import ScriptError
@@ -106,14 +106,66 @@ class CooperationChecks(unittest.TestCase):
         a, b = self.runtime('offer'), self.runtime('assist')
         b.publish('ActivityShikigami')
         config = SimpleNamespace(task_delay=Mock())
-        self.assertFalse(a.prepare(config, 'MetaDemon', 'assist', defer=False))
+        with patch('module.cooperation.time.sleep') as sleep:
+            self.assertFalse(a.prepare(config, 'MetaDemon', 'assist', defer=False))
+        sleep.assert_not_called()
         config.task_delay.assert_not_called()
 
     def test_prepare_detects_ready_peer(self):
         a, b = self.runtime('offer'), self.runtime('assist')
         b.publish('MetaDemon')
         config = SimpleNamespace(task_delay=Mock())
-        self.assertTrue(a.prepare(config, 'MetaDemon', 'assist', defer=False))
+        with patch('module.cooperation.time.sleep') as sleep:
+            self.assertTrue(a.prepare(config, 'MetaDemon', 'assist', defer=False))
+        sleep.assert_not_called()
+
+    def test_prepare_rechecks_missing_and_expired_heartbeats_for_thirty_seconds(self):
+        a, b = self.runtime('offer'), self.runtime('assist')
+        config = SimpleNamespace(task_delay=Mock())
+        for expired in (False, True):
+            with self.subTest(expired=expired):
+                if expired:
+                    b.publish('MetaDemon')
+                    with b.connect() as db:
+                        db.execute('UPDATE runners SET heartbeat=heartbeat-60 WHERE name=?', ('assist',))
+                with patch('module.cooperation.time.monotonic', side_effect=(0, 0, 5, 10, 15, 20, 25, 30)), \
+                        patch('module.cooperation.time.sleep') as sleep:
+                    self.assertFalse(a.prepare(config, 'MetaDemon', 'assist', defer=False))
+                self.assertEqual(sleep.call_args_list, [call(5)] * 6)
+                self.assertEqual(b.requested(), [])
+        config.task_delay.assert_not_called()
+
+    def test_prepare_continues_when_peer_heartbeat_arrives_during_retry(self):
+        a, b = self.runtime('offer'), self.runtime('assist')
+        config = SimpleNamespace(task_delay=Mock())
+        for peer_task in ('', 'MetaDemon'):
+            with self.subTest(peer_task=peer_task):
+                with b.connect() as db:
+                    db.execute('DELETE FROM runners WHERE name=?', ('assist',))
+                with patch('module.cooperation.time.monotonic', return_value=0), \
+                        patch('module.cooperation.time.sleep', side_effect=lambda seconds: b.publish(peer_task)) as sleep:
+                    self.assertTrue(a.prepare(config, 'MetaDemon', 'assist', defer=False))
+                sleep.assert_called_once_with(5)
+                if peer_task == '':
+                    self.assertEqual(b.requested(), [('MetaDemon', 'offer')])
+                else:
+                    self.assertEqual(b.requested(), [])
+
+    def test_prepare_accepts_peer_heartbeat_on_last_retry(self):
+        a, b = self.runtime('offer'), self.runtime('assist')
+        config = SimpleNamespace(task_delay=Mock())
+        elapsed = 0
+
+        def advance_time(seconds):
+            nonlocal elapsed
+            elapsed += seconds
+            if elapsed == 30:
+                b.publish('MetaDemon')
+
+        with patch('module.cooperation.time.monotonic', side_effect=lambda: elapsed), \
+                patch('module.cooperation.time.sleep', side_effect=advance_time) as sleep:
+            self.assertTrue(a.prepare(config, 'MetaDemon', 'assist', defer=False))
+        self.assertEqual(sleep.call_args_list, [call(5)] * 6)
 
 
 class AssistanceLinkChecks(unittest.TestCase):

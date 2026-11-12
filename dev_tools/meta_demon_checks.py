@@ -7,14 +7,23 @@ import numpy as np
 from pydantic import ValidationError
 
 from module.config.config_model import ConfigModel
+from module.exception import TaskEnd
 from tasks.MetaDemon.boss_battle import BossBattle
 from tasks.MetaDemon.config import (
     BossType, MetaDemon, MetaDemonConfig, MetaDemonMode, MetaDemonQuickPresetConfig, loadout_group,
 )
 from tasks.MetaDemon.synthesis import parse_synthesis_material_level
+from tasks.MetaDemon.page import page_main
 
 
 class MetaDemonSettingsChecks(unittest.TestCase):
+    def test_finish_task_refreshes_screenshot_before_returning_to_main(self):
+        owner = object.__new__(BossBattle)
+        owner.goto_page = Mock()
+        with self.assertRaises(TaskEnd):
+            owner.finish_task()
+        owner.goto_page.assert_called_once_with(page_main, skip_first_screenshot=False)
+
     def test_modes_are_mutually_exclusive_and_accept_historical_values(self):
         self.assertEqual(MetaDemonConfig().mode, [MetaDemonMode.BOSS_BATTLE])
         self.assertEqual(MetaDemonConfig(mode=['鬼王协助']).mode, [MetaDemonMode.BOSS_ASSIST])
