@@ -30,8 +30,11 @@ class Screenshot(Adb, DroidCast, Scrcpy, Window, NemuIpc):
     _last_save_time = {}
     image: np.ndarray
     image_frame_id: str | None = None
+    frame_cache_name: str | None = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, frame_cache_name: str | None = None, **kwargs):
+        # 连接初始化期间也可能截图，须提前设置缓存归属。
+        self.frame_cache_name = frame_cache_name
         super().__init__(*args, **kwargs)
         if IS_WINDOWS:
             # ConnectionAttr ends the cooperative init chain before Window.
@@ -72,7 +75,8 @@ class Screenshot(Adb, DroidCast, Scrcpy, Window, NemuIpc):
                 self.screenshot_adb  # 第二个参数默认的是screenshot_adb
             )
             self.image = method()
-            frame_info = get_image_client().register_frame(self.image, self.config.config_name)
+            frame_info = get_image_client().register_frame(
+                self.image, self.frame_cache_name or self.config.config_name)
             self.image_frame_id = frame_info["frame_id"]
 
             # if self.config.Emulator_ScreenshotDedithering:

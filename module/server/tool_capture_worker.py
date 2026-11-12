@@ -14,7 +14,7 @@ EMULATOR_CAPTURE_RETRY_BACKOFF_SECONDS = 1.0
 
 
 def _build_device(session_id: str, config_name: str, config: Config, interval: float) -> Device:
-    device = Device(config=config)
+    device = Device(config=config, frame_cache_name=f'annotator:{session_id}')
     device.disable_stuck_detection()
     device.screenshot_interval_set(interval)
     logger.info(
