@@ -164,7 +164,7 @@
   {
     "itemName": "check_mall",
     "imageName": "page_check_mall.png",
-    "roiFront": "231,455,131,78",
+    "roiFront": "231,455,86,78",
     "roiBack": "201,432,185,121",
     "method": "Template matching",
     "threshold": 0.8,

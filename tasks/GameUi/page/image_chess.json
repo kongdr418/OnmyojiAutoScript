@@ -40,6 +40,16 @@
     "description": "百鬼棋局分享页"
   },
   {
+    "itemName": "check_chess_rank",
+    "imageName": "page_check_chess_rank.png",
+    "roiFront": "14,75,79,38",
+    "roiBack": "14,75,79,38",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "百鬼棋局排名页"
+  },
+  {
     "itemName": "chess_rank_goto_lobby",
     "imageName": "page_chess_rank_goto_lobby.png",
     "roiFront": "66,646,133,42",
