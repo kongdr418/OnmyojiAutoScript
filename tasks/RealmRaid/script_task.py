@@ -166,13 +166,23 @@ class ScriptTask(GeneralBattle, GameUi, SwitchSoul, RealmRaidAssets):
         如果没有票了，那么就返回False
         :return:
         """
-        self.wait_until_appear(self.I_BACK_RED)
-        self.screenshot()
-        cu, res, total = self.O_NUMBER.ocr(self.device.image)
-        if cu == 0 and cu + res == total:
+        cu = self.read_ticket_count()
+        if cu == 0:
             logger.warning(f'Execute round failed, no ticket')
             return False
         return True
+
+    def read_ticket_count(self) -> int:
+        """重新截图读取突破券，丢弃越界或未识别成功的读数。"""
+        while True:
+            self.wait_until_appear(self.I_BACK_RED)
+            self.screenshot()
+            current, _, total = self.O_NUMBER.ocr(self.device.image)
+            if 0 <= current <= total == 30:
+                return current
+            logger.warning(f'突破券 OCR 读数无效({current}/{total})，有效范围为0至30张，忽略并重新识别')
+            if total == 0:
+                self.reward_detect_click(True)
 
     def medal_fire(self) -> bool:
         """
@@ -269,18 +279,11 @@ class ScriptTask(GeneralBattle, GameUi, SwitchSoul, RealmRaidAssets):
         if base < 0 or base > 30:
             logger.warning(f'It is not a valid base {base}')
             base = 0
-        self.wait_until_appear(self.I_BACK_RED)
-        self.screenshot()
-        cu, res, total = self.O_NUMBER.ocr(self.device.image)
-
-        if total == 0:
-            self.reward_detect_click(True)
-            # 增加出现聊天框遮挡，处理奖励之后，重新识别票数
-            cu, res, total = self.O_NUMBER.ocr(self.device.image)
-        if cu == 0 and cu + res == total:
+        cu = self.read_ticket_count()
+        if cu == 0:
             logger.warning(f'Execute raid failed, no ticket')
             return False
-        elif cu + res == total and cu < base:
+        elif cu < base:
             logger.warning(f'Execute raid failed, ticket is not enough')
             return False
         self.init_tickets = cu if self.init_tickets == -1 else self.init_tickets
@@ -403,7 +406,9 @@ class ScriptTask(GeneralBattle, GameUi, SwitchSoul, RealmRaidAssets):
             while 1:
                 self.screenshot()
                 result = self.O_TEXT.ocr(self.device.image)
-                if not re.search(r'[\u4e00-\u9fff]', result) and re.search(r'(\d+)/(\d+)', result):
+                counter = re.search(r'(\d+)/(\d+)', result)
+                if not re.search(r'[\u4e00-\u9fff]', result) and counter and \
+                        0 <= int(counter[1]) <= int(counter[2]) == 30:
                     return True
                 if self.appear_then_click(self.I_SOUL_RAID, interval=1.5):
                     continue
