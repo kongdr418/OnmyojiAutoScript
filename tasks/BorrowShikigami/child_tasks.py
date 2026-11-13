@@ -1,14 +1,36 @@
 from module.base.timer import Timer
 from module.logger import logger
 from tasks.AutoStory.script_task import handle_startup_popup
-from tasks.EvoZone.script_task import ScriptTask as EvoZoneTask
+from tasks.BorrowShikigami.assets import BorrowShikigamiAssets
 from tasks.ExperienceYoukai.script_task import ScriptTask as ExperienceYoukaiTask
-from tasks.Orochi.script_task import ScriptTask as OrochiTask
 from tasks.GameUi.page import any_of, page_team
+from tasks.Restart.assets import RestartAssets
 
 
 class LevelingBattleFailed(Exception):
     pass
+
+
+def handle_leveling_popup(task) -> bool:
+    """处理起号途中的手机提示、小白引导和功能解锁弹窗。"""
+    if task.appear(BorrowShikigamiAssets.I_BEGINNER_WELCOME):
+        task.appear_then_click(
+            BorrowShikigamiAssets.I_BEGINNER_WELCOME,
+            action=BorrowShikigamiAssets.C_BEGINNER_WELCOME_CLOSE, interval=1,
+        )
+        return True
+    for target in (
+        RestartAssets.I_LOGIN_LOGIN_CANCEL_BIND_PHONE,
+        RestartAssets.I_LOGIN_LOGIN_GOTO_BIND_PHONE,
+    ):
+        if task.appear(target):
+            task.appear_then_click(target, interval=1)
+            return True
+    if (task.appear(BorrowShikigamiAssets.I_BEGINNER_GUIDE_CHARACTER)
+            and task.appear(BorrowShikigamiAssets.I_BEGINNER_GUIDE_CONTINUE)):
+        task.appear_then_click(BorrowShikigamiAssets.I_BEGINNER_GUIDE_CONTINUE, interval=1)
+        return True
+    return handle_startup_popup(task)
 
 
 class LevelingBattleMixin:
@@ -19,30 +41,15 @@ class LevelingBattleMixin:
     def screenshot(self):
         while True:
             image = super().screenshot()
-            if not handle_startup_popup(self):
+            if not handle_leveling_popup(self):
                 return image
 
     def run_general_battle(self, *args, **kwargs):
         won = super().run_general_battle(*args, **kwargs)
         if not won:
-            raise LevelingBattleFailed('战斗未获胜，保留当前步骤以便重试')
+            raise LevelingBattleFailed('战斗未获胜，本轮暂停等待重试')
         self.successful_battles += 1
         return won
-
-    def check_layer(self, layer):
-        if not super().check_layer(layer):
-            raise LevelingBattleFailed(f'无法确认副本层数：{layer}')
-        return True
-
-
-class LevelingEvoZoneTask(LevelingBattleMixin, EvoZoneTask):
-    def _infer_task_category(self) -> str:
-        return 'evo_zone'
-
-
-class LevelingOrochiTask(LevelingBattleMixin, OrochiTask):
-    def _infer_task_category(self) -> str:
-        return 'orochi'
 
 
 class LevelingExperienceTask(LevelingBattleMixin, ExperienceYoukaiTask):

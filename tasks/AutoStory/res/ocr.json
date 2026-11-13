@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "itemName": "new_feature_unlocked",
+    "roiFront": "560,410,165,40",
+    "roiBack": "560,410,165,40",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "新功能开启",
+    "description": "固定区域识别新功能开启标题"
+  }
+]

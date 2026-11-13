@@ -1,5 +1,6 @@
 import time
 import random
+from functools import lru_cache
 
 from module.atom.click import RuleClick
 from module.exception import TaskEnd
@@ -17,15 +18,44 @@ class _StoryFinished(Exception):
     """识别到庭院主界面，正常结束当前辅助流程。"""
 
 
+@lru_cache(maxsize=1)
+def _new_feature_ocr_model():
+    try:
+        from tasks.DraftDuel.v6_rec import V6Rec
+
+        return V6Rec()
+    except Exception as error:
+        logger.warning(f'新功能开启 v6-small OCR 加载失败，使用共享 OCR：{error}')
+        return None
+
+
 def handle_startup_popup(task) -> bool:
     for target, action in (
         (AutoStoryAssets.I_PERSONALIZED_CONTENT, AutoStoryAssets.C_DISABLE_PERSONALIZED_CONTENT),
-        (AutoStoryAssets.I_NEW_FEATURE_UNLOCKED, AutoStoryAssets.C_NEW_FEATURE_DISMISS),
         (AutoStoryAssets.I_EXPLORATION_INTRO, AutoStoryAssets.C_EXPLORATION_INTRO_DISMISS),
     ):
         if task.appear(target):
             task.appear_then_click(target, action=action, interval=1)
             return True
+
+    rule = AutoStoryAssets.O_NEW_FEATURE_UNLOCKED
+    model = _new_feature_ocr_model()
+    if model is not None:
+        x, y, width, height = rule.roi
+        crop = task.device.image[y:y + height, x:x + width]
+        try:
+            text, score = model.recognize_single(crop)
+        except Exception as error:
+            logger.warning(f'新功能开启 v6-small OCR 识别失败，使用共享 OCR：{error}')
+            text = rule.ocr(task.device.image)
+        else:
+            if score < 0.6:
+                return False
+    else:
+        text = rule.ocr(task.device.image)
+    if ''.join(text.split()) == rule.keyword:
+        task.click(AutoStoryAssets.C_NEW_FEATURE_DISMISS, interval=1)
+        return True
     return False
 
 

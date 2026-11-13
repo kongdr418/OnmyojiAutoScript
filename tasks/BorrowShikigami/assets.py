@@ -12,6 +12,8 @@ class BorrowShikigamiAssets:
 
 
 	# Click Rule Assets
+	# 关闭首次新手活动介绍页右上角叉号
+	C_BEGINNER_WELCOME_CLOSE = RuleClick(roi_front=(1207,94,24,24), roi_back=(1207,94,24,24), name="beginner_welcome_close")
 	# 从初入平安京活动返回庭院
 	C_BORROW_BACK = RuleClick(roi_front=(29,28,24,20), roi_back=(29,28,24,20), name="borrow_back")
 
@@ -33,8 +35,16 @@ class BorrowShikigamiAssets:
 	I_ACCOUNT_LEVEL_SEVEN = RuleImage(roi_front=(11,22,17,20), roi_back=(4,12,34,38), threshold=0.93, method="Template matching", file="./tasks/BorrowShikigami/res/res_account_level_seven.png")
 	# 庭院新手入口
 	I_BEGINNER_ENTRANCE = RuleImage(roi_front=(199,302,54,51), roi_back=(140,250,300,160), threshold=0.6, method="Template matching", file="./tasks/BorrowShikigami/res/res_beginner_entrance.png")
+	# 首次进入新手活动的初入平安京介绍页标题
+	I_BEGINNER_WELCOME = RuleImage(roi_front=(593,18,380,87), roi_back=(570,5,420,110), threshold=0.85, method="Template matching", file="./tasks/BorrowShikigami/res/res_beginner_welcome.png")
 	# 初入平安京活动页面标题
 	I_BEGINNER_EVENT_PAGE = RuleImage(roi_front=(87,17,165,43), roi_back=(75,8,190,57), threshold=0.85, method="Template matching", file="./tasks/BorrowShikigami/res/res_beginner_event_page.png")
+	# 新手引导中的小白角色面具
+	I_BEGINNER_GUIDE_CHARACTER = RuleImage(roi_front=(354,221,88,67), roi_back=(320,200,160,130), threshold=0.85, method="Template matching", file="./tasks/BorrowShikigami/res/res_beginner_guide_character.png")
+	# 新手引导的点击任意位置继续提示
+	I_BEGINNER_GUIDE_CONTINUE = RuleImage(roi_front=(548,463,181,27), roi_back=(515,450,255,55), threshold=0.85, method="Template matching", file="./tasks/BorrowShikigami/res/res_beginner_guide_continue.png")
+	# 新手特权展开后的式神借用子菜单，避开引导手势
+	I_BEGINNER_BORROW_ENTRY = RuleImage(roi_front=(54,439,72,25), roi_back=(25,330,150,180), threshold=0.85, method="Template matching", file="./tasks/BorrowShikigami/res/res_beginner_borrow_entry.png")
 	# 新手特权侧边栏入口
 	I_BEGINNER_PRIVILEGE = RuleImage(roi_front=(43,390,119,34), roi_back=(25,280,150,155), threshold=0.85, method="Template matching", file="./tasks/BorrowShikigami/res/res_beginner_privilege.png")
 
@@ -42,5 +52,5 @@ class BorrowShikigamiAssets:
 	# Ocr Rule Assets
 	# 庭院左上角阴阳师等级
 	O_ACCOUNT_LEVEL = RuleOcr(roi=(7,20,26,22), area=(7,20,26,22), mode="Single", method="Default", keyword="", name="account_level")
-	# 庭院左上角账号昵称，用于隔离起号进度
-	O_ACCOUNT_NAME = RuleOcr(roi=(124,27,194,28), area=(124,27,194,28), mode="Single", method="Default", keyword="", name="account_name")
+	# 战斗结算左侧阴阳师等级，位于第一位角色头像右侧
+	O_ACCOUNT_RESULT_LEVEL = RuleOcr(roi=(388,347,27,28), area=(388,347,27,28), mode="Single", method="Default", keyword="", name="account_result_level")

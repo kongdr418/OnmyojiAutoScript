@@ -72,6 +72,15 @@
     "description": "庭院新手入口"
   },
   {
+    "itemName": "beginner_welcome",
+    "imageName": "res_beginner_welcome.png",
+    "roiFront": "593,18,380,87",
+    "roiBack": "570,5,420,110",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "首次进入新手活动的初入平安京介绍页标题"
+  },
+  {
     "itemName": "beginner_event_page",
     "imageName": "res_beginner_event_page.png",
     "roiFront": "87,17,165,43",
@@ -79,6 +88,33 @@
     "method": "Template matching",
     "threshold": 0.85,
     "description": "初入平安京活动页面标题"
+  },
+  {
+    "itemName": "beginner_guide_character",
+    "imageName": "res_beginner_guide_character.png",
+    "roiFront": "354,221,88,67",
+    "roiBack": "320,200,160,130",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "新手引导中的小白角色面具"
+  },
+  {
+    "itemName": "beginner_guide_continue",
+    "imageName": "res_beginner_guide_continue.png",
+    "roiFront": "548,463,181,27",
+    "roiBack": "515,450,255,55",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "新手引导的点击任意位置继续提示"
+  },
+  {
+    "itemName": "beginner_borrow_entry",
+    "imageName": "res_beginner_borrow_entry.png",
+    "roiFront": "54,439,72,25",
+    "roiBack": "25,330,150,180",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "新手特权展开后的式神借用子菜单，避开引导手势"
   },
   {
     "itemName": "beginner_privilege",

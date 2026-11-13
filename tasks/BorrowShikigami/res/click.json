@@ -1,5 +1,12 @@
 [
   {
+    "itemName": "beginner_welcome_close",
+    "roiFront": "1207,94,24,24",
+    "roiBack": "1207,94,24,24",
+    "profile": "High",
+    "description": "关闭首次新手活动介绍页右上角叉号"
+  },
+  {
     "itemName": "borrow_back",
     "roiFront": "29,28,24,20",
     "roiBack": "29,28,24,20",

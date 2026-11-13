@@ -1,3 +1,4 @@
+from functools import partial
 from types import SimpleNamespace
 
 from module.base.timer import Timer
@@ -6,20 +7,17 @@ from module.logger import logger
 from tasks.AutoStory.script_task import ScriptTask as AutoStoryTask
 from tasks.BorrowShikigami.assets import BorrowShikigamiAssets
 from tasks.BorrowShikigami.child_tasks import (
-    LevelingBattleFailed, LevelingBattleMixin, LevelingEvoZoneTask,
-    LevelingExperienceTask, LevelingOrochiTask,
+    LevelingBattleFailed, LevelingBattleMixin, LevelingExperienceTask, handle_leveling_popup,
 )
-from tasks.BorrowShikigami.config import LevelingProgress
 from tasks.Component.config_base import Time
+from tasks.Component.GeneralBattle.general_battle import BattleAction
 from tasks.CustomTask.script_task import EntryConfig
 import tasks.Exploration.page as exploration_pages
 from tasks.Exploration.config import ExplorationLevel
 from tasks.ExplorationFight.config import ExplorationFight, ExplorationFightConfig, ExplorationDifficulty
 from tasks.ExplorationFight.script_task import ScriptTask as ExplorationFightTask
-from tasks.EvoZone.config import EvoZone, EvoZoneConfig, Layer as EvoLayer, UserStatus as EvoUserStatus
 from tasks.ExperienceYoukai.config import ExperienceYoukai
 from tasks.GameUi.page import all_of, any_of, page_main
-from tasks.Orochi.config import Orochi, OrochiConfig, Layer as SoulLayer, UserStatus as SoulUserStatus
 
 
 def register_beginner_exploration(task):
@@ -31,15 +29,48 @@ def register_beginner_exploration(task):
 
 
 class FirstChapterTask(LevelingBattleMixin, ExplorationFightTask):
-    def __init__(self, config, device):
+    def __init__(self, config, device, target_level: int | None = None):
+        self.target_level = target_level
+        self._result_level_candidate = None
+        self._target_level_reached = False
         super().__init__(config, device)
         register_beginner_exploration(self)
+
+    def _handle_result(self, context, config):
+        if self.target_level is not None and not self._target_level_reached:
+            text = BorrowShikigamiAssets.O_ACCOUNT_RESULT_LEVEL.ocr(self.device.image).strip()
+            level = int(text) if text.isascii() and text.isdigit() and len(text) <= 2 else None
+            if level is not None and self.target_level <= level <= 60:
+                if level != self._result_level_candidate:
+                    self._result_level_candidate = level
+                    return BattleAction.CONTINUE
+                self._target_level_reached = True
+                logger.info(f'15级起号：结算页确认阴阳师等级 {level}，完成本阶段探索刷级')
+            else:
+                self._result_level_candidate = None
+        return super()._handle_result(context, config)
+
+    def run_general_battle(self, *args, **kwargs):
+        self._result_level_candidate = None
+        won = super().run_general_battle(*args, **kwargs)
+        if self._target_level_reached:
+            self.need_exit = True
+            self.goto_page(exploration_pages.page_exploration, skip_first_screenshot=False)
+            self.set_next_run('ExplorationFight', finish=True, success=True)
+            raise TaskEnd
+        return won
 
 
 class ScriptTask(AutoStoryTask, BorrowShikigamiAssets):
     def __init__(self, config, device):
         super().__init__(config, device)
         register_beginner_exploration(self)
+
+    def screenshot(self):
+        while True:
+            result = super().screenshot()
+            if not handle_leveling_popup(self):
+                return result
 
     def _infer_task_category(self) -> str:
         return exploration_pages.page_exp_main.category
@@ -50,7 +81,7 @@ class ScriptTask(AutoStoryTask, BorrowShikigamiAssets):
         if success:
             logger.info('15级起号完成：已确认阴阳师等级达到15级')
             raise TaskEnd
-        logger.warning('15级起号尚未完成，保留进度等待重试')
+        logger.warning('15级起号尚未完成，等待重试')
         return False
 
     def run_leveling(self) -> bool:
@@ -121,7 +152,8 @@ class ScriptTask(AutoStoryTask, BorrowShikigamiAssets):
                 hour=remaining // 3600, minute=remaining // 60 % 60, second=remaining % 60,
             )
             logger.info(f'15级起号：当前 {level} 级，挑战普通第一章探索，目标 {target_level} 级')
-            if not self.run_child_task('ExplorationFight', settings, FirstChapterTask):
+            runner_type = partial(FirstChapterTask, target_level=target_level)
+            if not self.run_child_task('ExplorationFight', settings, runner_type):
                 logger.warning('第一章探索未完成，本轮暂停起号流程')
                 return False
             self.goto_page(page_main, skip_first_screenshot=False)
@@ -148,54 +180,6 @@ class ScriptTask(AutoStoryTask, BorrowShikigamiAssets):
             logger.warning(f'15级起号：{task_type} 本轮确认获胜 {runner.successful_battles}/{required_wins} 场')
         return completed
 
-    def load_leveling_progress(self, level):
-        previous = ''
-        account_name = ''
-        for _ in range(3):
-            self.screenshot()
-            name = self.O_ACCOUNT_NAME.ocr(self.device.image).strip()
-            if name and name == previous:
-                account_name = name
-                break
-            previous = name
-        task = self.config.model.borrow_shikigami
-        progress = task.progress
-        if ((account_name and progress.account_name and account_name != progress.account_name)
-                or level < progress.last_level):
-            progress = LevelingProgress()
-            task.progress = progress
-        if account_name:
-            progress.account_name = account_name
-        progress.last_level = level
-        self.config.model.save()
-        return progress
-
-    def complete_dungeon(self, key, task_type, settings, runner_type, progress) -> bool:
-        if key in progress.completed_dungeons:
-            logger.info(f'15级起号：{key} 已完成，跳过')
-            return True
-        logger.info(f'15级起号：挑战{key}')
-        if not self.run_child_task(task_type, settings, runner_type):
-            return False
-        progress.completed_dungeons.append(key)
-        self.config.model.save()
-        return True
-
-    def run_dungeon_layers(self, progress) -> bool:
-        for layer in (EvoLayer.ONE, EvoLayer.TWO, EvoLayer.THREE):
-            settings = EvoZone(evo_zone_config=EvoZoneConfig(
-                user_status=EvoUserStatus.ALONE, layer=layer, limit_count=1,
-            ))
-            if not self.complete_dungeon(f'觉醒{layer.value}', 'EvoZone', settings, LevelingEvoZoneTask, progress):
-                return False
-        for layer in (SoulLayer.ONE, SoulLayer.TWO, SoulLayer.THREE):
-            settings = Orochi(orochi_config=OrochiConfig(
-                user_status=SoulUserStatus.ALONE, layer=layer, limit_count=1,
-            ))
-            if not self.complete_dungeon(f'御魂{layer.value}', 'Orochi', settings, LevelingOrochiTask, progress):
-                return False
-        return True
-
     def finish_leveling(self) -> bool:
         self.goto_page(page_main, skip_first_screenshot=False)
         level = self.read_account_level()
@@ -203,24 +187,12 @@ class ScriptTask(AutoStoryTask, BorrowShikigamiAssets):
             return False
         if level >= 15:
             return True
-        progress = self.load_leveling_progress(level)
-        if not self.run_dungeon_layers(progress):
+        if not self.ensure_account_level(10):
             return False
-        self.goto_page(page_main, skip_first_screenshot=False)
-        level = self.read_account_level()
-        if level is None:
-            return False
-        if level < 15 and not progress.experience_attempted:
-            logger.info('15级起号：执行现有经验妖怪任务')
-            if not self.run_child_task('ExperienceYoukai', ExperienceYoukai(), LevelingExperienceTask, required_wins=2):
-                logger.warning('经验妖怪未完成两场挑战，将通过普通探索补足等级')
-            progress.experience_attempted = True
-            self.config.model.save()
-        if not self.ensure_account_level(15):
-            return False
-        progress.last_level = 15
-        self.config.model.save()
-        return True
+        logger.info('15级起号：执行现有经验妖怪任务')
+        if not self.run_child_task('ExperienceYoukai', ExperienceYoukai(), LevelingExperienceTask, required_wins=2):
+            logger.warning('经验妖怪未完成两场挑战，将通过普通探索补足等级')
+        return self.ensure_account_level(15)
 
     def borrow_ubume(self) -> bool:
         self.screenshot()
@@ -252,6 +224,8 @@ class ScriptTask(AutoStoryTask, BorrowShikigamiAssets):
             if self.appear(self.I_BEGINNER_EVENT_PAGE):
                 if borrowed:
                     self.click(self.C_BORROW_BACK, interval=1)
+                elif self.appear(self.I_BEGINNER_BORROW_ENTRY):
+                    self.appear_then_click(self.I_BEGINNER_BORROW_ENTRY, interval=2)
                 else:
                     self.appear_then_click(self.I_BEGINNER_PRIVILEGE, interval=2)
                 continue

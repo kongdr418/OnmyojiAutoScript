@@ -60,3 +60,8 @@ class AutoStoryAssets:
 	# Image Rule Assets
 	# 闲庭设置
 	I_CHECK_MAIN_SET = RuleImage(roi_front=(255,37,41,36), roi_back=(214,6,120,100), threshold=0.8, method="Template matching", file="./tasks/AutoStory/res/page_check_main_set.png")
+
+
+	# Ocr Rule Assets
+	# 固定区域识别新功能开启标题
+	O_NEW_FEATURE_UNLOCKED = RuleOcr(roi=(560,410,165,40), area=(560,410,165,40), mode="Single", method="Default", keyword="新功能开启", name="new_feature_unlocked")
