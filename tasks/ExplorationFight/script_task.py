@@ -168,7 +168,9 @@ class ScriptTask(ExplorationTask, ExplorationFightAssets):
 
         handlers = self.exp_page_handle_dict
         battle_exit = pages.any_of(
-            pages.page_exp_main.recognizer, pages.page_exp_entrance.recognizer, pages.page_battle_team.recognizer,
+            self.navigator.resolve_page(pages.page_exp_main).recognizer,
+            self.navigator.resolve_page(pages.page_exp_entrance).recognizer,
+            self.navigator.resolve_page(pages.page_battle_team).recognizer,
         )
         while True:
             self.screenshot()

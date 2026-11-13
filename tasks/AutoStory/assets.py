@@ -16,6 +16,12 @@ class AutoStoryAssets:
 	C_STORY_WALK_RIGHT = RuleClick(roi_front=(1211,426,46,91), roi_back=(1211,426,46,91), name="story_walk_right")
 	#
 	C_STORY_WALK_LEFT = RuleClick(roi_front=(27,408,46,91), roi_back=(27,408,46,91), name="story_walk_left")
+	# 关闭个性化推荐
+	C_DISABLE_PERSONALIZED_CONTENT = RuleClick(roi_front=(380,590,180,40), roi_back=(380,590,180,40), name="disable_personalized_content")
+	# 点击空白处关闭新功能提示
+	C_NEW_FEATURE_DISMISS = RuleClick(roi_front=(580,620,120,30), roi_back=(580,620,120,30), name="new_feature_dismiss")
+	# 点击探索介绍下方空白处关闭
+	C_EXPLORATION_INTRO_DISMISS = RuleClick(roi_front=(570,620,140,32), roi_back=(570,620,140,32), name="exploration_intro_dismiss")
 
 
 	# Image Rule Assets
@@ -41,6 +47,14 @@ class AutoStoryAssets:
 	I_LOADING_2 = RuleImage(roi_front=(606,294,66,98), roi_back=(577,258,122,191), threshold=0.8, method="Template matching", file="./tasks/AutoStory/res/res_loading_2.png")
 	#
 	I_LOADING_1 = RuleImage(roi_front=(606,343,80,35), roi_back=(577,324,130,76), threshold=0.8, method="Template matching", file="./tasks/AutoStory/res/res_loading_1.png")
+	# 被屏幕右侧截断的剧情对话气泡
+	I_STORY_CHAT_RIGHT_EDGE = RuleImage(roi_front=(1247,280,33,56), roi_back=(1210,100,70,480), threshold=0.85, method="Template matching", file="./tasks/AutoStory/res/res_story_chat_right_edge.png")
+	# 个性化内容推荐弹窗标题
+	I_PERSONALIZED_CONTENT = RuleImage(roi_front=(501,82,266,44), roi_back=(470,65,330,75), threshold=0.85, method="Template matching", file="./tasks/AutoStory/res/res_personalized_content.png")
+	# 新功能开启弹窗标题
+	I_NEW_FEATURE_UNLOCKED = RuleImage(roi_front=(570,414,141,35), roi_back=(530,390,220,75), threshold=0.85, method="Template matching", file="./tasks/AutoStory/res/res_new_feature_unlocked.png")
+	# 首次探索玩法介绍
+	I_EXPLORATION_INTRO = RuleImage(roi_front=(474,95,350,52), roi_back=(440,75,410,90), threshold=0.85, method="Template matching", file="./tasks/AutoStory/res/res_exploration_intro.png")
 
 
 	# Image Rule Assets

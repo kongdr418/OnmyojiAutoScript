@@ -1,0 +1,20 @@
+[
+  {
+    "itemName": "account_level",
+    "roiFront": "7,20,26,22",
+    "roiBack": "7,20,26,22",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "庭院左上角阴阳师等级"
+  },
+  {
+    "itemName": "account_name",
+    "roiFront": "124,27,194,28",
+    "roiBack": "124,27,194,28",
+    "mode": "Single",
+    "method": "Default",
+    "keyword": "",
+    "description": "庭院左上角账号昵称，用于隔离起号进度"
+  }
+]

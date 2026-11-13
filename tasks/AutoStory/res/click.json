@@ -12,5 +12,26 @@
     "roiBack": "27,408,46,91",
     "profile": "Default",
     "description": ""
+  },
+  {
+    "itemName": "disable_personalized_content",
+    "roiFront": "380,590,180,40",
+    "roiBack": "380,590,180,40",
+    "profile": "High",
+    "description": "关闭个性化推荐"
+  },
+  {
+    "itemName": "new_feature_dismiss",
+    "roiFront": "580,620,120,30",
+    "roiBack": "580,620,120,30",
+    "profile": "High",
+    "description": "点击空白处关闭新功能提示"
+  },
+  {
+    "itemName": "exploration_intro_dismiss",
+    "roiFront": "570,620,140,32",
+    "roiBack": "570,620,140,32",
+    "profile": "High",
+    "description": "点击探索介绍下方空白处关闭"
   }
 ]

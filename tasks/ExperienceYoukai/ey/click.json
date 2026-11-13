@@ -1,0 +1,16 @@
+[
+  {
+    "itemName": "first_team_dialog_dismiss",
+    "roiFront": "570,468,120,28",
+    "roiBack": "570,468,120,28",
+    "profile": "High",
+    "description": "点击任意位置继续首次组队引导"
+  },
+  {
+    "itemName": "first_team_create",
+    "roiFront": "1020,612,90,30",
+    "roiBack": "1020,612,90,30",
+    "profile": "High",
+    "description": "点击首次引导高亮的创建队伍按钮"
+  }
+]

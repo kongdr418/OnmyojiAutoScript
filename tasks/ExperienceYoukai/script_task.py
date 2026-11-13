@@ -5,6 +5,7 @@
 from module.exception import TaskEnd
 from module.logger import logger
 from module.base.timer import Timer
+from module.atom.click import RuleClick
 import tasks.GameUi.page as pages
 
 from tasks.GameUi.game_ui import GameUi
@@ -18,9 +19,52 @@ from tasks.ExperienceYoukai.assets import ExperienceYoukaiAssets
 
 class ScriptTask(GameUi, GeneralBattle, GeneralRoom, GeneralInvite, SwitchSoul, ExperienceYoukaiAssets):
 
+    def screenshot(self):
+        while True:
+            image = super().screenshot()
+            if self.appear(self.I_FIRST_TEAM_DIALOG):
+                self.appear_then_click(
+                    self.I_FIRST_TEAM_DIALOG, action=self.C_FIRST_TEAM_DIALOG_DISMISS, interval=1,
+                )
+                continue
+            if self.appear(self.I_FIRST_TEAM_PAGE) and self.appear(self.I_FIRST_TEAM_GUIDE):
+                x, y, _, _ = self.I_FIRST_TEAM_GUIDE.roi_front
+                tip = (x + 1, y + 1, 6, 6)
+                action = RuleClick(roi_front=tip, roi_back=tip, name='first_team_guide_tip', profile='High')
+                self.appear_then_click(self.I_FIRST_TEAM_GUIDE, action=action, interval=1)
+                continue
+            if self.appear(self.I_FIRST_TEAM_PAGE) and self.appear(self.I_FIRST_TEAM_CREATE_GUIDE):
+                if self.appear_then_click(
+                        self.I_FIRST_TEAM_CREATE_GUIDE, action=self.C_FIRST_TEAM_CREATE, interval=1):
+                    self._first_team_create_pending = True
+                continue
+            return image
+
+    def _first_team_creation_open(self) -> bool:
+        return getattr(self, '_first_team_create_pending', False) and (
+            self.appear(self.I_CREATE_ENSURE) or self.appear(self.I_CREATE_ENSURE_2)
+        )
+
+    def check_zones(self, name: str) -> bool:
+        if name == '经验妖怪' and self._first_team_creation_open():
+            return True
+        return super().check_zones(name)
+
+    def create_room(self, create_room_rule=None) -> bool:
+        self.screenshot()
+        if self._first_team_creation_open():
+            self._first_team_create_pending = False
+            return True
+        return super().create_room(create_room_rule)
+
     def before_run(self):
         page_battle_result = self.navigator.resolve_page(pages.page_battle_result)
         page_battle_result.recognizer = pages.any_of(self.I_EXP_WIN, page_battle_result.recognizer)
+        team_page = self.navigator.resolve_page(page_team)
+        team_page.recognizer = pages.any_of(
+            team_page.recognizer, pages.all_of(self.I_FIRST_TEAM_PAGE, self.I_CREATE_ROOM),
+            self._first_team_creation_open,
+        )
 
     def run(self):
         self.before_run()

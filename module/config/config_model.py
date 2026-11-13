@@ -3,6 +3,7 @@
 # github https://github.com/runhey
 from tasks.GuguArtStudio.config import GuguArtStudio
 from tasks.AutoStory.config import AutoStory
+from tasks.BorrowShikigami.config import BorrowShikigami
 from tasks.ExplorationFight.config import ExplorationFight
 from tasks.CustomTask.config import CustomTask, ENTRY_PREFIX
 from tasks.GuildActivityMonitor.config import GuildActivityMonitor
@@ -167,6 +168,7 @@ class ConfigModel(ConfigBase):
     demon_retreat: DemonRetreat = Field(default_factory=DemonRetreat)
     guild_activity_monitor: GuildActivityMonitor = Field(default_factory=GuildActivityMonitor)
     auto_story: AutoStory = Field(default_factory=AutoStory)
+    borrow_shikigami: BorrowShikigami = Field(default_factory=BorrowShikigami)
     exploration_fight: ExplorationFight = Field(default_factory=ExplorationFight)
     custom_task: CustomTask = Field(default_factory=CustomTask)
 

@@ -7,5 +7,41 @@
     "method": "Template matching",
     "threshold": 0.8,
     "description": "经验妖怪的赢"
+  },
+  {
+    "itemName": "first_team_dialog",
+    "imageName": "ey_first_team_dialog.png",
+    "roiFront": "544,464,197,28",
+    "roiBack": "480,445,300,65",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "首次组队说明的点击任意位置继续"
+  },
+  {
+    "itemName": "first_team_guide",
+    "imageName": "ey_first_team_guide.png",
+    "roiFront": "269,473,40,46",
+    "roiBack": "130,150,1080,440",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "组队新手引导箭头尖端"
+  },
+  {
+    "itemName": "first_team_page",
+    "imageName": "ey_first_team_page.png",
+    "roiFront": "99,25,70,35",
+    "roiBack": "88,16,100,48",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "新手组队页面标题"
+  },
+  {
+    "itemName": "first_team_create_guide",
+    "imageName": "ey_first_team_create_guide.png",
+    "roiFront": "1086,634,40,46",
+    "roiBack": "980,575,220,145",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "首次组队创建队伍引导箭头"
   }
 ]

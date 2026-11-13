@@ -1,0 +1,92 @@
+[
+  {
+    "itemName": "borrow_page",
+    "imageName": "res_borrow_page.png",
+    "roiFront": "224,96,520,65",
+    "roiBack": "205,82,570,95",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "新手特权中的唤妖借处式神借用"
+  },
+  {
+    "itemName": "ubume_card",
+    "imageName": "res_ubume_card.png",
+    "roiFront": "290,389,65,49",
+    "roiBack": "250,350,930,100",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "待宵姑获鸟卡片头像"
+  },
+  {
+    "itemName": "ubume_borrowed",
+    "imageName": "res_ubume_borrowed.png",
+    "roiFront": "344,203,43,43",
+    "roiBack": "329,183,270,84",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "我的借用中的待宵姑获鸟头像"
+  },
+  {
+    "itemName": "ubume_using",
+    "imageName": "res_ubume_using.png",
+    "roiFront": "277,393,90,80",
+    "roiBack": "250,350,930,195",
+    "method": "Template matching",
+    "threshold": 0.95,
+    "description": "待宵姑获鸟卡片显示使用中"
+  },
+  {
+    "itemName": "beginner_exp_fixed_team",
+    "imageName": "res_beginner_exp_fixed_team.png",
+    "roiFront": "1060,655,137,38",
+    "roiBack": "1010,640,220,65",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "新手探索固定阵容按钮"
+  },
+  {
+    "itemName": "beginner_exp_cost",
+    "imageName": "res_beginner_exp_cost.png",
+    "roiFront": "985,597,92,26",
+    "roiBack": "950,580,175,50",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "新手探索出战消耗文字"
+  },
+  {
+    "itemName": "account_level_seven",
+    "imageName": "res_account_level_seven.png",
+    "roiFront": "11,22,17,20",
+    "roiBack": "4,12,34,38",
+    "method": "Template matching",
+    "threshold": 0.93,
+    "description": "7级数字，补充OCR容易把7读成1的情况"
+  },
+  {
+    "itemName": "beginner_entrance",
+    "imageName": "res_beginner_entrance.png",
+    "roiFront": "199,302,54,51",
+    "roiBack": "140,250,300,160",
+    "method": "Template matching",
+    "threshold": 0.6,
+    "description": "庭院新手入口"
+  },
+  {
+    "itemName": "beginner_event_page",
+    "imageName": "res_beginner_event_page.png",
+    "roiFront": "87,17,165,43",
+    "roiBack": "75,8,190,57",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "初入平安京活动页面标题"
+  },
+  {
+    "itemName": "beginner_privilege",
+    "imageName": "res_beginner_privilege.png",
+    "roiFront": "43,390,119,34",
+    "roiBack": "25,280,150,155",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "description": "新手特权侧边栏入口"
+  }
+]

@@ -484,5 +484,6 @@
   "when_attack_fail": "战斗失败后的操作",
   "start_chapter": "开始章节",
   "end_chapter": "结束章节",
-  "discover_monsters": "发现妖怪模式"
+  "discover_monsters": "发现妖怪模式",
+  "BorrowShikigami": "15级起号"
 }

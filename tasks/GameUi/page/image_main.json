@@ -93,7 +93,7 @@
     "itemName": "main_goto_team",
     "imageName": "page_main_goto_team.png",
     "roiFront": "395,590,38,48",
-    "roiBack": "395,590,120,100",
+    "roiBack": "0,570,1280,150",
     "method": "Template matching",
     "threshold": 0.7,
     "description": "庭院前往组队"

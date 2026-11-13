@@ -108,5 +108,45 @@
     "threshold": 0.8,
     "profile": "High",
     "description": ""
+  },
+  {
+    "itemName": "story_chat_right_edge",
+    "imageName": "res_story_chat_right_edge.png",
+    "roiFront": "1247,280,33,56",
+    "roiBack": "1210,100,70,480",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "profile": "High",
+    "description": "被屏幕右侧截断的剧情对话气泡"
+  },
+  {
+    "itemName": "personalized_content",
+    "imageName": "res_personalized_content.png",
+    "roiFront": "501,82,266,44",
+    "roiBack": "470,65,330,75",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "profile": "High",
+    "description": "个性化内容推荐弹窗标题"
+  },
+  {
+    "itemName": "new_feature_unlocked",
+    "imageName": "res_new_feature_unlocked.png",
+    "roiFront": "570,414,141,35",
+    "roiBack": "530,390,220,75",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "profile": "High",
+    "description": "新功能开启弹窗标题"
+  },
+  {
+    "itemName": "exploration_intro",
+    "imageName": "res_exploration_intro.png",
+    "roiFront": "474,95,350,52",
+    "roiBack": "440,75,410,90",
+    "method": "Template matching",
+    "threshold": 0.85,
+    "profile": "High",
+    "description": "首次探索玩法介绍"
   }
 ]
