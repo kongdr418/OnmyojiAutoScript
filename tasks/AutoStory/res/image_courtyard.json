@@ -1,0 +1,12 @@
+[
+  {
+    "itemName": "check_main_set",
+    "imageName": "page_check_main_set.png",
+    "roiFront": "255,37,41,36",
+    "roiBack": "214,6,120,100",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "profile": "High",
+    "description": "闲庭设置"
+  }
+]

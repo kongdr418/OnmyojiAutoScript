@@ -2,11 +2,15 @@
 # @author runhey
 # github https://github.com/runhey
 from tasks.GuguArtStudio.config import GuguArtStudio
+from tasks.AutoStory.config import AutoStory
+from tasks.ExplorationFight.config import ExplorationFight
+from tasks.CustomTask.config import CustomTask, ENTRY_PREFIX
 from tasks.GuildActivityMonitor.config import GuildActivityMonitor
 from tasks.OtherWorldTwilight.config import OtherWorldTwilight
 from typing import Dict, Any
 
 import re
+import json
 import inflection
 
 from pathlib import Path
@@ -162,6 +166,9 @@ class ConfigModel(ConfigBase):
     guild_banquet: GuildBanquet = Field(default_factory=GuildBanquet)
     demon_retreat: DemonRetreat = Field(default_factory=DemonRetreat)
     guild_activity_monitor: GuildActivityMonitor = Field(default_factory=GuildActivityMonitor)
+    auto_story: AutoStory = Field(default_factory=AutoStory)
+    exploration_fight: ExplorationFight = Field(default_factory=ExplorationFight)
+    custom_task: CustomTask = Field(default_factory=CustomTask)
 
     def __init__(self, config_name: str=None, **data) -> None:
         """
@@ -314,11 +321,15 @@ class ConfigModel(ConfigBase):
         :param task: 同gui_args函数
         :return:
         """
-        task = convert_to_underscore(task)
-        task = getattr(self, task, None)
+        entry = self.custom_task.entry(task[len(ENTRY_PREFIX):]) if task.startswith(ENTRY_PREFIX) else None
+        if task.startswith(ENTRY_PREFIX) and entry is None:
+            return {}
+        task = entry.task_model() if entry else getattr(self, convert_to_underscore(task), None)
         if task is None:
             logger.warning(f'{task} is no inexistence')
             return {}
+
+        excluded = {'scheduler'} if entry else {'entries', 'selected_entry_id'} if isinstance(task, CustomTask) else set()
 
         def extract_groups(sch):
             # 从schema 中提取未解析的group的数据
@@ -326,6 +337,8 @@ class ConfigModel(ConfigBase):
             results = {}
             properties = {}
             for key, value in sch["properties"].items():
+                if key in excluded:
+                    continue
                 if 'items' in value:
                     properties[key] = re.search(r"/([^/]+)$", value['items']['$ref']).group(1)
                 else:
@@ -383,7 +396,7 @@ class ConfigModel(ConfigBase):
         groups_value = groups.copy()
 
         result: dict[str, list] = {}
-        for key, value in task.model_dump(context={'hide': True}).items():
+        for key, value in task.model_dump(exclude=excluded, context={'hide': True}).items():
             if value == 0xABCDEF:
                 continue
             if key not in groups:
@@ -401,9 +414,46 @@ class ConfigModel(ConfigBase):
         if isinstance(task, Chess):
             result = task.oasx_args(result)
         from module.config.settings_presentation import present_settings
-        return present_settings(task, result)
+        result = present_settings(task, result)
+        if entry and entry.type == 'AccountSwitch':
+            result['account'] = [row for row in result['account'] if row['name'] != 'last_complete_time']
+        if isinstance(task, CustomTask):
+            result = task.oasx_args(result)
+            selected = task.selected_entry
+            if selected is not None:
+                fields = self.script_task(ENTRY_PREFIX + selected.id)
+                fields.pop('settings_layout_config', None)
+                result.update(fields)
+        return result
 
     def script_set_arg(self, task: str, group: str, argument: str, value) -> bool:
+        custom_task = convert_to_underscore(task) == 'custom_task'
+        if custom_task and group == 'task_list' and argument == 'task_list':
+            try:
+                value = json.loads(value) if isinstance(value, str) else value
+                candidate = CustomTask(entries=value['entries'], selected_entry_id=self.custom_task.selected_entry_id)
+            except (ValueError, KeyError, TypeError):
+                return False
+            self.custom_task.entries = candidate.entries
+            selected = candidate.selected_entry
+            self.custom_task.selected_entry_id = selected.id if selected else ''
+            self.save()
+            return True
+        if custom_task and group == 'task_list':
+            if not isinstance(value, str) or not self.custom_task.set_control(argument, value):
+                return False
+            self.save()
+            return True
+        if custom_task and convert_to_underscore(group) != 'scheduler':
+            selected = self.custom_task.selected_entry
+            if selected is None:
+                return False
+            return self.script_set_arg(ENTRY_PREFIX + selected.id, group, argument, value)
+        entry = self.custom_task.entry(task[len(ENTRY_PREFIX):]) if task.startswith(ENTRY_PREFIX) else None
+        if task.startswith(ENTRY_PREFIX) and (entry is None or convert_to_underscore(group) == 'scheduler'):
+            return False
+        if entry and entry.type == 'AccountSwitch' and argument == 'last_complete_time':
+            return False
         # 验证参数
         task = convert_to_underscore(task)
         group = convert_to_underscore(group)
@@ -431,7 +481,7 @@ class ConfigModel(ConfigBase):
         if isinstance(value, str) and value == 'false':
             value = False
 
-        task_object = getattr(self, task, None)
+        task_object = entry.task_model() if entry else getattr(self, task, None)
         group_object = getattr(task_object, group, None)
         if isinstance(task_object, Chess) and group == 'chess_config' and argument == 'lineup_bond':
             handled = task_object.select_oasx_lineup(value)
@@ -461,13 +511,15 @@ class ConfigModel(ConfigBase):
 
         # 设置参数
         try:
-            if getattr(task_object, 'settings_layout', None):
+            if entry or isinstance(task_object, ExplorationFight) or getattr(task_object, 'settings_layout', None):
                 # 将列表、JSON 列表和旧文本统一验证后再保存，保持实际执行类型稳定。
                 candidate = group_object.model_dump()
                 candidate[argument] = value
                 validated = type(group_object).model_validate(candidate)
                 value = getattr(validated, argument)
             setattr(group_object, argument, value)
+            if entry:
+                entry.settings = task_object.model_dump(exclude={'scheduler'})
             logger.info(f'Set arg {self.config_name}.{task}.{group}.{argument}.{value}')
             self.save()  # 我是没有想到什么方法可以使得属性改变自动保存的
             return True
