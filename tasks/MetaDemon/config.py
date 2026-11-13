@@ -51,6 +51,11 @@ class OfferingStar(str, Enum):
                      if star >= self.floor)
 
 
+class OfferingOrder(str, Enum):
+    ASCENDING = '顺序'
+    DESCENDING = '倒序'
+
+
 class MetaDemonConfig(ConfigBase):
     mode: list[MetaDemonMode] = Field(default=[MetaDemonMode.BOSS_BATTLE], title='配置选择模式',
         json_schema_extra={'ui_exclusive_groups': [['鬼王战斗', '鬼王协助']]})
@@ -229,7 +234,9 @@ class MetaDemonAssistanceConfig(ConfigBase):
     role: AssistanceRole = Field(default=AssistanceRole.OFFERING, title='鬼王协助身份',
         description='上供召唤鬼王并分享；协助从超鬼王主页寻找好友分享的鬼王并挑战。')
     offering_star: OfferingStar = Field(default=OfferingStar.SIX, title='上供鬼王星级',
-        description='上供端召唤并分享的鬼王星级：四星及以上 / 五星及以上 / 六星，按高星优先召唤。')
+        description='上供端召唤并分享的鬼王星级：四星及以上 / 五星及以上 / 六星。')
+    offering_order: OfferingOrder = Field(default=OfferingOrder.ASCENDING, title='上供召唤顺序',
+        description='顺序为低星优先（四星→五星→六星）；倒序为高星优先（六星→五星→四星）。仅召唤所选星级范围内的鬼王。')
     friend_names: str = Field(default='', title='分享好友名字',
         description='填写游戏内好友完整名字；多个名字用分号或换行分隔，按名称精确匹配，不使用近似名字。')
     poll_interval: int = Field(default=5, ge=2, le=60, title='协助轮询间隔（秒）',
@@ -239,6 +246,11 @@ class MetaDemonAssistanceConfig(ConfigBase):
     @classmethod
     def validate_cooperation_script(cls, value: str) -> str:
         return instance_name(value)
+
+    @property
+    def offering_sequence(self) -> tuple[BossType, ...]:
+        return tuple(sorted(self.offering_star.stars,
+                            reverse=self.offering_order == OfferingOrder.DESCENDING))
 
     @property
     def friends(self) -> list[str]:

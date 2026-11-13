@@ -437,6 +437,7 @@
   "assistance_config": "鬼王协助",
   "role": "身份",
   "offering_star": "上供鬼王星级",
+  "offering_order": "上供召唤顺序",
   "friend_names": "分享好友名字",
   "poll_interval": "协助轮询间隔（秒）"
 }

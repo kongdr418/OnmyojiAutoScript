@@ -394,7 +394,7 @@ class GhostOffering:
             if not self.within_limit():
                 return True
         self.empty_frames = 0
-        return t.check_and_switch_ticket(sequence=self.settings.offering_star.stars) or t.State.done
+        return t.check_and_switch_ticket(sequence=self.settings.offering_sequence) or t.State.done
 
 
 class GhostAssistant:

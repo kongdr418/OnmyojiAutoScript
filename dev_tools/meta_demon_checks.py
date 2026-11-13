@@ -1,4 +1,5 @@
 """超鬼王：模式、配置迁移、召唤星级复核、高星快速上阵与强力追击。"""
+from datetime import datetime, timedelta
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
@@ -9,14 +10,57 @@ from pydantic import ValidationError
 from module.config.config_model import ConfigModel
 from module.exception import TaskEnd
 from tasks.MetaDemon.boss_battle import BossBattle
+from tasks.MetaDemon.assistance import GhostOffering
 from tasks.MetaDemon.config import (
-    BossType, MetaDemon, MetaDemonConfig, MetaDemonMode, MetaDemonQuickPresetConfig, loadout_group,
+    BossType, MetaDemon, MetaDemonConfig, MetaDemonMode, MetaDemonQuickPresetConfig,
+    OfferingOrder, OfferingStar, loadout_group,
 )
 from tasks.MetaDemon.synthesis import parse_synthesis_material_level
 from tasks.MetaDemon.page import page_main
 
 
 class MetaDemonSettingsChecks(unittest.TestCase):
+    def test_existing_offering_configs_default_to_low_star_first(self):
+        for star, sequence in ((OfferingStar.FOUR_PLUS, (4, 5, 6)),
+                               (OfferingStar.FIVE_PLUS, (5, 6)), (OfferingStar.SIX, (6,))):
+            with self.subTest(star=star):
+                conf = MetaDemon(assistance_config={'offering_star': star.value})
+                self.assertEqual(conf.assistance_config.offering_order, OfferingOrder.ASCENDING)
+                self.assertEqual(conf.assistance_config.offering_sequence, sequence)
+
+    def test_offering_order_round_trips_and_reaches_summoning(self):
+        for star, ascending in ((OfferingStar.FOUR_PLUS, (4, 5, 6)),
+                                (OfferingStar.FIVE_PLUS, (5, 6)), (OfferingStar.SIX, (6,))):
+            for order in OfferingOrder:
+                with self.subTest(star=star, order=order):
+                    conf = MetaDemon(assistance_config={
+                        'offering_star': star.value, 'offering_order': order.value})
+                    conf = MetaDemon.model_validate_json(conf.model_dump_json())
+                    expected = ascending if order == OfferingOrder.ASCENDING else ascending[::-1]
+                    self.assertEqual(conf.assistance_config.offering_sequence, expected)
+                    owner = object.__new__(BossBattle)
+                    owner.conf = conf
+                    owner.start_time = datetime.now()
+                    owner.limit_time = timedelta(minutes=5)
+                    owner.limit_count = 10
+                    owner.total_count = 0
+                    owner.State = SimpleNamespace(done=False)
+                    owner.appear = Mock(side_effect=lambda rule: rule is owner.I_MD_SUMMON_BOSS)
+                    owner.check_and_switch_ticket = Mock(return_value=True)
+                    offering = GhostOffering(owner, Mock())
+                    self.assertTrue(offering.tick())
+                    self.assertTrue(offering.tick())
+                    owner.check_and_switch_ticket.assert_called_once_with(sequence=expected)
+
+    def test_offering_order_is_exposed_in_settings(self):
+        payload = ConfigModel.script_task(SimpleNamespace(meta_demon=MetaDemon()), 'MetaDemon')
+        fields = {field['name']: field for field in payload['assistance_config']}
+        self.assertEqual(fields['offering_order']['enumEnum'], ['顺序', '倒序'])
+        self.assertEqual(fields['offering_order']['default'], '顺序')
+        sections = MetaDemon.settings_layout
+        section = next(section for section in sections if section['id'] == 'assistance_config')
+        self.assertIn('offering_order', section['groups'][0]['fields'])
+
     def test_finish_task_refreshes_screenshot_before_returning_to_main(self):
         owner = object.__new__(BossBattle)
         owner.goto_page = Mock()
