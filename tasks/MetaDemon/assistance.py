@@ -14,7 +14,7 @@ from module.cooperation import Cooperation
 from module.exception import RequestHumanTakeover, ScriptError, TaskEnd
 from module.image.rpc import get_image_client
 from module.logger import logger
-from tasks.MetaDemon.config import AssistanceRole, BossType, MetaDemonMode
+from tasks.MetaDemon.config import AssistanceRole, BossType, MetaDemonMode, OfferingMode
 import tasks.MetaDemon.page as pages
 
 
@@ -97,7 +97,11 @@ class AssistanceLink:
         return bool(state and state['session'] == self.session and state['payload'].get('settled'))
 
     def peer_in_task(self):
-        return self.runtime.runner_task(self.peer) == 'MetaDemon'
+        if self.runtime.runner_task(self.peer) != 'MetaDemon':
+            return False
+        settings = self.runtime.read(self.peer).get('meta_demon', {}).get('assistance_config', {})
+        return (settings.get('role') != AssistanceRole.OFFERING
+                or settings.get('offering_mode', OfferingMode.COOPERATIVE) == OfferingMode.COOPERATIVE)
 
     def wait_for_peer(self):
         task = 'MetaDemon'
@@ -285,11 +289,35 @@ class GhostOffering:
             t.swipe(t.S_MD_SWIPE_FRIEND_UP, interval=1.2)
         return False
 
+    def share_with_friends(self):
+        t = self.task
+        if not self.open_share_panel() or not self.select_friends():
+            return False
+        t.screenshot()
+        if self.selected_count() != len(self.settings.friends):
+            logger.warning('分享前好友选中数量不符，停止本次上供')
+            return False
+        if not t.appear_then_click(t.I_MD_INVITE_FRIENDS, interval=self.INVITE_RETRY_SECONDS):
+            return False
+        deadline = time.monotonic() + self.INVITE_RETRY_SECONDS
+        while self.within_limit() and time.monotonic() < deadline:
+            t.screenshot()
+            if t.appear(t.I_MD_INVITE_FRIENDS):
+                continue
+            if any(t.appear(rule) for rule in (
+                    t.I_MD_FIRE, t.I_MD_SETTLING, t.I_MD_SUMMON_BOSS, t.I_UI_REWARD)):
+                logger.info('已按好友名字分享鬼王，等待好友击杀')
+                return True
+        logger.warning('未确认好友分享完成，停止本次上供')
+        return False
+
     def share(self):
         t = self.task
         if t.cur_boss_type not in self.settings.offering_star.stars:
             logger.warning(f'仅允许分享本次已确认召唤的{self.settings.offering_star.value}鬼王')
             return False
+        if self.link is None:
+            return self.share_with_friends()
         portrait_sent = False
         select_recipients = True
         while self.within_limit():
@@ -354,9 +382,11 @@ class GhostOffering:
             t.click(t.C_UI_REWARD, interval=0.8)
             return True
         settling = t.appear(t.I_MD_SETTLING)
-        if self.shared_generation is not None and not self.settled and (settling or self.link.peer_settled()):
+        if (self.shared_generation is not None and not self.settled
+                and (settling or (self.link is not None and self.link.peer_settled()))):
             self.settled = True
-            self.link.publish()
+            if self.link is not None:
+                self.link.publish()
             logger.info('上供鬼王进入结算，等待召唤标志后再开始下一轮')
         if settling:
             self.empty_frames = 0
@@ -376,7 +406,7 @@ class GhostOffering:
         if not t.appear(t.I_MD_SUMMON_BOSS):
             self.empty_frames = 0
             return True
-        if self.shared_generation is not None and not self.settled:
+        if self.shared_generation is not None and not self.settled and self.link is not None:
             self.empty_frames = 0
             return True
         self.empty_frames += 1
@@ -523,12 +553,12 @@ class GhostAssistant:
         return True
 
 
-def run_offering(task, link):
+def run_offering(task, link=None):
     task.goto_page(pages.page_meta_demon_boss)
     offering = GhostOffering(task, link)
     success = True
     while offering.within_limit():
-        if not link.peer_in_task():
+        if link is not None and not link.peer_in_task():
             logger.info('协助端已离开超鬼王，结束本轮上供')
             return False
         # Waiting for someone else to kill a boss is intentional inactivity.
@@ -539,7 +569,7 @@ def run_offering(task, link):
             logger.warning('鬼王上供流程未完成，结束本次运行')
             break
         remaining = max(0, (task.limit_time - (datetime.now() - task.start_time)).total_seconds())
-        interval = 0.5 if offering.waiting and not offering.settled else offering.settings.poll_interval
+        interval = 0.5 if link is not None and offering.waiting and not offering.settled else offering.settings.poll_interval
         time.sleep(min(interval, remaining))
     return success
 
@@ -550,6 +580,11 @@ def run_assistance(task):
     if offering and not settings.friends:
         raise RequestHumanTakeover('鬼王上供需要填写分享好友名字')
     task.before_run()
+    if not settings.requires_cooperation:
+        success = run_offering(task)
+        task.set_next_run(task='MetaDemon', success=success)
+        task.finish_task()
+        return
     try:
         link = AssistanceLink(task)
         if not link.peer and not offering:

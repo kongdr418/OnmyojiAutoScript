@@ -9,7 +9,7 @@ from unittest.mock import Mock, call, patch
 from module.cooperation import Cooperation
 from module.exception import ScriptError
 from tasks.MetaDemon.assistance import AssistanceLink, GhostAssistant
-from tasks.MetaDemon.config import AssistanceRole, MetaDemon, MetaDemonMode
+from tasks.MetaDemon.config import AssistanceRole, MetaDemon, MetaDemonMode, OfferingMode
 
 
 def write_config(root, name, *, role, peer='', enable=True, mode=None, ticket=None):
@@ -67,6 +67,29 @@ class CooperationChecks(unittest.TestCase):
                      mode=[MetaDemonMode.BOSS_BATTLE])
         with self.assertRaises(ScriptError):
             a.validate('MetaDemon', 'assist')
+
+    def test_independent_offer_cannot_be_used_as_a_cooperative_partner(self):
+        path = self.root / 'config' / 'offer.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        data['meta_demon']['assistance_config']['offering_mode'] = OfferingMode.INDEPENDENT
+        path.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
+        with self.assertRaisesRegex(ScriptError, '不协同'):
+            self.runtime('assist').validate('MetaDemon', 'offer')
+
+    def test_running_assistant_detects_offer_switching_to_independent_mode(self):
+        offer = self.runtime('offer')
+        offer.publish('MetaDemon')
+        task = SimpleNamespace(
+            conf=MetaDemon(assistance_config={'role': '协助', 'cooperation_script': 'offer'}),
+            config=SimpleNamespace(config_name='assist', cooperation_runtime=self.runtime('assist')),
+        )
+        link = AssistanceLink(task)
+        self.assertTrue(link.peer_in_task())
+        path = self.root / 'config' / 'offer.json'
+        data = json.loads(path.read_text(encoding='utf-8'))
+        data['meta_demon']['assistance_config']['offering_mode'] = OfferingMode.INDEPENDENT
+        path.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
+        self.assertFalse(link.peer_in_task())
 
     def test_ticket_pair_requires_leader_member_and_same_mode(self):
         write_config(self.root, 'leader', role=AssistanceRole.OFFERING, ticket=ticket_config('leader', peer='member'))

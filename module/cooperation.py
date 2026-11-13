@@ -238,9 +238,13 @@ class Cooperation:
 
     def _validate_meta_demon(self, own, other, peer):
         """超鬼王协同：一端上供、一端协助，双方都开启鬼王协助模式。"""
-        from tasks.MetaDemon.config import AssistanceRole, MetaDemonMode
+        from tasks.MetaDemon.config import AssistanceRole, MetaDemonMode, OfferingMode
         pair = ((own, peer), (other, self.name))
         settings = [item.get('assistance_config', {}) for item, _ in pair]
+        if any(setting.get('role') == AssistanceRole.OFFERING
+               and setting.get('offering_mode', OfferingMode.COOPERATIVE) != OfferingMode.COOPERATIVE
+               for setting in settings):
+            raise ScriptError('上供端已选择不协同，无法匹配鬼王协助脚本')
         targets = [setting.get('cooperation_script', '').strip() for setting in settings]
         if ({setting.get('role') for setting in settings} != {AssistanceRole.OFFERING, AssistanceRole.ASSIST}
                 or not all(MetaDemonMode.BOSS_ASSIST in item.get('meta_demon_config', {}).get('mode', [])
@@ -406,6 +410,8 @@ class Cooperation:
 def prepare_task_cooperation(config, task):
     """Check and wake the partner as soon as the scheduler activates this task."""
     item = getattr(config.model, convert_to_underscore(task))
+    if task == 'MetaDemon' and not item.assistance_config.requires_cooperation:
+        return
     settings_group = 'assistance_config' if task == 'MetaDemon' else 'invite_config'
     runtime = getattr(config, 'cooperation_runtime', None)
     peer = getattr(getattr(item, settings_group, None), 'cooperation_script', '')

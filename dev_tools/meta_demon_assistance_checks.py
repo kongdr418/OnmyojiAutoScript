@@ -1,4 +1,4 @@
-"""超鬼王协助：只分享六星、等待结算、双端身份与协同必经。"""
+"""超鬼王上供、好友分享、结算等待和双端协同检查。"""
 import unittest
 from datetime import datetime, timedelta
 from types import SimpleNamespace
@@ -9,8 +9,9 @@ from pydantic import ValidationError
 
 from module.config.config_model import ConfigModel
 from module.exception import RequestHumanTakeover, ScriptError, TaskEnd
-from tasks.MetaDemon.assistance import AssistanceLink, GhostOffering, run_assistance
-from tasks.MetaDemon.config import AssistanceRole, BossType, MetaDemon
+from module.cooperation import prepare_task_cooperation
+from tasks.MetaDemon.assistance import AssistanceLink, GhostOffering, run_assistance, run_offering
+from tasks.MetaDemon.config import AssistanceRole, BossType, MetaDemon, OfferingMode
 from tasks.MetaDemon.script_task import ScriptTask
 
 
@@ -59,6 +60,7 @@ class AssistanceChecks(unittest.TestCase):
             'panel': t.I_MD_INVITE_FRIENDS}.get(t.phase))
         t.O_MD_FRIENDS = SimpleNamespace(roi=(435, 179, 486, 351), detect_and_ocr=Mock())
         t.I_MD_FRIEND_SELECTED = SimpleNamespace(match_all=Mock(return_value=[]))
+        t.I_MD_FRIEND_SELECTED.match_all_any = t.I_MD_FRIEND_SELECTED.match_all
         t.S_MD_SWIPE_FRIEND_UP = SimpleNamespace(roi_front=(784,398,55,20), roi_back=(792,340,56,23))
         return t
 
@@ -74,6 +76,107 @@ class AssistanceChecks(unittest.TestCase):
             MetaDemon(meta_demon_config={'mode': ['门票刷取：探索']})
         payload = ConfigModel.script_task(SimpleNamespace(meta_demon=conf), 'MetaDemon')
         self.assertTrue(all('default' in row for row in payload['assistance_config']))
+
+    def test_offering_mode_defaults_to_cooperation_and_assist_still_requires_peer(self):
+        self.assertTrue(MetaDemon().assistance_config.requires_cooperation)
+        t = self.make_task(offering_mode=OfferingMode.INDEPENDENT)
+        self.assertFalse(t.conf.assistance_config.requires_cooperation)
+        t = self.make_task(role=AssistanceRole.ASSIST, offering_mode=OfferingMode.INDEPENDENT)
+        self.assertTrue(t.conf.assistance_config.requires_cooperation)
+
+    def test_independent_offering_skips_scheduler_peer_checks_including_cached_peer(self):
+        t = self.make_task(offering_mode=OfferingMode.INDEPENDENT, cooperation_script='old-peer')
+        runtime = Mock()
+        config = SimpleNamespace(model=SimpleNamespace(meta_demon=t.conf),
+                                 cooperation_runtime=runtime, _cooperation_peers={'MetaDemon': 'old-peer'})
+        prepare_task_cooperation(config, 'MetaDemon')
+        self.assertEqual(runtime.mock_calls, [])
+
+    def test_independent_offering_entry_does_not_construct_a_cooperation_link(self):
+        t = self.make_task(offering_mode=OfferingMode.INDEPENDENT)
+        with patch('tasks.MetaDemon.assistance.AssistanceLink') as link_class, \
+                patch('tasks.MetaDemon.assistance.run_offering', return_value=True) as run:
+            run_assistance(t)
+        link_class.assert_not_called()
+        run.assert_called_once_with(t)
+        t.set_next_run.assert_called_once_with(task='MetaDemon', success=True)
+        t.finish_task.assert_called_once()
+
+    def test_independent_sharing_requires_selected_names_and_game_confirmation(self):
+        t = self.make_task(offering_mode=OfferingMode.INDEPENDENT)
+        offering = GhostOffering(t)
+        offering.open_share_panel = Mock(return_value=True)
+        offering.select_friends = Mock(return_value=True)
+        offering.selected_count = Mock(return_value=2)
+        t.phase = 'fire'
+        self.assertTrue(offering.share())
+        offering.select_friends.assert_called_once()
+        t.appear_then_click.assert_called_once_with(t.I_MD_INVITE_FRIENDS, interval=20)
+        t.start_battle.assert_not_called()
+
+    def test_independent_sharing_rejects_incomplete_friend_selection(self):
+        t = self.make_task(offering_mode=OfferingMode.INDEPENDENT)
+        offering = GhostOffering(t)
+        offering.open_share_panel = Mock(return_value=True)
+        offering.select_friends = Mock(return_value=True)
+        offering.selected_count = Mock(return_value=1)
+        self.assertFalse(offering.share())
+        t.appear_then_click.assert_not_called()
+
+    def test_independent_offering_observes_game_settlement_without_peer_messages(self):
+        t = self.make_task(offering_mode=OfferingMode.INDEPENDENT)
+        offering = GhostOffering(t)
+        offering.share = Mock(return_value=True)
+        offering.tick()
+        offering.tick()
+        offering.share.assert_called_once()
+        t.phase = 'settling'
+        offering.tick()
+        t.phase = 'empty'
+        offering.tick()
+        offering.tick()
+        self.assertEqual(t.total_count, 1)
+        t.check_and_switch_ticket.assert_called_once()
+        t.start_battle.assert_not_called()
+
+    def test_independent_offering_handles_a_missed_settlement_frame(self):
+        t = self.make_task(offering_mode=OfferingMode.INDEPENDENT)
+        offering = GhostOffering(t)
+        offering.share = Mock(return_value=True)
+        offering.tick()
+        t.phase = 'empty'
+        offering.tick()
+        self.assertEqual(t.total_count, 0)
+        offering.tick()
+        self.assertEqual(t.total_count, 1)
+        t.check_and_switch_ticket.assert_called_once()
+
+    def test_independent_share_timeout_does_not_record_a_success(self):
+        t = self.make_task(offering_mode=OfferingMode.INDEPENDENT)
+        offering = GhostOffering(t)
+        offering.open_share_panel = Mock(side_effect=lambda: setattr(t, 'phase', 'panel') or True)
+        offering.select_friends = Mock(return_value=True)
+        offering.selected_count = Mock(return_value=2)
+        with patch('tasks.MetaDemon.assistance.time.monotonic', side_effect=[0, 0, 21]):
+            self.assertFalse(offering.tick())
+        self.assertIsNone(offering.shared_generation)
+        self.assertEqual(t.total_count, 0)
+        t.check_and_switch_ticket.assert_not_called()
+
+    def test_independent_run_uses_poll_interval_and_stops_at_kill_limit(self):
+        t = self.make_task(offering_mode=OfferingMode.INDEPENDENT)
+        t.limit_count = 1
+        t.device.stuck_record_clear = Mock()
+        phases = iter(['fire', 'fire', 'empty', 'empty'])
+        t.screenshot.side_effect = lambda: setattr(t, 'phase', next(phases))
+        with patch.object(GhostOffering, 'share', return_value=True) as share, \
+                patch('tasks.MetaDemon.assistance.time.sleep') as sleep:
+            self.assertTrue(run_offering(t))
+        share.assert_called_once()
+        self.assertEqual(t.total_count, 1)
+        self.assertTrue(all(call.args[0] == 5 for call in sleep.call_args_list))
+        t.check_and_switch_ticket.assert_not_called()
+        t.start_battle.assert_not_called()
 
     def test_shares_once_waits_for_settlement_then_summons_only_six(self):
         t = self.make_task()
