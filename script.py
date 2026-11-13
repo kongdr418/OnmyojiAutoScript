@@ -272,6 +272,9 @@ class Script:
         future = future + timedelta(seconds=1)
         self.config.start_watching()
         while 1:
+            cooperation = getattr(self, '_cooperation_runtime', None)
+            if cooperation is not None and cooperation.wake_next(self.config, task_filter='MetaDemonTicket'):
+                return False
             if datetime.now() > future:
                 return True
             # if self.stop_event is not None:
@@ -325,6 +328,9 @@ class Script:
         :return:
         """
         while True:
+            cooperation = getattr(self, '_cooperation_runtime', None)
+            if cooperation is not None:
+                cooperation.wake_next(self.config, task_filter='MetaDemonTicket')
             task = self.config.get_next()
             now = datetime.now()
             antiban_wake = self.anti_ban_guard.wake_time(now, self.config.script.anti_ban)

@@ -63,6 +63,20 @@ class GeneralInvite(BaseTask, GeneralInviteAssets):
         runtime, task, peer = self._room_cooperation()
         if not peer:
             return True
+        peers = getattr(self, '_ticket_peers', ())
+        if len(peers) > 1:
+            tokens = getattr(self, '_cooperation_room_tokens', {})
+            ready = True
+            for member in peers:
+                result = runtime.room_check_result(task, member, tokens[member]) if member in tokens else False
+                if result is False:
+                    tokens[member] = runtime.request_room_check(task, member)
+                if result is not True:
+                    ready = False
+            self._cooperation_room_tokens = {} if ready else tokens
+            if ready:
+                logger.info('Cooperation: all members confirmed in team room, start challenge')
+            return ready
         token = getattr(self, '_cooperation_room_token', None)
         if token:
             ready = runtime.room_check_result(task, peer, token)

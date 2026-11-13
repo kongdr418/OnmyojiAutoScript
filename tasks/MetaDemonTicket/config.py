@@ -2,10 +2,10 @@ from datetime import time, timedelta
 from enum import Enum
 from typing import ClassVar
 
-from pydantic import Field
+from pydantic import Field, validator
 
 from module.config.multi_select import normalize_multi_select
-from tasks.Component.config_base import ConfigBase, Time
+from tasks.Component.config_base import ConfigBase, Time, MultiLine
 from tasks.Component.config_scheduler import Scheduler
 from tasks.Component.config_settings_layout import SettingsLayoutConfig, settings_section
 from tasks.Component.GeneralBattle.config_general_battle import GeneralBattleConfig
@@ -13,6 +13,7 @@ from tasks.Component.GeneralInvite.config_invite import InviteConfig
 from tasks.Component.SwitchSoul.switch_soul_config import SwitchSoulConfig
 from tasks.EvoZone.config import KirinType, Layer
 from tasks.Exploration.config import ExplorationLevel, UserStatus
+from module.cooperation import ticket_peer_names
 
 
 class TicketMode(str, Enum):
@@ -48,6 +49,14 @@ class TicketGeneralConfig(ConfigBase):
         return self.limit_time
 
 
+class TicketInviteConfig(InviteConfig):
+    cooperation_script: MultiLine = Field(default='', description='ticket_cooperation_script_help')
+
+    @validator('cooperation_script')
+    def validate_cooperation_script(cls, value):
+        return '\n'.join(ticket_peer_names(value))
+
+
 class MetaDemonTicket(ConfigBase):
     settings_layout_config: SettingsLayoutConfig = Field(default_factory=SettingsLayoutConfig)
     settings_layout: ClassVar[list[dict]] = [
@@ -60,7 +69,7 @@ class MetaDemonTicket(ConfigBase):
 
     scheduler: Scheduler = Field(default_factory=Scheduler)
     general_config: TicketGeneralConfig = Field(default_factory=TicketGeneralConfig)
-    invite_config: InviteConfig = Field(default_factory=InviteConfig)
+    invite_config: TicketInviteConfig = Field(default_factory=TicketInviteConfig)
     switch_soul_config: SwitchSoulConfig = Field(default_factory=SwitchSoulConfig)
     general_battle_config: GeneralBattleConfig = Field(default_factory=GeneralBattleConfig)
 

@@ -1,8 +1,11 @@
 """超鬼王门票刷取，复用觉醒和探索的战斗流程。"""
 from datetime import datetime
+import time
+import uuid
 from cached_property import cached_property
 
 from module.logger import logger
+from module.cooperation import ticket_peer_names
 from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
 from tasks.EvoZone.config import EvoZone, EvoZoneConfig, UserStatus as AwakeUserStatus
 from tasks.EvoZone.script_task import ScriptTask as AwakeTask
@@ -26,6 +29,81 @@ class TicketPartnerFinished(Exception):
     """协同伙伴结束门票阶段。"""
 
 
+class TicketCooperation:
+    """通过队长汇总本轮各实例的满票状态，使用会话标识隔离旧通知。"""
+
+    def __init__(self, runtime, group, full):
+        self.runtime = runtime
+        self.group = tuple(group)
+        self.leader = group[0]
+        self.is_leader = runtime.name == self.leader
+        self.peers = self.group[1:] if self.is_leader else (self.leader,)
+        self.session = uuid.uuid4().hex if self.is_leader else None
+        self.started = time.time()
+        self.full = full
+        self.complete = False
+        self.finished = False
+        self.publish()
+
+    def publish(self):
+        if self.session is None:
+            return
+        payload = {'members': self.group, 'full': self.full,
+                   'complete': self.complete, 'finished': self.finished}
+        for peer in self.peers:
+            self.runtime.publish_battle_state('MetaDemonTicket', peer, self.session, payload)
+
+    def set_full(self):
+        self.full = True
+        self.publish()
+
+    def leader_state(self):
+        state = self.runtime.peer_battle_state('MetaDemonTicket', self.leader)
+        if state is None or tuple(state['payload'].get('members', ())) != self.group:
+            return None
+        if (self.session is None and state['updated'] < self.started
+                and (state['payload']['finished'] or state['payload']['complete'])):
+            return None
+        return state
+
+    def poll(self):
+        if time.time() - self.started >= 30:
+            missing = [peer for peer in self.peers if self.runtime.runner_task(peer) is None]
+            if missing:
+                logger.warning('刷票协同伙伴心跳失效，结束本轮：' + '、'.join(missing))
+                raise TicketPartnerFinished
+        if self.is_leader:
+            states = [self.runtime.peer_battle_state('MetaDemonTicket', peer) for peer in self.peers]
+            payloads = [state['payload'] for state in states
+                        if state is not None and state['session'] == self.session]
+            if self.full and len(payloads) == len(self.peers) and all(item['full'] for item in payloads):
+                self.complete = True
+                self.publish()
+                raise TicketsFull
+            if any(item['finished'] for item in payloads):
+                raise TicketPartnerFinished
+            return
+        state = self.leader_state()
+        if state is None:
+            return
+        if self.session != state['session']:
+            self.session = state['session']
+            self.publish()
+        if state['payload']['complete'] and self.full:
+            raise TicketsFull
+        if state['payload']['finished'] or state['payload']['complete']:
+            raise TicketPartnerFinished
+
+    def finish(self, complete):
+        if self.session is None and not self.is_leader:
+            state = self.leader_state()
+            if state is not None:
+                self.session = state['session']
+        self.complete = complete
+        self.finished = True
+        self.publish()
+
+
 def metademon_tickets_full(task) -> bool:
     """读取当前奖励截图的门票/上限；无有效上限或读数越界时不判满。"""
     # I_REWARD is the red-daruma settlement image; I_UI_REWARD is the
@@ -47,14 +125,9 @@ def metademon_tickets_full(task) -> bool:
 class TicketRewardMixin:
     def screenshot(self):
         result = super().screenshot()
-        peer = getattr(self, '_ticket_peer', '')
-        if peer and not self._ticket_farming_complete and self._battle_context is None:
-            status = self.config.cooperation_runtime.peer_task_completion(
-                'MetaDemonTicket', peer, self._ticket_phase_started)
-            if status == 'tickets_full' and self._ticket_full:
-                raise TicketsFull
-            if status == 'ticket_finished':
-                raise TicketPartnerFinished
+        link = getattr(self, '_ticket_link', None)
+        if link is not None and not self._ticket_farming_complete and self._battle_context is None:
+            link.poll()
         return result
 
     def check_ticket_reward(self):
@@ -62,12 +135,12 @@ class TicketRewardMixin:
             return
         if metademon_tickets_full(self):
             logger.info('门票已满')
-            peer = getattr(self, '_ticket_peer', '')
-            if not peer:
+            link = getattr(self, '_ticket_link', None)
+            if link is None:
                 raise TicketsFull
             self._ticket_full = True
-            self.config.cooperation_runtime.notify_task_completion('MetaDemonTicket', peer, 'tickets_full')
-            logger.info('本号门票已满，继续组队直到对方满票')
+            link.set_full()
+            logger.info('本号门票已满，继续组队直到全队满票')
 
     def _handle_reward(self, context, config):
         self.check_ticket_reward()
@@ -168,15 +241,20 @@ def run_ticket_farming(owner, mode) -> bool:
     config = getattr(owner, 'config', None)
     runtime = getattr(config, 'cooperation_runtime', None)
     peer = ''
+    group = ()
+    peers = ()
     if runtime is not None:
         meta = config.meta_demon_ticket
-        target = meta.invite_config.cooperation_script or runtime.peers.get('MetaDemonTicket', '')
-        if target and meta.general_config.user_status != ExplorationUserStatus.ALONE:
-            if runtime.matches_meta_demon_tickets(target):
-                peer = target
-            else:
+        targets = ticket_peer_names(meta.invite_config.cooperation_script)
+        target = targets[0] if targets else runtime.peers.get('MetaDemonTicket', '')
+        if meta.general_config.user_status != ExplorationUserStatus.ALONE:
+            if target and not runtime.matches_meta_demon_tickets(target):
                 logger.warning(f'超鬼王门票刷取协同配置不匹配：{target}，跳过本轮，避免按本号满票提前退出')
                 return False
+            group = runtime.ticket_group()
+            if group:
+                peers = group[1:] if runtime.name == group[0] else (group[0],)
+                peer = peers[0]
     local_full = tickets_full_before_farming(owner)
     if local_full and not peer:
         logger.info('超鬼王门票已满，跳过门票刷取')
@@ -196,22 +274,23 @@ def run_ticket_farming(owner, mode) -> bool:
     runner._battle_cooperation_prepared = True
     runner._ticket_farming_complete = False
     runner._ticket_full = local_full
+    runner._ticket_link = None
     runner.install_ticket_reward_hook()
     buff_opened = False
     cooperation_started = False
     result = False
     try:
         if peer:
-            runner._ticket_phase_started = runtime.begin_completion_phase('MetaDemonTicket', peer)
+            runtime.peers['MetaDemonTicket'] = peer
+            runner._ticket_peers = peers
+            runner._battle_cooperation_task = 'MetaDemonTicket'
+            runner._ticket_link = TicketCooperation(runtime, group, local_full)
+            cooperation_started = True
             if not runtime.prepare(config, 'MetaDemonTicket', peer, defer=False):
                 return False
-            cooperation_started = True
-            runtime.peers['MetaDemonTicket'] = peer
-            runner._ticket_peer = peer
-            runner._battle_cooperation_task = 'MetaDemonTicket'
+            runner._ticket_link.poll()
             if local_full:
-                runtime.notify_task_completion('MetaDemonTicket', peer, 'tickets_full')
-                logger.info('本号门票已满，继续组队直到对方满票')
+                logger.info('本号门票已满，继续组队直到全队满票')
         if mode == TicketMode.AWAKE:
             soul = runner._config.switch_soul_config
             if soul.enable or soul.enable_switch_by_name:
@@ -240,13 +319,14 @@ def run_ticket_farming(owner, mode) -> bool:
     except TicketsFull:
         result = True
         if cooperation_started:
-            logger.info('双方门票已满，结束协同刷取')
+            logger.info('全队门票已满，结束协同刷取')
     except TicketPartnerFinished:
         logger.info('协同伙伴已结束门票刷取，退出组队')
     finally:
         runner._ticket_farming_complete = True
         if cooperation_started:
-            runtime.notify_task_completion('MetaDemonTicket', peer, 'tickets_full' if result else 'ticket_finished')
+            runner._ticket_link.finish(result)
+            runtime.finish('MetaDemonTicket')
         if cooperation_started or (not peer and role != ExplorationUserStatus.ALONE) or buff_opened:
             runner.goto_page(pages.page_main)
         if buff_opened:

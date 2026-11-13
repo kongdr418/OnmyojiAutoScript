@@ -1,6 +1,9 @@
 """超鬼王门票刷取（独立任务）：配置、旧配置迁移、满票判定与协同。"""
 from types import SimpleNamespace
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 from tasks.MetaDemonTicket.config import (
@@ -9,7 +12,11 @@ from tasks.MetaDemonTicket.config import (
 from tasks.MetaDemonTicket.ticket_farming import (
     TicketPartnerFinished, TicketsFull, metademon_tickets_full, run_ticket_farming,
     ticket_farming_config, tickets_full_before_farming,
+    TicketCooperation, TicketRewardMixin,
 )
+from module.cooperation import Cooperation
+from pydantic import ValidationError
+from tasks.Component.GeneralInvite.config_invite import InviteConfig
 from tasks.Exploration.config import AutoRotate, UpType, UserStatus as ExplorationUserStatus
 from tasks.EvoZone.config import KirinType, Layer
 from tasks.MetaDemon.assets import MetaDemonAssets
@@ -17,6 +24,18 @@ from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
 
 
 class TicketConfigChecks(unittest.TestCase):
+    def test_ticket_invite_accepts_two_profiles_with_multiline_ui(self):
+        for value in ('first\nsecond', 'first,second', 'first；second', 'first\nfirst\nsecond'):
+            conf = MetaDemonTicket(invite_config={'cooperation_script': value})
+            self.assertEqual(conf.invite_config.cooperation_script, 'first\nsecond')
+            schema = conf.invite_config.model_json_schema()
+            self.assertEqual(schema['properties']['cooperation_script']['type'], 'multi_line')
+        for value in ('first\nsecond\nthird', '../profile'):
+            with self.assertRaises(ValidationError):
+                MetaDemonTicket(invite_config={'cooperation_script': value})
+        with self.assertRaises(ValidationError):
+            InviteConfig(cooperation_script='first\nsecond')
+
     def test_defaults_and_single_mode(self):
         conf = MetaDemonTicket()
         self.assertEqual(conf.general_config.mode, TicketMode.AWAKE)
@@ -181,6 +200,180 @@ class TicketFarmingChecks(unittest.TestCase):
                      patch('tasks.MetaDemonTicket.ticket_farming.AwakeTicketTask', return_value=runner):
                     self.assertFalse(run_ticket_farming(owner, TicketMode.AWAKE))
                 getattr(runner, method).assert_called_once()
+
+
+class TicketGroupCompletionChecks(unittest.TestCase):
+    def setUp(self):
+        self.folder = tempfile.TemporaryDirectory()
+        self.addCleanup(self.folder.cleanup)
+        self.root = Path(self.folder.name)
+        (self.root / 'config').mkdir()
+        self.group = ('leader', 'member1', 'member2')
+        self.runtimes = {}
+        for name in self.group:
+            role = 'leader' if name == 'leader' else 'member'
+            peer = 'member1\nmember2' if role == 'leader' else 'leader'
+            settings = MetaDemonTicket(scheduler={'enable': True}, general_config={'user_status': role},
+                                      invite_config={'cooperation_script': peer})
+            (self.root / 'config' / f'{name}.json').write_text(
+                json.dumps({'meta_demon_ticket': settings.model_dump(mode='json')}, ensure_ascii=False),
+                encoding='utf-8')
+            runtime = Cooperation(name, root=self.root)
+            runtime.publish('MetaDemonTicket')
+            self.runtimes[name] = runtime
+
+    def links(self, full=(False, False, False)):
+        links = [TicketCooperation(self.runtimes[name], self.group, value)
+                 for name, value in zip(self.group, full)]
+        for member in links[1:]:
+            member.poll()
+        return links
+
+    def test_leader_requires_everyone_full_and_broadcasts_completion(self):
+        leader, first, second = self.links((True, True, False))
+        leader.poll()
+        first.poll()
+        self.assertFalse(leader.complete)
+        second.set_full()
+        with self.assertRaises(TicketsFull):
+            leader.poll()
+        for member in (first, second):
+            with self.assertRaises(TicketsFull):
+                member.poll()
+
+    def test_two_person_cooperation_uses_the_same_completion_flow(self):
+        group = self.group[:2]
+        leader = TicketCooperation(self.runtimes['leader'], group, True)
+        member = TicketCooperation(self.runtimes['member1'], group, True)
+        member.poll()
+        with self.assertRaises(TicketsFull):
+            leader.poll()
+        with self.assertRaises(TicketsFull):
+            member.poll()
+
+    def test_member_exit_is_relayed_by_leader(self):
+        leader, first, second = self.links()
+        first.finish(False)
+        with self.assertRaises(TicketPartnerFinished):
+            leader.poll()
+        leader.finish(False)
+        with self.assertRaises(TicketPartnerFinished):
+            second.poll()
+
+    def test_missing_member_heartbeat_stops_group_after_startup_grace(self):
+        leader, first, second = self.links()
+        with self.runtimes['leader'].connect() as db:
+            db.execute('DELETE FROM runners WHERE name=?', ('member1',))
+        leader.poll()
+        leader.started -= 31
+        with self.assertRaises(TicketPartnerFinished):
+            leader.poll()
+        leader.finish(False)
+        with self.assertRaises(TicketPartnerFinished):
+            second.poll()
+
+    def test_old_full_states_are_ignored_after_leader_restart(self):
+        old_leader, first, second = self.links((True, True, True))
+        with self.assertRaises(TicketsFull):
+            old_leader.poll()
+        leader = TicketCooperation(self.runtimes['leader'], self.group, True)
+        self.assertNotEqual(leader.session, old_leader.session)
+        leader.poll()
+        first.poll()
+        leader.poll()
+        second.poll()
+        with self.assertRaises(TicketsFull):
+            leader.poll()
+
+    def test_late_starting_member_ignores_completed_previous_session(self):
+        leader, first, second = self.links((True, True, True))
+        with self.assertRaises(TicketsFull):
+            leader.poll()
+        leader.finish(True)
+        restarted = TicketCooperation(self.runtimes['member1'], self.group, False)
+        restarted.poll()
+        self.assertIsNone(restarted.session)
+        next_leader = TicketCooperation(self.runtimes['leader'], self.group, False)
+        restarted.poll()
+        self.assertEqual(restarted.session, next_leader.session)
+        next_leader.poll()
+
+    def test_member_can_start_before_leader_publishes_a_session(self):
+        member = TicketCooperation(self.runtimes['member1'], self.group, True)
+        member.poll()
+        self.assertIsNone(member.session)
+        leader = TicketCooperation(self.runtimes['leader'], self.group, False)
+        member.poll()
+        self.assertEqual(member.session, leader.session)
+        state = self.runtimes['leader'].peer_battle_state('MetaDemonTicket', 'member1')
+        self.assertTrue(state['payload']['full'])
+
+    def test_failed_group_preparation_publishes_stop_to_both_members(self):
+        runtime = self.runtimes['leader']
+        settings = MetaDemonTicket.model_validate(runtime.read('leader')['meta_demon_ticket'])
+        owner = SimpleNamespace(config=SimpleNamespace(meta_demon_ticket=settings, cooperation_runtime=runtime),
+                                device=SimpleNamespace(image=object()))
+        runner = Mock()
+        with patch('tasks.MetaDemonTicket.ticket_farming.tickets_full_before_farming', return_value=False), \
+                patch('tasks.MetaDemonTicket.ticket_farming.AwakeTicketTask', return_value=runner), \
+                patch.object(runtime, 'prepare', return_value=False):
+            self.assertFalse(run_ticket_farming(owner, TicketMode.AWAKE))
+        runner.run_leader.assert_not_called()
+        for name in ('member1', 'member2'):
+            state = self.runtimes[name].peer_battle_state('MetaDemonTicket', 'leader')
+            self.assertTrue(state['payload']['finished'])
+            self.assertFalse(state['payload']['complete'])
+
+    def test_starting_task_clears_only_its_previous_outgoing_state(self):
+        leader = self.runtimes['leader']
+        leader.publish_battle_state('MetaDemonTicket', 'member1', 'old', {'full': True})
+        leader.publish_battle_state('MetaDemonAssistance', 'member1', 'keep', {'full': True})
+        leader.publish('')
+        leader.publish('MetaDemonTicket')
+        member = self.runtimes['member1']
+        self.assertIsNone(member.peer_battle_state('MetaDemonTicket', 'leader'))
+        self.assertEqual(member.peer_battle_state('MetaDemonAssistance', 'leader')['session'], 'keep')
+
+    def test_completion_waits_until_current_battle_has_finished(self):
+        class Frames:
+            def screenshot(self):
+                return 'frame'
+
+        class Runner(TicketRewardMixin, Frames):
+            pass
+
+        runner = Runner()
+        runner._ticket_farming_complete = False
+        runner._battle_context = object()
+        runner._ticket_link = Mock()
+        runner._ticket_link.poll.side_effect = TicketsFull
+        self.assertEqual(runner.screenshot(), 'frame')
+        runner._ticket_link.poll.assert_not_called()
+        runner._battle_context = None
+        with self.assertRaises(TicketsFull):
+            runner.screenshot()
+
+    def test_pre_filled_leader_stays_until_both_members_confirm_full(self):
+        runtime = self.runtimes['leader']
+        settings = MetaDemonTicket.model_validate(runtime.read('leader')['meta_demon_ticket'])
+        owner = SimpleNamespace(config=SimpleNamespace(meta_demon_ticket=settings, cooperation_runtime=runtime),
+                                device=SimpleNamespace(image=object()))
+        runner = Mock()
+        def run_leader():
+            self.assertEqual(runner._ticket_peers, ('member1', 'member2'))
+            for name in ('member1', 'member2'):
+                member = TicketCooperation(self.runtimes[name], self.group, True)
+                member.poll()
+            runner._ticket_link.poll()
+        runner.run_leader.side_effect = run_leader
+        with patch('tasks.MetaDemonTicket.ticket_farming.tickets_full_before_farming', return_value=True), \
+                patch('tasks.MetaDemonTicket.ticket_farming.AwakeTicketTask', return_value=runner):
+            self.assertTrue(run_ticket_farming(owner, TicketMode.AWAKE))
+        runner.run_leader.assert_called_once()
+        for name in ('member1', 'member2'):
+            state = self.runtimes[name].peer_battle_state('MetaDemonTicket', 'leader')
+            self.assertTrue(state['payload']['complete'])
+            self.assertTrue(state['payload']['finished'])
 
 
 if __name__ == '__main__':

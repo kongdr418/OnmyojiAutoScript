@@ -15,6 +15,7 @@
   "friend_names": "Friends to share with",
   "poll_interval": "Assist poll interval (seconds)",
   "cooperation_script": "Cooperation script",
+  "ticket_cooperation_script_help": "Enter local OAS profile names. Leaders enter one member per line, up to two for Awakening or one for Exploration. Members enter the leader. Enable ticket farming with the same mode in every profile. Confirm all members are in the room before starting and finish when everyone has full tickets. Start all instances first. The runtime limit applies.",
   "high_star_powerful_enable": "Enable powerful pursuit on high stars",
   "powerful_count": "Powerful pursuit count",
   "鬼王战斗": "Boss battle",
