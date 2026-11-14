@@ -12,7 +12,7 @@ from tasks.MetaDemonTicket.config import (
 from tasks.MetaDemonTicket.ticket_farming import (
     TicketPartnerFinished, TicketsFull, metademon_tickets_full, run_ticket_farming,
     ticket_farming_config, tickets_full_before_farming,
-    TicketCooperation, TicketRewardMixin,
+    AwakeTicketTask, TicketCooperation, TicketRewardMixin,
 )
 from module.cooperation import Cooperation
 from module.exception import GamePageUnknownError
@@ -22,6 +22,9 @@ from tasks.Exploration.config import AutoRotate, UpType, UserStatus as Explorati
 from tasks.EvoZone.config import KirinType, Layer
 from tasks.MetaDemon.assets import MetaDemonAssets
 from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
+from tasks.Component.GeneralBattle.config_general_battle import GeneralBattleConfig
+from tasks.Component.GeneralBattle.general_battle import BattleAction
+from tasks.GameUi.page import page_battle, page_battle_prepare, page_battle_result, page_reward
 
 
 class TicketConfigChecks(unittest.TestCase):
@@ -222,6 +225,7 @@ class TicketRewardExitChecks(unittest.TestCase):
         runner.match_page_once = Mock(side_effect=lambda page: runner.reward_visible)
         runner.appear_then_click = Mock(return_value=False)
         runner.click = Mock()
+        runner.check_ticket_reward = Mock()
         return runner
 
     def test_swallowed_reward_click_is_retried_until_page_closes(self):
@@ -237,10 +241,80 @@ class TicketRewardExitChecks(unittest.TestCase):
 
     def test_active_farming_leaves_reward_handling_to_battle_loop(self):
         runner = self.runner(complete=False)
+        runner._battle_context = object()
         self.assertEqual(runner.screenshot(), 1)
         runner.click.assert_not_called()
         runner.match_page_once.assert_not_called()
-        runner._ticket_link.poll.assert_called_once()
+        runner._ticket_link.poll.assert_not_called()
+
+    def test_active_farming_closes_orphan_reward_after_reading_tickets(self):
+        runner = self.runner(complete=False)
+        order = []
+        runner.check_ticket_reward.side_effect = lambda: order.append('read_tickets')
+        def click(*args, **kwargs):
+            order.append('click')
+            if runner.click.call_count == 2:
+                runner.reward_visible = False
+        runner.click.side_effect = click
+        self.assertEqual(runner.screenshot(), 3)
+        self.assertEqual(order, ['read_tickets', 'click', 'read_tickets', 'click'])
+        self.assertEqual(runner._ticket_link.poll.call_count, 3)
+
+    def test_orphan_reward_stops_at_full_tickets_before_clicking(self):
+        runner = self.runner(complete=False)
+        runner.check_ticket_reward.side_effect = TicketsFull
+        with self.assertRaises(TicketsFull):
+            runner.screenshot()
+        runner.click.assert_not_called()
+
+    def test_orphan_reward_keeps_polling_partner_status(self):
+        runner = self.runner(complete=False)
+        runner._ticket_link.poll.side_effect = [None, TicketPartnerFinished]
+        with self.assertRaises(TicketPartnerFinished):
+            runner.screenshot()
+        runner.click.assert_called_once()
+
+    def test_awake_exit_marker_waits_for_settlement(self):
+        runner = object.__new__(AwakeTicketTask)
+        runner._evaluate_exit_matcher = Mock(return_value=True)
+        for last_page in (None, page_battle_prepare, page_battle):
+            with self.subTest(last_page=last_page):
+                context = SimpleNamespace(last_page=last_page, reward_no_battle_ts=None, is_win=False)
+                result = runner._handle_missing_battle_page(context, GeneralBattleConfig(), object())
+                self.assertEqual(result, BattleAction.CONTINUE)
+        runner._evaluate_exit_matcher.assert_not_called()
+
+    def test_awake_exit_marker_preserves_settled_win_and_loss(self):
+        runner = object.__new__(AwakeTicketTask)
+        runner._evaluate_exit_matcher = Mock(return_value=True)
+        for last_page in (page_battle_result, page_reward):
+            for is_win, expected in ((True, BattleAction.EXIT_WIN), (False, BattleAction.EXIT_LOSE)):
+                with self.subTest(last_page=last_page, is_win=is_win):
+                    context = SimpleNamespace(last_page=last_page, reward_no_battle_ts=None, is_win=is_win)
+                    result = runner._handle_missing_battle_page(context, GeneralBattleConfig(), object())
+                    self.assertEqual(result, expected)
+
+    def test_awake_short_battle_can_go_directly_to_reward(self):
+        runner = object.__new__(AwakeTicketTask)
+        runner.config = SimpleNamespace(meta_demon_ticket=MetaDemonTicket(
+            general_config={'user_status': 'alone'}))
+        runner.device = Mock()
+        runner.current_count = 0
+        runner._custom_pages_registered = True
+        runner._battle_shared_state = {}
+        runner.screenshot = Mock()
+        runner.appear = Mock(return_value=False)
+        runner.appear_then_click = Mock(return_value=False)
+        runner.click = Mock()
+        runner.check_ticket_reward = Mock()
+        runner._evaluate_exit_matcher = Mock(return_value=True)
+        with patch('tasks.Component.GeneralBattle.general_battle.GameUi.detect_page_in',
+                   side_effect=[None, page_reward, None]):
+            self.assertTrue(runner.run_general_battle(exit_matcher=object()))
+        self.assertEqual(runner.screenshot.call_count, 3)
+        runner.check_ticket_reward.assert_called_once()
+        runner._evaluate_exit_matcher.assert_called_once()
+        self.assertIsNone(runner._battle_context)
 
     def test_stuck_reward_exit_has_a_bounded_retry(self):
         runner = self.runner()

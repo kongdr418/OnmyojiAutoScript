@@ -128,14 +128,19 @@ class TicketRewardMixin:
         deadline = time.monotonic() + 30
         while True:
             result = super().screenshot()
-            if getattr(self, '_ticket_farming_complete', False) and self.match_page_once(page_reward):
+            complete = getattr(self, '_ticket_farming_complete', False)
+            outside_battle = getattr(self, '_battle_context', None) is None
+            link = getattr(self, '_ticket_link', None)
+            if link is not None and not complete and outside_battle:
+                link.poll()
+            # 外层等待副本/房间时也接管遗留奖励页，先读门票再点击继续。
+            if (complete or outside_battle) and self.match_page_once(page_reward):
+                if not complete:
+                    self.check_ticket_reward()
                 if time.monotonic() >= deadline:
-                    raise GamePageUnknownError('刷票结束后奖励页面持续未关闭')
+                    raise GamePageUnknownError('刷票奖励页面持续未关闭')
                 handle_battle_reward_page(self)
                 continue
-            link = getattr(self, '_ticket_link', None)
-            if link is not None and not self._ticket_farming_complete and self._battle_context is None:
-                link.poll()
             return result
 
     def check_ticket_reward(self):
@@ -163,6 +168,12 @@ class TicketRewardMixin:
 
 
 class AwakeTicketTask(TicketRewardMixin, AwakeTask):
+    def _handle_missing_battle_page(self, context, config, exit_matcher):
+        """结算后再检查退出标志，兼容进场抖动和直接进入奖励页的短战斗。"""
+        if not self._in_settlement_stage(context, None):
+            exit_matcher = None
+        return super()._handle_missing_battle_page(context, config, exit_matcher)
+
     @cached_property
     def _config(self):
         return ticket_farming_config(self.config.meta_demon_ticket, TicketMode.AWAKE)
