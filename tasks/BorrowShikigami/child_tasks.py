@@ -3,12 +3,18 @@ from module.logger import logger
 from tasks.AutoStory.script_task import handle_startup_popup
 from tasks.BorrowShikigami.assets import BorrowShikigamiAssets
 from tasks.ExperienceYoukai.script_task import ScriptTask as ExperienceYoukaiTask
-from tasks.GameUi.page import any_of, page_team
+from tasks.GameUi.page import any_of, page_battle, page_team
 from tasks.Restart.assets import RestartAssets
 
 
 class LevelingBattleFailed(Exception):
     pass
+
+
+def register_beginner_battle(task):
+    """为起号任务的页面副本补充左下角“自动”识别。"""
+    page = task.navigator.resolve_page(page_battle)
+    page.recognizer = any_of(page.recognizer, task.O_BATTLE_AUTO)
 
 
 def handle_leveling_popup(task) -> bool:
@@ -36,6 +42,7 @@ def handle_leveling_popup(task) -> bool:
 class LevelingBattleMixin:
     def __init__(self, config, device):
         super().__init__(config, device)
+        register_beginner_battle(self)
         self.successful_battles = 0
 
     def screenshot(self):

@@ -8,6 +8,7 @@ from tasks.AutoStory.script_task import ScriptTask as AutoStoryTask
 from tasks.BorrowShikigami.assets import BorrowShikigamiAssets
 from tasks.BorrowShikigami.child_tasks import (
     LevelingBattleFailed, LevelingBattleMixin, LevelingExperienceTask, handle_leveling_popup,
+    register_beginner_battle,
 )
 from tasks.Component.config_base import Time
 from tasks.Component.GeneralBattle.general_battle import BattleAction
@@ -64,6 +65,7 @@ class FirstChapterTask(LevelingBattleMixin, ExplorationFightTask):
 class ScriptTask(AutoStoryTask, BorrowShikigamiAssets):
     def __init__(self, config, device):
         super().__init__(config, device)
+        register_beginner_battle(self)
         register_beginner_exploration(self)
 
     def screenshot(self):
