@@ -6,6 +6,7 @@ from cached_property import cached_property
 
 from module.logger import logger
 from module.cooperation import ticket_peer_names
+from module.exception import GamePageUnknownError
 from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
 from tasks.EvoZone.config import EvoZone, EvoZoneConfig, UserStatus as AwakeUserStatus
 from tasks.EvoZone.script_task import ScriptTask as AwakeTask
@@ -14,7 +15,7 @@ from tasks.Exploration.config import (
     UpType, UserStatus as ExplorationUserStatus,
 )
 from tasks.Exploration.script_task import ScriptTask as ExplorationTask
-from tasks.GameUi.default_pages import page_reward
+from tasks.GameUi.default_pages import page_reward, handle_battle_reward_page
 import tasks.GameUi.page as pages
 from tasks.MetaDemonTicket.config import TicketMode, ExplorationTarget
 from tasks.MetaDemon.assets import MetaDemonAssets
@@ -124,11 +125,18 @@ def metademon_tickets_full(task) -> bool:
 
 class TicketRewardMixin:
     def screenshot(self):
-        result = super().screenshot()
-        link = getattr(self, '_ticket_link', None)
-        if link is not None and not self._ticket_farming_complete and self._battle_context is None:
-            link.poll()
-        return result
+        deadline = time.monotonic() + 30
+        while True:
+            result = super().screenshot()
+            if getattr(self, '_ticket_farming_complete', False) and self.match_page_once(page_reward):
+                if time.monotonic() >= deadline:
+                    raise GamePageUnknownError('刷票结束后奖励页面持续未关闭')
+                handle_battle_reward_page(self)
+                continue
+            link = getattr(self, '_ticket_link', None)
+            if link is not None and not self._ticket_farming_complete and self._battle_context is None:
+                link.poll()
+            return result
 
     def check_ticket_reward(self):
         if getattr(self, '_ticket_farming_complete', False) or getattr(self, '_ticket_full', False):
@@ -327,6 +335,7 @@ def run_ticket_farming(owner, mode) -> bool:
         if cooperation_started:
             runner._ticket_link.finish(result)
             runtime.finish('MetaDemonTicket')
+        runner.screenshot()
         if cooperation_started or (not peer and role != ExplorationUserStatus.ALONE) or buff_opened:
             runner.goto_page(pages.page_main)
         if buff_opened:

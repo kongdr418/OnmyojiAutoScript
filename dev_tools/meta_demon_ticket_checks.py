@@ -15,6 +15,7 @@ from tasks.MetaDemonTicket.ticket_farming import (
     TicketCooperation, TicketRewardMixin,
 )
 from module.cooperation import Cooperation
+from module.exception import GamePageUnknownError
 from pydantic import ValidationError
 from tasks.Component.GeneralInvite.config_invite import InviteConfig
 from tasks.Exploration.config import AutoRotate, UpType, UserStatus as ExplorationUserStatus
@@ -200,6 +201,73 @@ class TicketFarmingChecks(unittest.TestCase):
                      patch('tasks.MetaDemonTicket.ticket_farming.AwakeTicketTask', return_value=runner):
                     self.assertFalse(run_ticket_farming(owner, TicketMode.AWAKE))
                 getattr(runner, method).assert_called_once()
+
+
+class TicketRewardExitChecks(unittest.TestCase):
+    def runner(self, complete=True):
+        class Frames:
+            def screenshot(self):
+                self.frames += 1
+                return self.frames
+
+        class Runner(TicketRewardMixin, Frames):
+            pass
+
+        runner = Runner()
+        runner.frames = 0
+        runner.reward_visible = True
+        runner._ticket_farming_complete = complete
+        runner._ticket_link = Mock()
+        runner._battle_context = None
+        runner.match_page_once = Mock(side_effect=lambda page: runner.reward_visible)
+        runner.appear_then_click = Mock(return_value=False)
+        runner.click = Mock()
+        return runner
+
+    def test_swallowed_reward_click_is_retried_until_page_closes(self):
+        runner = self.runner()
+        def click(*args, **kwargs):
+            if runner.click.call_count == 2:
+                runner.reward_visible = False
+            return runner.click.call_count == 2
+        runner.click.side_effect = click
+        self.assertEqual(runner.screenshot(), 3)
+        self.assertEqual(runner.click.call_count, 2)
+        runner._ticket_link.poll.assert_not_called()
+
+    def test_active_farming_leaves_reward_handling_to_battle_loop(self):
+        runner = self.runner(complete=False)
+        self.assertEqual(runner.screenshot(), 1)
+        runner.click.assert_not_called()
+        runner.match_page_once.assert_not_called()
+        runner._ticket_link.poll.assert_called_once()
+
+    def test_stuck_reward_exit_has_a_bounded_retry(self):
+        runner = self.runner()
+        with patch('tasks.MetaDemonTicket.ticket_farming.time.monotonic', side_effect=[0, 0, 31]):
+            with self.assertRaisesRegex(GamePageUnknownError, '奖励页面持续未关闭'):
+                runner.screenshot()
+        self.assertEqual(runner.click.call_count, 1)
+
+    def test_final_reward_cleanup_runs_before_return_navigation_for_every_role(self):
+        for role, method in (('leader', 'run_leader'), ('member', 'run_member'), ('alone', 'run_alone')):
+            with self.subTest(role=role):
+                settings = MetaDemonTicket(general_config={'user_status': role})
+                owner = SimpleNamespace(config=SimpleNamespace(meta_demon_ticket=settings, cooperation_runtime=None),
+                                        device=SimpleNamespace())
+                runner = Mock()
+                runner._config = ticket_farming_config(settings, TicketMode.AWAKE)
+                getattr(runner, method).side_effect = TicketsFull
+                order = []
+                def screenshot():
+                    self.assertTrue(runner._ticket_farming_complete)
+                    order.append('reward_cleanup')
+                runner.screenshot.side_effect = screenshot
+                runner.goto_page.side_effect = lambda *args, **kwargs: order.append('return_main')
+                with patch('tasks.MetaDemonTicket.ticket_farming.tickets_full_before_farming', return_value=False), \
+                        patch('tasks.MetaDemonTicket.ticket_farming.AwakeTicketTask', return_value=runner):
+                    self.assertTrue(run_ticket_farming(owner, TicketMode.AWAKE))
+                self.assertEqual(order, ['reward_cleanup'] + (['return_main'] if role != 'alone' else []))
 
 
 class TicketGroupCompletionChecks(unittest.TestCase):
