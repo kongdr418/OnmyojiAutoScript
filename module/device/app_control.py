@@ -11,7 +11,7 @@ class AppControl(Adb, Uiautomator2):
     hierarchy: etree._Element
     _app_u2_family = ['uiautomator2', 'minitouch', 'scrcpy']
 
-    def app_is_alive(self, package_name=None) -> bool:
+    def app_is_alive(self, package_name=None, *, raise_on_error=False) -> bool:
         """
         判断目标应用进程是否仍然存活，不要求当前位于前台。
 
@@ -23,6 +23,8 @@ class AppControl(Adb, Uiautomator2):
         try:
             result = self.adb_shell(['pidof', package_name])
         except Exception as e:
+            if raise_on_error:
+                raise
             logger.info(f'Check app alive by pidof failed: {e}')
             return False
 
@@ -44,14 +46,16 @@ class AppControl(Adb, Uiautomator2):
         return package == self.package
 
     def app_start(self):
-        method = self.config.script.device.screenshot_method
-        logger.info(f'App start: {self.package}')
-        # if self.config.Emulator_Serial == 'wsa-0':
-        #     self.app_start_wsa(display=0)
-        if method in AppControl._app_u2_family:
-            self.app_start_uiautomator2()
-        else:
-            self.app_start_adb()
+        from module.scrolls.storage import game_start_lease
+        with game_start_lease(self.config, self.serial):
+            method = self.config.script.device.screenshot_method
+            logger.info(f'App start: {self.package}')
+            # if self.config.Emulator_Serial == 'wsa-0':
+            #     self.app_start_wsa(display=0)
+            if method in AppControl._app_u2_family:
+                self.app_start_uiautomator2()
+            else:
+                self.app_start_adb()
 
     def app_stop(self):
         method = self.config.script.device.screenshot_method

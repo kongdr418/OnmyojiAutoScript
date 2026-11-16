@@ -7,6 +7,7 @@ config/*.yaml
 !config/deploy.*.yaml
 config/*.json
 config/tmp*
+/config/scrolls/
 !config/template*.json
 config/*.crt
 *.pyw

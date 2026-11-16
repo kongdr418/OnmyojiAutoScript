@@ -1,0 +1,34 @@
+
+client_gate.protomobile.servercommon.proto"#
+EncryptString
+
+encryptstr ("
+SessionSeed
+seed ("k
+
+SessionKey
+random_padding_header (
+session_key (
+seed (
+random_padding_tail (2≤
+IGateService8
+seed_request.mobile.server.Void.mobile.server.Void@
+session_key.mobile.server.EncryptString.mobile.server.VoidJ
+connect_server#.mobile.server.ConnectServerRequest.mobile.server.VoidC
+entity_message.mobile.server.EntityMessage.mobile.server.VoidA
+soul_message.mobile.server.EntityMessage.mobile.server.Void?
+reg_md5_index.mobile.server.Md5OrIndex.mobile.server.VoidE
+service_message.mobile.server.ServiceMessage.mobile.server.VoidJ
+forward_aoi_pos_info.mobile.server.ForwardAoiInfo.mobile.server.Void2≥
+IGateClient=
+
+seed_reply.mobile.server.SessionSeed.mobile.server.Void:
+session_key_ok.mobile.server.Void.mobile.server.VoidG
+connect_reply!.mobile.server.ConnectServerReply.mobile.server.Void?
+create_entity.mobile.server.EntityInfo.mobile.server.Void@
+destroy_entity.mobile.server.EntityInfo.mobile.server.VoidC
+entity_message.mobile.server.EntityMessage.mobile.server.VoidA
+chat_to_client.mobile.server.OutBandInfo.mobile.server.Void?
+reg_md5_index.mobile.server.Md5OrIndex.mobile.server.VoidL
+dispatch_filter_message.mobile.server.FilterMessage.mobile.server.VoidF
+forward_aoi_info.mobile.server.ForwardAoiInfo.mobile.server.VoidBÄê
