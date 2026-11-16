@@ -67,13 +67,32 @@ class RedroidFiles:
         return data
 
     def game_alive(self):
+        alive = []
         for package in self.packages():
             result = self.command(['pidof', package], allow_failure=True)
             if result.returncode not in (0, 1):
                 raise OSError('无法检查 redroid 游戏运行状态，请检查 ADB 连接')
             pids = result.stdout.split()
             if pids and all(pid.isdigit() for pid in pids):
-                return True
+                alive.append(package)
+                continue
             if result.returncode == 0 or pids or result.stderr:
                 raise OSError('无法确认 redroid 游戏运行状态，请重试')
-        return False
+        if len(alive) > 1:
+            raise RuntimeError('当前设备有多个阴阳师客户端运行，请在配置中明确选择游戏包名')
+        if alive:
+            self.device.package = alive[0]
+        return bool(alive)
+
+    def game_runtime(self):
+        if not self.game_alive():
+            raise RuntimeError('游戏进程已退出，请重试查询')
+        pids = self.command(['pidof', self.device.package]).stdout.split()
+        if len(pids) != 1 or not pids[0].isdigit():
+            raise RuntimeError('无法唯一确认阴阳师主进程')
+        pid = int(pids[0])
+        stat = self.root_command(['cat', f'/proc/{pid}/stat']).decode('utf-8')
+        fields = stat.rsplit(')', 1)[-1].split()
+        if len(fields) < 20 or not fields[19].isdigit():
+            raise RuntimeError('无法校验 redroid 游戏进程')
+        return ((pid, fields[19]),)

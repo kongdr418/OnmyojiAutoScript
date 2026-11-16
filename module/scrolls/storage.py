@@ -1,9 +1,10 @@
-"""Per-device query leases and Windows-user encrypted authorization."""
+"""Per-device query leases and platform-appropriate encrypted authorization."""
 import ctypes
 from contextlib import contextmanager
 import hashlib
 import json
 import os
+import stat
 from pathlib import Path
 import uuid
 
@@ -93,9 +94,53 @@ def atomic_write(path, data):
         temporary.unlink(missing_ok=True)
 
 
+_PORTABLE_HEADER = b'OASKEY1\x00'
+
+
+def _portable_key(create=False):
+    ROOT.mkdir(mode=0o700, parents=True, exist_ok=True)
+    path = ROOT / '.credential-key'
+    with FileLock(str(ROOT / '.credential-key.lock')).acquire(timeout=5):
+        if create and not path.exists():
+            descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+            with os.fdopen(descriptor, 'wb') as stream:
+                stream.write(os.urandom(32))
+                stream.flush()
+                os.fsync(stream.fileno())
+        try:
+            descriptor = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+        except FileNotFoundError as error:
+            raise ValueError('本地凭证密钥缺失，请恢复 config/scrolls 中的密钥或重新读取账号') from error
+        with os.fdopen(descriptor, 'rb') as stream:
+            metadata = os.fstat(stream.fileno())
+            if (not stat.S_ISREG(metadata.st_mode) or metadata.st_size != 32
+                    or (os.name == 'posix' and (metadata.st_uid != os.geteuid() or metadata.st_mode & 0o077))):
+                raise ValueError('本地凭证密钥无效或权限不安全，应由运行 OAS 的用户持有且权限为 600')
+            return stream.read(33)
+
+
+def _protect_portable(data, decrypt=False):
+    from cryptography.exceptions import InvalidTag
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    if decrypt:
+        if not data.startswith(_PORTABLE_HEADER) or len(data) < len(_PORTABLE_HEADER) + 12 + 16:
+            raise ValueError('凭证格式不适用于当前平台，请重新读取本地账号')
+        nonce = data[len(_PORTABLE_HEADER):len(_PORTABLE_HEADER) + 12]
+        try:
+            return AESGCM(_portable_key()).decrypt(nonce, data[len(_PORTABLE_HEADER) + 12:], _PORTABLE_HEADER)
+        except InvalidTag as error:
+            raise ValueError('本地凭证校验失败，请确认密钥与凭证配套或重新读取账号') from error
+    nonce = os.urandom(12)
+    return _PORTABLE_HEADER + nonce + AESGCM(_portable_key(create=True)).encrypt(nonce, data, _PORTABLE_HEADER)
+
+
 def protect(data, decrypt=False):
+    if os.name == 'posix':
+        return _protect_portable(data, decrypt)
     if os.name != 'nt':
-        raise RuntimeError('本地授权加密存储目前支持 Windows 上运行的 OAS')
+        raise RuntimeError('当前系统不支持本地凭证加密存储')
+    if decrypt and data.startswith(_PORTABLE_HEADER):
+        raise ValueError('凭证属于 Linux 环境，请在当前系统重新读取本地账号')
     from ctypes import wintypes
 
     class Blob(ctypes.Structure):

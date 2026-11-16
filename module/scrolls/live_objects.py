@@ -92,6 +92,7 @@ class GuestObjects:
         self.data_pages = {}
         self.reference_pages = None
         self.reference_locations = None
+        self.field_cache = {}
 
     def check_time(self):
         if time.monotonic() > self.deadline:
@@ -248,6 +249,28 @@ class GuestObjects:
         entries = keys + 32 + (1 << logbytes)
         result = {}
         wanted = set(wanted) if wanted is not None else None
+        cache = getattr(self, 'field_cache', None)
+        if cache is None:
+            self.field_cache = cache = {}
+        cache_key = (keys, frozenset(wanted)) if wanted is not None else None
+        if cache_key in cache:
+            try:
+                for name, index in cache[cache_key].items():
+                    if not 0 <= index < size:
+                        raise ValueError('Cached dictionary field moved')
+                    item = entries + index * (16 if kind else 24)
+                    key = self.pointer(item if kind else item + 8)
+                    value = self.pointer(values + index * 8) if values else self.pointer(item + (8 if kind else 16))
+                    if not key or not value or self.object(key) != name:
+                        raise ValueError('Cached dictionary field changed')
+                    result[name] = value
+                if wanted <= result.keys():
+                    return result
+            except (ValueError, KeyError, TypeError, UnicodeError, struct.error):
+                pass
+            cache.pop(cache_key, None)
+            result.clear()
+        positions = {}
         for index in range(size):
             item = entries + index * (16 if kind else 24)
             key = self.pointer(item if kind else item + 8)
@@ -264,10 +287,13 @@ class GuestObjects:
                     continue
                 if wanted is None or name in wanted:
                     result[name] = value
+                    positions[name] = index
                 if wanted is not None and wanted <= result.keys():
                     break
         if wanted is not None and not wanted <= result.keys():
             raise ValueError('Required live dictionary fields are unavailable')
+        if wanted is not None:
+            cache[cache_key] = positions
         return result
 
     def object(self, address, depth=0):
@@ -361,6 +387,8 @@ class GuestObjects:
         def currency_counts(address):
             if fragment_ids is None:
                 return self.object(address)
+            if hasattr(self, 'currency_values'):
+                return self.currency_values(address, fragment_ids)
             wanted = {str(value) for value in fragment_ids.values()}
             return {key: self.object(value) for key, value in self.dictionary(address).items()
                     if str(key) in wanted}

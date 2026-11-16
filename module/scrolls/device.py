@@ -1,5 +1,6 @@
 """Use OAS configuration, platform discovery and ADB without starting the game."""
 import ipaddress
+import os
 import re
 from pathlib import Path
 from types import SimpleNamespace
@@ -29,16 +30,18 @@ class ScrollDevice(Platform, AppControl):
         normalized = self.serial.replace('localhost:', '127.0.0.1:')
         # Imports already resolved the serial/name pair. Reuse it only while
         # every configured device field still matches its saved binding.
-        reuse = (not remote and saved_name and saved_instance.get('binding') == binding(config)
+        external = remote or os.name != 'nt' or (saved_instance or {}).get('device_type') == 'redroid'
+        reuse = (not external and saved_name and saved_instance.get('binding') == binding(config)
                  and saved_instance.get('serial') == normalized
                  and getattr(config.script.device, 'emulatorinfo_type', '') == 'MuMuPlayer12'
                  and config.script.device.emulatorinfo_name == saved_name)
         if reuse:
             self.instance = SimpleNamespace(type='MuMuPlayer12', name=saved_name, serial=normalized)
         else:
-            self.instance = None if remote else self.emulator_instance
+            self.instance = None if external else self.emulator_instance
         if self.instance is None:
-            self.adb_client.connect(self.serial, timeout=5)
+            if self.is_network_device:
+                self.adb_client.connect(self.serial, timeout=5)
             self.redroid_files = RedroidFiles(self)
             if not self.redroid_files.is_redroid():
                 raise RuntimeError('无法识别当前设备，绘卷读取支持 MuMu 或 redroid')
@@ -47,7 +50,7 @@ class ScrollDevice(Platform, AppControl):
 
     @property
     def supports_live_memory(self):
-        return self.instance.type == 'MuMuPlayer12'
+        return self.instance.type in ('MuMuPlayer12', 'redroid')
 
     def data_disk(self):
         if self.instance.type != 'MuMuPlayer12':
@@ -132,6 +135,8 @@ class ScrollDevice(Platform, AppControl):
         return list(addresses.pop())
 
     def game_runtime(self):
+        if getattr(getattr(self, 'instance', None), 'type', '') == 'redroid':
+            return self.redroid_files.game_runtime()
         pids = self.readonly_shell(['pidof', self.package]).split()
         if not pids or not all(pid.isdigit() for pid in pids):
             raise RuntimeError('游戏进程已退出，请重试查询')

@@ -10,6 +10,7 @@ from module.scrolls.client import fragment_counts, now_string, progress_rows, qu
 from module.scrolls.activity import current_activity
 from module.scrolls.device import ScrollDevice
 from module.scrolls.mumu import read_game_memory
+from module.scrolls.process_memory import read_redroid_memory
 from module.scrolls.live_objects import LiveRoleMismatch, LiveCacheUnavailable
 from module.scrolls.saved_accounts import read_accounts
 from module.scrolls.servers import gate_address
@@ -172,8 +173,11 @@ def _selected_memory_result(device, record, activity, *, cached_only=False, time
             options['cached_only'] = True
         if timeout is not None:
             options['timeout'] = timeout
-        actual, snapshot = read_game_memory(device.host_pid(), runtime, expected,
-                                            **options)
+        if getattr(getattr(device, 'instance', None), 'type', '') == 'redroid':
+            options.pop('selected_only')
+            actual, snapshot = read_redroid_memory(device.redroid_files, runtime, expected, **options)
+        else:
+            actual, snapshot = read_game_memory(device.host_pid(), runtime, expected, **options)
     except LiveRoleMismatch as error:
         if device.game_runtime() != runtime:
             raise ScrollError('game_restarted', '查询期间游戏进程发生变化，请重试', 409) from error
@@ -334,6 +338,8 @@ def _query(name):
         if selected:
             return _query_selected(name, settings, store, selected, activity)
         device = ScrollDevice(settings)
+        if getattr(getattr(device, 'instance', None), 'type', '') == 'redroid':
+            raise ScrollError('authorization_missing', '请先读取本地账号并选择查询角色')
         with device_lock(device.serial).acquire(timeout=0):
             try:
                 record = store.read()
