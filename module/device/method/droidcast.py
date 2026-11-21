@@ -127,11 +127,11 @@ class DroidCast(Uiautomator2):
         return f'http://127.0.0.1:{self._droidcast_port}{url}'
 
     def droidcast_raw_url(self, url='/screenshot'):
-        if self.is_mumu_over_version_356:
+        if self.droidcast_width and self.droidcast_height:
             w, h = self.droidcast_width, self.droidcast_height
-            if self.orientation == 0:
+            if self.orientation in (0, 2):
                 return f'http://127.0.0.1:{self._droidcast_port}{url}?width={w}&height={h}'
-            elif self.orientation == 1:
+            elif self.orientation in (1, 3):
                 return f'http://127.0.0.1:{self._droidcast_port}{url}?width={h}&height={w}'
             else:
                 # logger.warning('DroidCast receives invalid device orientation')
@@ -173,14 +173,15 @@ class DroidCast(Uiautomator2):
             logger.error(f'Unknown DROIDCAST_VERSION: {self.config.DROIDCAST_VERSION}')
 
     def _droidcast_update_resolution(self):
-        if self.is_mumu_over_version_356:
+        if self.config.DROIDCAST_VERSION == 'DroidCast_raw' or self.is_mumu_over_version_356:
             logger.info('Update droidcast resolution')
             w, h = self.resolution_uiautomator2(cal_rotation=False)
             self.get_orientation()
-            # 720, 1280
-            # mumu12 > 3.5.6 is always a vertical device
+            # Raw frames have no size header. Request the logical display size
+            # explicitly: real phones can otherwise return their physical size
+            # even after Android's display resolution has been overridden.
             self.droidcast_width, self.droidcast_height = w, h
-            logger.info(f'Droicast resolution: {(w, h)}')
+            logger.info(f'DroidCast resolution: {(w, h)}')
 
 
     @retry
@@ -220,28 +221,25 @@ class DroidCast(Uiautomator2):
     def screenshot_droidcast_raw(self):
         self.config.DROIDCAST_VERSION = 'DroidCast_raw'
 
-        shape = (720, 1280)
-        if self.is_mumu_over_version_356:
-            if not self.droidcast_width or not self.droidcast_height:
-                self._droidcast_update_resolution()
-            if self.droidcast_height and self.droidcast_width:
-                shape = (self.droidcast_height, self.droidcast_width)
-
-        rotate = self.is_mumu_over_version_356 and self.orientation == 1
+        if not self.droidcast_width or not self.droidcast_height:
+            self._droidcast_update_resolution()
+        shape = (self.droidcast_height, self.droidcast_width)
 
         image = self.droidcast_session.get(self.droidcast_raw_url(), timeout=3).content
         # DroidCast_raw returns a RGB565 bitmap
 
         try:
             arr = np.frombuffer(image, dtype=np.uint16)
-            if rotate:
-                arr = arr.reshape(shape)
+            arr = arr.reshape(shape)
+            if self.orientation == 1:
                 # arr = cv2.rotate(arr, cv2.ROTATE_90_CLOCKWISE)
                 # A little bit faster?
                 arr = cv2.transpose(arr)
                 cv2.flip(arr, 1, dst=arr)
-            else:
-                arr = arr.reshape(shape)
+            elif self.orientation == 2:
+                arr = cv2.rotate(arr, cv2.ROTATE_180)
+            elif self.orientation == 3:
+                arr = cv2.rotate(arr, cv2.ROTATE_90_COUNTERCLOCKWISE)
         except ValueError as e:
             if len(image) < 500:
                 logger.warning(f'Unexpected screenshot: {image}')
