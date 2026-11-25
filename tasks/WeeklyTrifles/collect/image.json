@@ -3,10 +3,10 @@
     "itemName": "wt_collect",
     "imageName": "collect_wt_collect.png",
     "roiFront": "1170,606,78,83",
-    "roiBack": "1170,606,78,83",
+    "roiBack": "1145,589,130,128",
     "method": "Template matching",
     "threshold": 0.8,
-    "description": "点击分享"
+    "description": "式神绘卷右下角的分享按钮"
   },
   {
     "itemName": "wt_scroll_1",
@@ -29,8 +29,8 @@
   {
     "itemName": "wt_collect_wechat",
     "imageName": "collect_wt_collect_wechat.png",
-    "roiFront": "280,600,440,100",
-    "roiBack": "280,600,440,100",
+    "roiFront": "391,617,64,73",
+    "roiBack": "367,602,101,103",
     "method": "Template matching",
     "threshold": 0.8,
     "description": "微信分享"
@@ -45,12 +45,39 @@
     "description": "二维码"
   },
   {
-    "itemName": "wt_share",
-    "imageName": "collect_wt_share.png",
-    "roiFront": "331,282,60,53",
-    "roiBack": "133,243,270,120",
+    "itemName": "wt_collection_title",
+    "imageName": "collect_wt_collection_title.png",
+    "roiFront": "154,20,132,35",
+    "roiBack": "136,7,174,55",
     "method": "Template matching",
     "threshold": 0.8,
-    "description": "式神图鉴头像旁边的分享按钮"
+    "description": "式神图鉴页标题"
+  },
+  {
+    "itemName": "wt_collection_scroll",
+    "imageName": "collect_wt_collection_scroll.png",
+    "roiFront": "1206,622,51,46",
+    "roiBack": "1177,606,102,83",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "式神图鉴右下角的式神绘卷按钮"
+  },
+  {
+    "itemName": "wt_collection_guide",
+    "imageName": "collect_wt_collection_guide.png",
+    "roiFront": "937,482,297,52",
+    "roiBack": "893,459,361,96",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "首次进入式神图鉴的地域迁移提示"
+  },
+  {
+    "itemName": "wt_collect_qr_code",
+    "imageName": "collect_wt_collect_qr_code.png",
+    "roiFront": "505,457,278,66",
+    "roiBack": "435,418,414,169",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "式神绘卷二维码弹窗的固定说明"
   }
 ]
