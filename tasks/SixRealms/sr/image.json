@@ -146,7 +146,7 @@
   {
     "itemName": "sr_not_tip",
     "imageName": "sr_sr_not_tip.png",
-    "roiFront": "543,342,37,37",
+    "roiFront": "564,343,37,37",
     "roiBack": "405,230,467,255",
     "method": "Template matching",
     "threshold": 0.8,
