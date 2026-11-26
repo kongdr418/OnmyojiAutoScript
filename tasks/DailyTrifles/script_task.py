@@ -576,7 +576,10 @@ class ScriptTask(GameUi, Summon, DailyTriflesAssets):
                     self.appear_then_click(self.I_HARVEST_MAIL, interval=1.2) or \
                     self.appear_then_click(self.I_HARVEST_MAIL_COPY, interval=1.2):
                 continue
-            if self.appear_then_click(self.I_HARVEST_MAIL_CONFIRM, interval=1):
+            if (
+                self.appear_then_click(self.I_HARVEST_MAIL_NEW_CONFIRM, interval=1)
+                or self.appear_then_click(self.I_HARVEST_MAIL_CONFIRM, interval=1)
+            ):
                 continue
             if self.appear_then_click(self.I_HARVEST_MAIL_ALL, interval=2):
                 timeout_timer.reset()

@@ -45,6 +45,15 @@
     "description": "确认收取邮件"
   },
   {
+    "itemName": "harvest_mail_new_confirm",
+    "imageName": "dt_harvest_mail_new_confirm.png",
+    "roiFront": "673,543,179,64",
+    "roiBack": "643,520,241,110",
+    "method": "Template matching",
+    "threshold": 0.8,
+    "description": "新版全部领取确定按钮"
+  },
+  {
     "itemName": "dt_harvest_mail_copy2",
     "imageName": "dt_harvest_mail_copy2.png",
     "roiFront": "1158,18,22,20",
