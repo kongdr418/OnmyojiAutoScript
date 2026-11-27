@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 import random
 
+from module.atom.click import RuleClick
 from module.exception import GameStuckError
 from module.logger import logger
 from tasks.Component.GeneralBattle.assets import GeneralBattleAssets
@@ -191,6 +192,20 @@ class ChessBattleNavigationMixin:
     def Chess_Exit(self, return_to_lobby: bool = True) -> bool:
         """主动退出当前百鬼棋局，可选择停在结算流程。"""
         logger.warning('Global Chess page handler: exit interrupted battle')
+        legacy_confirm = GeneralBattleAssets.I_EXIT_ENSURE
+        confirm_rules = (
+            GeneralBattleAssets.I_NEW_EXIT_ENSURE,
+            GlobalGameAssets.I_UI_NEW_CONFIRM,
+            legacy_confirm,
+        )
+        # 旧确认模板使用固定搜索区域，匹配结果只会更新 roi_front。
+        confirm_roi = legacy_confirm.roi_back
+        confirm_click = RuleClick(
+            roi_front=confirm_roi,
+            roi_back=confirm_roi,
+            name=legacy_confirm.name,
+            profile=legacy_confirm.profile,
+        )
         deadline = time.monotonic() + self.CHESS_EXIT_TIMEOUT
         while time.monotonic() < deadline:
             self.device.stuck_record_clear()
@@ -202,11 +217,12 @@ class ChessBattleNavigationMixin:
                 continue
 
             # 与通用战斗一致：先确认退出，再检查结算，最后尝试退出入口。
-            if self.appear_then_click(GeneralBattleAssets.I_EXIT_ENSURE, interval=0.8):
+            if any(self.appear_then_click(rule, confirm_click, interval=0.8) for rule in confirm_rules):
                 time.sleep(self.CHESS_EXIT_SCREENSHOT_INTERVAL)
                 continue
             if self.chess_result_page_visible():
-                self.ui_click_until_disappear(GeneralBattleAssets.I_EXIT_ENSURE, interval=0.8)
+                for rule in confirm_rules:
+                    self.ui_click_until_disappear(rule, interval=0.8, click_target=confirm_click)
                 logger.debug('Chess_Exit: result page reached')
                 if return_to_lobby:
                     return self.return_to_chess_lobby()
