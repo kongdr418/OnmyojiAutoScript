@@ -9,7 +9,7 @@ from datetime import time, datetime, timedelta
 from decimal import Decimal
 from module.atom.image import RuleImage
 from module.atom.ocr import RuleOcr
-from ppocronnx.predict_system import BoxedResult
+from ppocronnx.predict_system import BoxedResult, TextDetector, get_rotate_crop_image
 
 from tasks.Component.config_base import Time
 from tasks.DailyTrifles.page import page_store_gift_room, page_friends_luck, page_guild_wish
@@ -22,7 +22,10 @@ from tasks.Component.Summon.summon import Summon
 
 from module.logger import logger
 from module.exception import TaskEnd
+from module.base.decorator import cached_property
 from module.base.timer import Timer
+from module.ocr.base_ocr import enlarge_canvas
+from module.ocr.ppocr import sorted_boxes
 from module.log_income import (
     INCOME_FIELDS as INCOME_LOG_FIELDS,
     INCOME_LOG_PREFIX,
@@ -638,13 +641,48 @@ class ScriptTask(GameUi, Summon, DailyTriflesAssets):
             value = self.read_income(name, getattr(self, asset), upper)
             setattr(snapshot, field, value)
 
+    @cached_property
+    def _income_ocr(self):
+        try:
+            from tasks.DraftDuel.v6_rec import V6Rec
+
+            models = TextDetector(), V6Rec()
+        except Exception as e:
+            logger.warning(f'Income: v6-small OCR unavailable, using shared OCR: {e}')
+            return None
+        logger.info('Income: v6-small rec loaded')
+        return models
+
+    def _detect_income_text_v6(self, rule: RuleOcr) -> str:
+        if self._income_ocr is None:
+            return ''
+        detector, recognizer = self._income_ocr
+        # Locate the text first so adjacent resource icons stay out of recognition.
+        image = rule.crop(self.device.image, rule.roi)
+        image = enlarge_canvas(rule.pre_process(image))
+        try:
+            boxes, _ = detector(image)
+            if boxes is None:
+                return ''
+            texts = []
+            for box in sorted_boxes(boxes):
+                text, score = recognizer.recognize_single(get_rotate_crop_image(image, box))
+                if score < rule.score or not text.strip():
+                    return ''
+                texts.append(text)
+            return ''.join(texts)
+        except Exception as e:
+            logger.warning(f'Income: v6-small OCR {rule.name} failed, using shared OCR: {e}')
+            return ''
+
     def read_income(self, name: str, rule: RuleOcr, upper: int) -> int:
         """读一次顶栏数字，读不出或者超出合理范围就返回 -1 留给下一次运行"""
         self.screenshot()
-        # 走文本检测 + 识别，和标注工具的测试按钮同一条路径
-        # （Single/Digit 的 ocr() 只做识别，ROI 里带图标时会读出 "路421+"）
-        text = rule.detect_text(self.device.image)
+        text = self._detect_income_text_v6(rule)
         value = parse_income_number(text)
+        if value is None or not 0 <= value <= upper:
+            text = rule.detect_text(self.device.image)
+            value = parse_income_number(text)
         if value is None or not 0 <= value <= upper:
             logger.warning(f'Income {name}: give up, raw [{text}]')
             return -1
