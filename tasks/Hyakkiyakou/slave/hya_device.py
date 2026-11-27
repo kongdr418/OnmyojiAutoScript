@@ -1,7 +1,7 @@
-import timeit
 import numpy as np
 from datetime import datetime
 
+from module.base.decorator import cached_property
 from module.base.timer import Timer
 from module.device.handle import Handle, WindowNode, handle_num2title, handle_title2num, is_handle_valid
 from module.logger import logger
@@ -27,85 +27,85 @@ class HyaDevice(BaseTask):
     我宣布世界上最好的 Linux 系统是 Windows
     """
     hya_screenshot_interval = Timer(0.2)  # 300ms
-    hya_fs_check_timer = Timer(3 * 60)  # 五分钟跑不完就应该是出问题了
+    hya_fs_check_timer = Timer(3 * 60)
+    _nemu_ipc_failed = False
 
-    def _ensure_root_node(self) -> None:
-        """Ensure root_node is initialized on the Device.
-
-        Handle.__init__ returns early without creating root_node when
-        config.script.device.handle is empty. This rebuilds it on demand.
-        """
-        if hasattr(self.device, 'root_node'):
-            return
-        from module.config.config import Config
+    @cached_property
+    def _has_window_handle(self) -> bool:
+        if getattr(self.device, 'root_node', None) and is_handle_valid(self.device.root_node.num):
+            return True
         root_handle = self.device.config.script.device.handle
         if not root_handle:
-            logger.warning('Device handle config is empty, cannot build root_node')
-            return
+            logger.warning('Hyakkiyakou: no window handle, using standard device methods')
+            return False
         root_handle_title = ''
         root_handle_num = 0
         if root_handle == 'auto':
             logger.info('Handle is auto, searching for emulator window')
             window_list = Handle.all_windows()
             root_handle_title = Handle.auto_handle_title(window_list)
-            root_handle_num = handle_title2num(root_handle_title)
+            if root_handle_title:
+                root_handle_num = handle_title2num(root_handle_title)
         else:
             try:
                 root_handle_num = int(root_handle)
-                if is_handle_valid(root_handle_num):
-                    root_handle_title = handle_num2title(root_handle_num)
             except ValueError:
-                if handle_title2num(root_handle) != 0:
-                    root_handle_num = handle_title2num(root_handle)
-                    root_handle_title = root_handle
+                root_handle_num = handle_title2num(root_handle)
+                root_handle_title = root_handle
+        if not root_handle_num or not is_handle_valid(root_handle_num):
+            logger.warning('Hyakkiyakou: invalid window handle, using standard device methods')
+            return False
+        if not root_handle_title:
+            root_handle_title = handle_num2title(root_handle_num)
         self.device.root_handle_title = root_handle_title
         self.device.root_handle_num = root_handle_num
         self.device.root_node = WindowNode(name=root_handle_title, num=root_handle_num)
         Handle.handle_tree(root_handle_num, self.device.root_node)
         logger.info(f'root_node initialized: title={root_handle_title}, num={root_handle_num}')
+        return True
+
+    def _capture_fast_frame(self, screenshot: ScreenshotMethod):
+        if screenshot == ScreenshotMethod.NEMU_IPC:
+            if not self._nemu_ipc_failed:
+                try:
+                    return self.device.screenshot_nemu_ipc()
+                except RequestHumanTakeover:
+                    self._nemu_ipc_failed = True
+                    logger.warning('Hyakkiyakou: Nemu IPC unavailable, using standard screenshot')
+        elif self._has_window_handle:
+            return self.device.screenshot_window_background()
+        return None
 
     def fast_screenshot(self, screenshot: ScreenshotMethod):
-        self._ensure_root_node()
         self.hya_screenshot_interval.wait()
         self.hya_screenshot_interval.reset()
-        if hasattr(self.device, 'root_node'):
-            self.device.image = self.device.screenshot_window_background() if screenshot == ScreenshotMethod.WINDOW_BACKGROUND else self.device.screenshot_nemu_ipc()
+        if self.hya_fs_check_timer.reached():
+            raise GameStuckError('Hyakkiyakou round did not finish within three minutes')
+
+        # The round timeout also covers periods without bean throws.
+        self.device.stuck_timer.reset()
+        fast_image = self._capture_fast_frame(screenshot)
+        if fast_image is not None:
+            self.device.image = fast_image
+            self.device.image_frame_id = None
         else:
-            logger.warning('root_node unavailable, falling back to standard screenshot')
             self.device.screenshot()
-        self.device.image_frame_id = None
         if image_black(self.device.image):
             logger.error('Screenshot image is black, try again')
             raise RequestHumanTakeover('Screenshot image is black, try again')
-        if self.hya_fs_check_timer.reached():
-            logger.error('Fast screenshot check timer reached')
-            logger.error('Five minutes have not ended, the game is probably stuck, please check the game')
-            raise GameStuckError
-        if self.config.script.error.save_error:
+        if fast_image is not None and self.config.script.error.save_error:
             self.device.screenshot_deque.append({'time': datetime.now(), 'image': self.device.image})
         return self.device.image
 
     def fast_click(self, x: int, y: int, control_method: ControlMethod = ControlMethod.WINDOW_MESSAGE) -> None:
-        self._ensure_root_node()
-        logger.info(
-            'Click %s @ %s' % (point2str(x, y), 'Click')
-        )
-        if not hasattr(self.device, 'root_node'):
-            logger.warning('root_node unavailable, falling back to standard click')
-            self.device.click(x, y)
-            return
         if control_method == ControlMethod.MINITOUCH:
-            try:
-                self.device.click_minitouch(x=x, y=y)
-            except AttributeError:
-                logger.warning('click_minitouch failed, falling back to standard click')
-                self.device.click(x, y)
+            self.device.click_minitouch(x=x, y=y)
+        elif self._has_window_handle:
+            self.device.click_window_message(x=x, y=y, fast=True)
         else:
-            try:
-                self.device.click_window_message(x=x, y=y, fast=True)
-            except AttributeError:
-                logger.warning('click_window_message failed, falling back to standard click')
-                self.device.click(x, y)
+            self.device.click(x, y, control_check=False, control_name='Hyakkiyakou bean throw')
+            return
+        logger.info(f'Click {point2str(x, y)} @ Hyakkiyakou bean throw')
 
     def set_fast_screenshot_interval(self, interval: float):
         """

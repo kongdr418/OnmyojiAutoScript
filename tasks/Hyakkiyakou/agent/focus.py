@@ -6,8 +6,7 @@ from cached_property import cached_property
 
 from module.logger import logger
 
-from oashya.labels import id2label, id2name
-from oashya.labels import CLASSINDEX as CI
+from module.hyakkiyakou.labels import CLASSINDEX as CI, id2label, id2name
 
 # get buff status
 from tasks.Hyakkiyakou.slave.hya_slave import HyaBuff

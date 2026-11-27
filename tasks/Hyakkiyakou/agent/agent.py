@@ -3,9 +3,7 @@ import numpy as np
 from datetime import datetime
 from cached_property import cached_property
 
-from oashya.tracker import Tracker
-from oashya.labels import CLASSINDEX as CI
-from oashya.labels import id2label, id2name
+from module.hyakkiyakou.labels import CLASSINDEX as CI, id2label, id2name
 from module.logger import logger
 from module.hyakkiyakou import Debugger
 from tasks.Hyakkiyakou.agent.focus import Focus

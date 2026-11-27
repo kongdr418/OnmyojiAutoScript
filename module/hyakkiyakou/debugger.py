@@ -10,9 +10,8 @@ from pathlib import Path
 from numpy import uint8, fromfile
 from rich.table import Table
 from threading import Event, Lock, Thread
-from oashya.labels import id2label, CLASSIFY, CLASSINDEX, id2name
-from oashya.utils import draw_tracks
-from oashya.tracker import Tracker
+from module.hyakkiyakou.labels import id2label, CLASSIFY, CLASSINDEX, id2name
+from module.hyakkiyakou.tracker import Tracker, draw_tracks
 
 from tasks.base_task import BaseTask
 from module.logger import logger

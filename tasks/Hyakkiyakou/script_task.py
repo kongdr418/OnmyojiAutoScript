@@ -4,13 +4,7 @@
 import time
 
 from datetime import datetime, timedelta
-from random import choice
 from cached_property import cached_property
-# Use cmd to install: ./toolkit/python.exe -m pip install -i https://pypi.org/simple/ oashya --trusted-host pypi.org
-# update oashya:  ./toolkit/python.exe -m pip install --upgrade oashya
-from oashya.tracker import Tracker
-from oashya.labels import label2id, CLASSINDEX as CI, id2name
-from oashya.utils import draw_tracks
 
 from module.exception import TaskEnd
 from module.logger import logger
@@ -22,6 +16,8 @@ from tasks.Hyakkiyakou.config import InferenceEngine, ModelPrecision
 from tasks.Hyakkiyakou.agent.agent import Agent
 from tasks.Hyakkiyakou.slave.hya_slave import HyaSlave
 from module.hyakkiyakou import Debugger
+from module.hyakkiyakou.labels import CLASSINDEX as CI, MODEL_BOSS_SCORES, id2name, label2id
+from module.hyakkiyakou.tracker import Tracker, draw_tracks
 
 
 class ScriptTask(GameUi, HyaSlave, SwitchOnmyoji):
@@ -44,15 +40,7 @@ class ScriptTask(GameUi, HyaSlave, SwitchOnmyoji):
         # 这个坑后面再补
         if inf_en == 'tensorrt' or precision == 'int8':
             raise RequestHumanTakeover('Only support onnxruntime and FP32 now')
-        debug_info: bool = self._config.debug_config.hya_info
-        args = {
-            'conf_threshold': conf,
-            'iou_threshold': nms,
-            'precision': precision,
-            'inference_engine': inf_en,
-            'debug': debug_info,
-        }
-        return Tracker(args=args)
+        return Tracker(args={'conf_threshold': conf, 'iou_threshold': nms})
 
     @cached_property
     def agent(self) -> Agent:
@@ -109,6 +97,7 @@ class ScriptTask(GameUi, HyaSlave, SwitchOnmyoji):
         limit_time = self._config.hyakkiyakou_config.hya_limit_time
         self.limit_time: timedelta = timedelta(hours=limit_time.hour, minutes=limit_time.minute,
                                                seconds=limit_time.second)
+        self.tracker.prepare()
         self.goto_page(page_onmyodo)
         self.switch_onmyoji(self._config.hyakkiyakou_config.hya_onmyoji)
         self.goto_page(page_hyakkiyakou)
@@ -144,6 +133,8 @@ class ScriptTask(GameUi, HyaSlave, SwitchOnmyoji):
         SP > SSR > SR > R > N > G
         没有匹配到的返回 -1
         """
+        if class_id in MODEL_BOSS_SCORES:
+            return MODEL_BOSS_SCORES[class_id]
         # G（呱太）
         if CI.MIN_G <= class_id <= CI.MAX_G:
             return 0
@@ -171,17 +162,15 @@ class ScriptTask(GameUi, HyaSlave, SwitchOnmyoji):
         (最高稀有度分数, 对应的 class_id)
         如果没检测到式神，则返回 (-1, -1)
         """
-        # 截一张当前图
         self.screenshot()
-        # 这里 response 随便给一个默认值即可，主线战斗里是 last_action
-        tracks = self.tracker(image=self.device.image, response=[0, 0, False, 10])
+        detections = self.tracker.detect(self.device.image, include_initial=True)
         best_score = -1
         best_class = -1
-        for _id, _class, _conf, _cx, _cy, _w, _h, _v in tracks:
-            score = self._rarity_score(_class)
+        for label, _, _ in detections:
+            score = self._rarity_score(label)
             if score > best_score:
                 best_score = score
-                best_class = _class
+                best_class = label
         if best_class != -1:
             logger.info(
                 f'Hyakki select: detect {id2name(best_class)} '
@@ -291,12 +280,11 @@ class ScriptTask(GameUi, HyaSlave, SwitchOnmyoji):
         self.ui_click(self.I_HEND, self.I_HACCESS)
         self.debugger.save_images()
         del self.debugger
-        # you maybe update oashya
         self.tracker.clear_tracks()
 
     def do_action(self, action: list, state):
         x, y, throw, bean = action
-        if not throw:
+        if not throw or not (0 <= x < 1280 and 0 <= y < 720):
             return
         if state[0] <= 0:
             return
